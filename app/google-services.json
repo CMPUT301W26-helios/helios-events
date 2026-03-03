@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "487436095066",
-    "project_id": "eventlotterysystem-c9d8b",
-    "storage_bucket": "eventlotterysystem-c9d8b.firebasestorage.app"
+    "project_number": "38925526488",
+    "project_id": "helios-testdb",
+    "storage_bucket": "helios-testdb.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:487436095066:android:6c13e1defe951dc9231263",
+        "mobilesdk_app_id": "1:38925526488:android:7e1a022c755c098389fead",
         "android_client_info": {
           "package_name": "com.example.helios"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAZTrSaEoUXYZAYPgfDeJio1DEDIMvvgrg"
+          "current_key": "AIzaSyCoEiBKm9VubzI1dZcvEOpKTrxQIYnwYfY"
         }
       ],
       "services": {
