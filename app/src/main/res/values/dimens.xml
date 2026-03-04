@@ -4,10 +4,10 @@
     <dimen name="helios_screen_top_padding">28dp</dimen>
 
     <dimen name="helios_logo_width">92dp</dimen>
-    <dimen name="helios_logo_height">91dp</dimen>
+    <dimen name="helios_logo_height">92dp</dimen>
 
-    <dimen name="helios_brand_title_size">24sp</dimen>
-    <dimen name="helios_brand_subtitle_size">13sp</dimen>
+    <dimen name="helios_brand_title_size">48sp</dimen>
+    <dimen name="helios_brand_subtitle_size">26sp</dimen>
 
     <dimen name="helios_heading_size">26sp</dimen>
     <dimen name="helios_subheading_size">15sp</dimen>

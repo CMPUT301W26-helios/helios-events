@@ -5,43 +5,7 @@
     android:background="#F2FBF7"
     android:padding="24dp">
 
-    <LinearLayout
-        android:id="@+id/brand_block"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:gravity="center_vertical">
-
-        <ImageView
-            android:layout_width="84dp"
-            android:layout_height="84dp"
-            android:src="@drawable/helios_logo_v1"
-            android:contentDescription="Helios logo" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginStart="8dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Helios"
-                android:textColor="#1D1B20"
-                android:textStyle="bold"
-                android:textSize="24sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="The Event App"
-                android:textColor="#1D1B20"
-                android:textSize="13sp" />
-        </LinearLayout>
-    </LinearLayout>
+    <include layout="@layout/include_helios_brand_header" />
 
     <LinearLayout
         android:layout_width="wrap_content"
