@@ -3,10 +3,10 @@ package com.example.helios.ui;
 import androidx.annotation.IdRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-
-import com.example.helios.ui.entrant.EntrantEventScreenFragment;
+import androidx.fragment.app.FragmentTransaction;
 
 public class AppNavigator {
+
     private final AppCompatActivity activity;
     private final int containerId;
 
@@ -15,18 +15,25 @@ public class AppNavigator {
         this.containerId = containerId;
     }
 
+    /**
+     * Opens the main Event List screen
+     */
     public void openEntrantHome() {
-        replace(new EntrantEventScreenFragment(), false);
+        replace(new EventListFragment(), false);
     }
 
+    /**
+     * Replaces the fragment inside the container
+     */
     public void replace(Fragment fragment, boolean addToBackStack) {
-        androidx.fragment.app.FragmentTransaction tx = activity
+
+        FragmentTransaction tx = activity
                 .getSupportFragmentManager()
                 .beginTransaction()
-                .replace(containerId, fragment);
+                .replace(containerId, fragment, fragment.getClass().getSimpleName());
 
         if (addToBackStack) {
-            tx.addToBackStack(null);
+            tx.addToBackStack(fragment.getClass().getSimpleName());
         }
 
         tx.commit();

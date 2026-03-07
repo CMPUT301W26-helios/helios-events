@@ -1,0 +1,4 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#FFF1F9" /> <!-- Light pinkish highlight -->
+    <corners android:radius="20dp" />
+</shape>

@@ -25,10 +25,10 @@ public class EntrantEventScreenFragment extends Fragment {
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState
     ) {
-        return inflater.inflate(R.layout.fragment_entrant_event_screen, container, false);
+        return inflater.inflate(R.layout.fragment_event_screen, container, false);
     }
-
-    @Override
+/*
+@Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         View browseButton = view.findViewById(R.id.button_browse_events);
         View signUpButton = view.findViewById(R.id.button_try_sign_up);
@@ -52,4 +52,6 @@ public class EntrantEventScreenFragment extends Fragment {
             );
         });
     }
+ */
+
 }

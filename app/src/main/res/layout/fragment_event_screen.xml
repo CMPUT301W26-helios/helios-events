@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F4FAF6">
+
+    <!-- Top Sun Icon -->
+    <ImageView
+        android:id="@+id/iv_sun_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:src="@android:drawable/ic_menu_day"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="#FFC107" />
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:fontFamily="sans-serif-black"
+        android:text="Event List"
+        android:textColor="#1A1C1E"
+        android:textSize="42sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Search Bar -->
+    <EditText
+        android:id="@+id/et_search"
+        android:layout_width="0dp"
+        android:layout_height="54dp"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/bg_search_bar"
+        android:drawableEnd="@android:drawable/ic_menu_search"
+        android:hint="Search for Event"
+        android:paddingHorizontal="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_title" />
+
+    <!-- Date Filters -->
+    <LinearLayout
+        android:id="@+id/ll_date_filters"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="24dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/et_search">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Between: "
+            android:textColor="#44474E" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_filter_chip"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:text="March 1, 2025" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="8dp"
+            android:text="-" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_filter_chip"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:text="Apr 1, 2025" />
+
+        <View android:layout_width="0dp" android:layout_height="0dp" android:layout_weight="1"/>
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/ic_menu_manage" />
+    </LinearLayout>
+
+    <!-- Interest Chips -->
+    <LinearLayout
+        android:id="@+id/ll_interest_filters"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:paddingHorizontal="24dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/ll_date_filters">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Interests: "
+            android:textColor="#44474E" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_filter_chip"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:layout_marginStart="8dp"
+            android:text="Education X" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_filter_chip"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            android:layout_marginStart="8dp"
+            android:text="Fun X" />
+    </LinearLayout>
+
+    <!-- Event List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_events"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation_container"
+        app:layout_constraintTop_toBottomOf="@id/ll_interest_filters"
+        tools:listitem="@layout/item_event" />
+
+    <!-- Bottom Navigation Container -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/bottom_navigation_container"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Background bar -->
+        <LinearLayout
+            android:id="@+id/bottom_navigation_bar"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:background="#E9F5EE"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:background="@drawable/bg_nav_active"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_menu_today" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="My Events"
+
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_menu_camera" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Scan QR"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <!-- Spacer for the floating button -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_menu_myplaces" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="My Profile"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@android:drawable/ic_popup_reminder" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Notifications"
+                    android:textSize="10sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Floating Action Button Design -->
+        <LinearLayout
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:background="@drawable/bg_fab_circle"
+            android:elevation="4dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginBottom="10dp">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@android:drawable/ic_input_add"
+                app:tint="#FFFFFF" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create Event"
+                android:textColor="#FFFFFF"
+                android:textSize="8sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
