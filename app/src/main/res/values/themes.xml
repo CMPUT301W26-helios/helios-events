@@ -6,4 +6,8 @@
     </style>
 
     <style name="Theme.Helios" parent="Base.Theme.Helios" />
+
+    <style name="CircleImage">
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>
