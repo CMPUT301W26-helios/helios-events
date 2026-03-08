@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical">
+
+    <ImageView
+        android:id="@+id/helios_brand_logo"
+        android:layout_width="@dimen/helios_logo_width"
+        android:layout_height="@dimen/helios_logo_height"
+        android:src="@drawable/helios_logo_v1"
+        android:contentDescription="Helios logo" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/helios_brand_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Helios"
+            android:textColor="@color/helios_text_primary"
+            android:textStyle="bold"
+            android:textSize="@dimen/helios_brand_title_size" />
+
+        <TextView
+            android:id="@+id/helios_brand_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="The Event App"
+            android:textColor="@color/helios_text_primary"
+            android:textSize="@dimen/helios_brand_subtitle_size" />
+    </LinearLayout>
+</LinearLayout>
