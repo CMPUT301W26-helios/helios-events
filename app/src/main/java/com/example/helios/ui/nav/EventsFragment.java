@@ -21,6 +21,7 @@ import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
 import com.example.helios.ui.EventAdapter;
+import com.example.helios.ui.event.EventDetailsBottomSheet;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,13 +37,12 @@ public class EventsFragment extends Fragment {
     private final List<Event> allEvents = new ArrayList<>();
     private final List<Event> filteredEvents = new ArrayList<>();
 
-    // simple debounce for search
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable pendingFilter;
 
-    public EventsFragment() {
-        // Required empty public constructor
-    }
+    private boolean loadedOnce = false;
+
+    public EventsFragment() {}
 
     @Nullable
     @Override
@@ -67,6 +67,15 @@ public class EventsFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh list after returning from other screens (optional, but useful during dev)
+        if (loadedOnce) {
+            loadEvents();
+        }
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         if (pendingFilter != null) {
@@ -76,7 +85,20 @@ public class EventsFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
-        eventAdapter = new EventAdapter(filteredEvents);
+        eventAdapter = new EventAdapter(filteredEvents, event -> {
+            if (!isAdded()) return;
+
+            String eventId = event.getEventId();
+            if (eventId == null || eventId.trim().isEmpty()) {
+                Toast.makeText(requireContext(), "Event is missing an ID.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            EventDetailsBottomSheet
+                    .newInstance(eventId)
+                    .show(getParentFragmentManager(), "event_details");
+        });
+
         rvEvents.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvEvents.setAdapter(eventAdapter);
     }
@@ -94,7 +116,7 @@ public class EventsFragment extends Fragment {
                 }
 
                 pendingFilter = () -> filterEvents(query);
-                handler.postDelayed(pendingFilter, 150); // small debounce
+                handler.postDelayed(pendingFilter, 150);
             }
 
             @Override public void afterTextChanged(Editable s) {}
@@ -106,10 +128,11 @@ public class EventsFragment extends Fragment {
                 events -> {
                     if (!isAdded()) return;
 
+                    loadedOnce = true;
+
                     allEvents.clear();
                     allEvents.addAll(events);
 
-                    // apply current filter immediately (so if user typed before load finishes, it still applies)
                     String currentQuery = etSearch.getText() != null ? etSearch.getText().toString() : "";
                     filterEvents(currentQuery);
                 },
