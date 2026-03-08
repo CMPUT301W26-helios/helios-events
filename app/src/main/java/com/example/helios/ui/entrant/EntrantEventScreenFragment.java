@@ -4,14 +4,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.helios.R;
-import com.example.helios.ui.MainActivity;
 
 public class EntrantEventScreenFragment extends Fragment {
 
@@ -25,7 +23,7 @@ public class EntrantEventScreenFragment extends Fragment {
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState
     ) {
-        return inflater.inflate(R.layout.fragment_event_screen, container, false);
+        return inflater.inflate(R.layout.fragment_events, container, false);
     }
 /*
 @Override

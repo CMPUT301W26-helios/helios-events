@@ -13,15 +13,8 @@ public class UserProfile {
         // Required for Firestore
     }
 
-    public UserProfile(
-            String uid,
-            String name,
-            String email,
-            String phone,
-            String role,
-            boolean notificationsEnabled,
-            String installationId
-    ) {
+    public UserProfile(String uid, String name, String email, String phone,
+                       String role, boolean notificationsEnabled, String installationId) {
         this.uid = uid;
         this.name = name;
         this.email = email;
@@ -31,65 +24,28 @@ public class UserProfile {
         this.installationId = installationId;
     }
 
-    public String getUid() {
-        return uid;
-    }
+    public String getUid() { return uid; }
+    public void setUid(String uid) { this.uid = uid; }
 
-    public void setUid(String uid) {
-        this.uid = uid;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = emptyToNull(name); }
 
-    public String getName() {
-        return name;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = emptyToNull(email); }
 
-    public void setName(String name) {
-        this.name = emptyToNull(name);
-    }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = emptyToNull(phone); }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
-    public void setEmail(String email) {
-        this.email = emptyToNull(email);
-    }
+    public boolean isNotificationsEnabled() { return notificationsEnabled; }
+    public void setNotificationsEnabled(boolean notificationsEnabled) { this.notificationsEnabled = notificationsEnabled; }
 
-    public String getPhone() {
-        return phone;
-    }
+    public String getInstallationId() { return installationId; }
+    public void setInstallationId(String installationId) { this.installationId = installationId; }
 
-    public void setPhone(String phone) {
-        this.phone = emptyToNull(phone);
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public boolean isNotificationsEnabled() {
-        return notificationsEnabled;
-    }
-
-    public void setNotificationsEnabled(boolean notificationsEnabled) {
-        this.notificationsEnabled = notificationsEnabled;
-    }
-
-    public String getInstallationId() {
-        return installationId;
-    }
-
-    public void setInstallationId(String installationId) {
-        this.installationId = installationId;
-    }
-
-    public boolean isAdmin() {
-        return "admin".equals(role);
-    }
+    public boolean isAdmin() { return "admin".equals(role); }
 
     public boolean hasRequiredProfileInfo() {
         return isNonEmpty(name) && isNonEmpty(email);
@@ -99,15 +55,13 @@ public class UserProfile {
         return isNonEmpty(name) ? name : null;
     }
 
-    private boolean isNonEmpty(String value) {
-        return value != null && !value.trim().isEmpty();
+    private boolean isNonEmpty(String v) {
+        return v != null && !v.trim().isEmpty();
     }
 
-    private String emptyToNull(String value) {
-        if (value == null) {
-            return null;
-        }
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
+    private String emptyToNull(String v) {
+        if (v == null) return null;
+        String t = v.trim();
+        return t.isEmpty() ? null : t;
     }
 }

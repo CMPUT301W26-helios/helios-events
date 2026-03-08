@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/eventsFragment">
+
+    <fragment
+        android:id="@+id/eventsFragment"
+        android:name="com.example.helios.ui.nav.EventsFragment"
+        android:label="Events" />
+
+    <fragment
+        android:id="@+id/scanQrFragment"
+        android:name="com.example.helios.ui.nav.ScanQrFragment"
+        android:label="Scan QR" />
+
+    <fragment
+        android:id="@+id/organizeFragment"
+        android:name="com.example.helios.ui.nav.OrganizeFragment"
+        android:label="Organize" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.helios.ui.nav.ProfileFragment"
+        android:label="Profile" />
+
+    <fragment
+        android:id="@+id/notificationsFragment"
+        android:name="com.example.helios.ui.nav.NotificationsFragment"
+        android:label="Notifications" />
+
+</navigation>

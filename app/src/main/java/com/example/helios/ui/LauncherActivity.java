@@ -42,7 +42,7 @@ public class LauncherActivity extends AppCompatActivity {
 
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
                 if (result.isNewUser()) {
-                    openProfileSetup(true);
+                    openProfileSetupRequired();
                 } else {
                     openMain(profile);
                 }
@@ -58,9 +58,9 @@ public class LauncherActivity extends AppCompatActivity {
         });
     }
 
-    private void openProfileSetup(boolean isFirstTime) {
+    private void openProfileSetupRequired() {
         Intent intent = new Intent(this, ProfileSetupActivity.class);
-        intent.putExtra(ProfileSetupActivity.EXTRA_FIRST_TIME, isFirstTime);
+        intent.putExtra(ProfileSetupActivity.EXTRA_MODE, ProfileSetupActivity.MODE_SETUP_REQUIRED);
         intent.putExtra(ProfileSetupActivity.EXTRA_RETURN_TO_MAIN, true);
         startActivity(intent);
         finish();

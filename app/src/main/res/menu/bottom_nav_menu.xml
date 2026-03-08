@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/eventsFragment"
+        android:icon="@android:drawable/ic_menu_today"
+        android:title="Events" />
+    <item
+        android:id="@+id/scanQrFragment"
+        android:icon="@android:drawable/ic_menu_camera"
+        android:title="Scan QR" />
+    <item
+        android:id="@+id/organizeFragment"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="Organize" />
+    <item
+        android:id="@+id/profileFragment"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="Profile" />
+    <item
+        android:id="@+id/notificationsFragment"
+        android:icon="@android:drawable/ic_popup_reminder"
+        android:title="Notifications" />
+    <item
+        android:id="@+id/adminFragment"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="Admin"
+        android:visible="false" />
+</menu>

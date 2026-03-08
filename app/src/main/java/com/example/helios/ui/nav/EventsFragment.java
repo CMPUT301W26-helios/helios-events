@@ -1,6 +1,8 @@
-package com.example.helios.ui;
+package com.example.helios.ui.nav;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -16,13 +18,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.helios.R;
-import com.example.helios.data.EventService;
 import com.example.helios.model.Event;
+import com.example.helios.service.EventService;
+import com.example.helios.ui.EventAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class EventListFragment extends Fragment {
+public class EventsFragment extends Fragment {
 
     private RecyclerView rvEvents;
     private EditText etSearch;
@@ -30,12 +33,14 @@ public class EventListFragment extends Fragment {
     private EventAdapter eventAdapter;
     private EventService eventService;
 
-    // Full list from Firestore
     private final List<Event> allEvents = new ArrayList<>();
-    // Displayed list after filtering
     private final List<Event> filteredEvents = new ArrayList<>();
 
-    public EventListFragment() {
+    // simple debounce for search
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable pendingFilter;
+
+    public EventsFragment() {
         // Required empty public constructor
     }
 
@@ -44,7 +49,7 @@ public class EventListFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_event_screen, container, false);
+        return inflater.inflate(R.layout.fragment_events, container, false);
     }
 
     @Override
@@ -61,67 +66,89 @@ public class EventListFragment extends Fragment {
         loadEvents();
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (pendingFilter != null) {
+            handler.removeCallbacks(pendingFilter);
+            pendingFilter = null;
+        }
+    }
+
     private void setupRecyclerView() {
         eventAdapter = new EventAdapter(filteredEvents);
-
         rvEvents.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvEvents.setAdapter(eventAdapter);
     }
 
     private void setupSearch() {
         etSearch.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // Not needed
-            }
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                filterEvents(s.toString());
+                final String query = s != null ? s.toString() : "";
+
+                if (pendingFilter != null) {
+                    handler.removeCallbacks(pendingFilter);
+                }
+
+                pendingFilter = () -> filterEvents(query);
+                handler.postDelayed(pendingFilter, 150); // small debounce
             }
 
-            @Override
-            public void afterTextChanged(Editable s) {
-                // Not needed
-            }
+            @Override public void afterTextChanged(Editable s) {}
         });
     }
 
     private void loadEvents() {
         eventService.getAllEvents(
                 events -> {
+                    if (!isAdded()) return;
+
                     allEvents.clear();
                     allEvents.addAll(events);
 
-                    filteredEvents.clear();
-                    filteredEvents.addAll(events);
-
-                    eventAdapter.notifyDataSetChanged();
+                    // apply current filter immediately (so if user typed before load finishes, it still applies)
+                    String currentQuery = etSearch.getText() != null ? etSearch.getText().toString() : "";
+                    filterEvents(currentQuery);
                 },
-                e -> Toast.makeText(requireContext(),
-                        "Failed to load events: " + e.getMessage(),
-                        Toast.LENGTH_SHORT).show()
+                e -> {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(),
+                            "Failed to load events: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                }
         );
     }
 
-    private void filterEvents(String query) {
+    private void filterEvents(@Nullable String query) {
         filteredEvents.clear();
 
-        if (query == null || query.trim().isEmpty()) {
+        String q = query == null ? "" : query.trim().toLowerCase();
+
+        if (q.isEmpty()) {
             filteredEvents.addAll(allEvents);
         } else {
-            String lowerQuery = query.toLowerCase().trim();
-
             for (Event event : allEvents) {
-                String title = event.getTitle() != null ? event.getTitle().toLowerCase() : "";
-                String description = event.getDescription() != null ? event.getDescription().toLowerCase() : "";
-
-                if (title.contains(lowerQuery) || description.contains(lowerQuery)) {
+                if (eventMatches(event, q)) {
                     filteredEvents.add(event);
                 }
             }
         }
 
         eventAdapter.notifyDataSetChanged();
+    }
+
+    private boolean eventMatches(@NonNull Event event, @NonNull String q) {
+        String title = safeLower(event.getTitle());
+        String desc = safeLower(event.getDescription());
+        String loc = safeLower(event.getLocationName());
+
+        return title.contains(q) || desc.contains(q) || loc.contains(q);
+    }
+
+    private String safeLower(@Nullable String s) {
+        return s == null ? "" : s.toLowerCase();
     }
 }
