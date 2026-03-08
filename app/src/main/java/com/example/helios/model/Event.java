@@ -1,120 +1,107 @@
 package com.example.helios.model;
 
-import java.util.Date;
-import java.util.List;
-
 public class Event {
+    private String eventId;
 
-    private String id;
     private String title;
     private String description;
-    private Date startDate;
-    private List<String> tags;
 
-    private String organizerId;
-    private int maxEntrants;
-    private Date createdAt;
-    private String location;
-    private String imageUrl;
+    private String locationName;
+    private String address;
 
-    // Required empty constructor for Firestore
+    // epoch millis for simplicity (Firestore also supports Timestamp, but millis is easiest)
+    private long startTimeMillis;
+    private long endTimeMillis;
+
+    private long registrationOpensMillis;
+    private long registrationClosesMillis;
+
+    private int capacity;
+    private int sampleSize;
+
+    private Integer waitlistLimit; // optional limit (nullable)
+    private boolean geolocationRequired;
+
+    private String lotteryGuidelines; // shown to entrants
+    private String organizerUid;
+
+    private String posterImageId;  // optional (nullable)
+    private String qrCodeValue;    // optional (nullable) - could be eventId embedded
+
+    // Construction:
     public Event() {}
 
-    public Event(String id, String title, String description, Date startDate,
-                 List<String> tags, String organizerId, int maxEntrants,
-                 Date createdAt, String location, String imageUrl) {
-
-        this.id = id;
+    public Event(String eventId, String title, String description, String locationName, String address,
+                 long startTimeMillis, long endTimeMillis, long registrationOpensMillis, long registrationClosesMillis,
+                 int capacity, int sampleSize, Integer waitlistLimit, boolean geolocationRequired,
+                 String lotteryGuidelines, String organizerUid, String posterImageId, String qrCodeValue) {
+        this.eventId = eventId;
         this.title = title;
         this.description = description;
-        this.startDate = startDate;
-        this.tags = tags;
-        this.organizerId = organizerId;
-        this.maxEntrants = maxEntrants;
-        this.createdAt = createdAt;
-        this.location = location;
-        this.imageUrl = imageUrl;
+        this.locationName = locationName;
+        this.address = address;
+        this.startTimeMillis = startTimeMillis; // Use millis because this time representation is significantly more accurate than date.
+        this.endTimeMillis = endTimeMillis;
+        this.registrationOpensMillis = registrationOpensMillis;
+        this.registrationClosesMillis = registrationClosesMillis;
+        this.capacity = capacity;
+        this.sampleSize = sampleSize;
+        this.waitlistLimit = waitlistLimit;
+        this.geolocationRequired = geolocationRequired;
+        this.lotteryGuidelines = lotteryGuidelines;
+        this.organizerUid = organizerUid;
+        this.posterImageId = posterImageId;
+        this.qrCodeValue = qrCodeValue;
     }
+    // Getters and Setters:
+    public String getEventId() { return eventId; }
+    public void setEventId(String eventId) { this.eventId = eventId; }
 
-    // Getters and Setters
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public String getId() {
-        return id;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    public String getLocationName() { return locationName; }
+    public void setLocationName(String locationName) { this.locationName = locationName; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public long getStartTimeMillis() { return startTimeMillis; }
+    public void setStartTimeMillis(long startTimeMillis) { this.startTimeMillis = startTimeMillis; }
 
-    public String getDescription() {
-        return description;
-    }
+    public long getEndTimeMillis() { return endTimeMillis; }
+    public void setEndTimeMillis(long endTimeMillis) { this.endTimeMillis = endTimeMillis; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public long getRegistrationOpensMillis() { return registrationOpensMillis; }
+    public void setRegistrationOpensMillis(long registrationOpensMillis) { this.registrationOpensMillis = registrationOpensMillis; }
 
-    public Date getStartDate() {
-        return startDate;
-    }
+    public long getRegistrationClosesMillis() { return registrationClosesMillis; }
+    public void setRegistrationClosesMillis(long registrationClosesMillis) { this.registrationClosesMillis = registrationClosesMillis; }
 
-    public void setStartDate(Date startDate) {
-        this.startDate = startDate;
-    }
+    public int getCapacity() { return capacity; }
+    public void setCapacity(int capacity) { this.capacity = capacity; }
 
-    public List<String> getTags() {
-        return tags;
-    }
+    public int getSampleSize() { return sampleSize; }
+    public void setSampleSize(int sampleSize) { this.sampleSize = sampleSize; }
 
-    public void setTags(List<String> tags) {
-        this.tags = tags;
-    }
+    public Integer getWaitlistLimit() { return waitlistLimit; }
+    public void setWaitlistLimit(Integer waitlistLimit) { this.waitlistLimit = waitlistLimit; }
 
-    public String getOrganizerId() {
-        return organizerId;
-    }
+    public boolean isGeolocationRequired() { return geolocationRequired; }
+    public void setGeolocationRequired(boolean geolocationRequired) { this.geolocationRequired = geolocationRequired; }
 
-    public void setOrganizerId(String organizerId) {
-        this.organizerId = organizerId;
-    }
+    public String getLotteryGuidelines() { return lotteryGuidelines; }
+    public void setLotteryGuidelines(String lotteryGuidelines) { this.lotteryGuidelines = lotteryGuidelines; }
 
-    public int getMaxEntrants() {
-        return maxEntrants;
-    }
+    public String getOrganizerUid() { return organizerUid; }
+    public void setOrganizerUid(String organizerUid) { this.organizerUid = organizerUid; }
 
-    public void setMaxEntrants(int maxEntrants) {
-        this.maxEntrants = maxEntrants;
-    }
+    public String getPosterImageId() { return posterImageId; }
+    public void setPosterImageId(String posterImageId) { this.posterImageId = posterImageId; }
 
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
+    public String getQrCodeValue() { return qrCodeValue; }
+    public void setQrCodeValue(String qrCodeValue) { this.qrCodeValue = qrCodeValue; }
 }

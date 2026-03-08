@@ -3,6 +3,8 @@
     <dimen name="helios_screen_padding">20dp</dimen>
     <dimen name="helios_screen_top_padding">28dp</dimen>
 
+    <dimen name="helios_top_safe_gap">0dp</dimen>
+
     <dimen name="helios_logo_width">92dp</dimen>
     <dimen name="helios_logo_height">92dp</dimen>
 

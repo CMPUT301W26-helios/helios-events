@@ -12,6 +12,7 @@ import com.example.helios.R;
 import com.example.helios.model.Event;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -20,7 +21,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     private final List<Event> events;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
 
-    public EventAdapter(List<Event> events) {
+    public EventAdapter(@NonNull List<Event> events) {
         this.events = events;
     }
 
@@ -36,28 +37,42 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     public void onBindViewHolder(@NonNull EventViewHolder holder, int position) {
         Event event = events.get(position);
 
-        holder.tvTitle.setText(event.getTitle() != null ? event.getTitle() : "Untitled Event");
-        holder.tvDescription.setText(event.getDescription() != null ? event.getDescription() : "");
-        holder.tvLocation.setText(event.getLocation() != null ? event.getLocation() : "No location");
-        
-        if (event.getStartDate() != null) {
-            holder.tvDate.setText(dateFormat.format(event.getStartDate()));
+        holder.tvTitle.setText(nonEmptyOr(event.getTitle(), "Untitled Event"));
+        holder.tvDescription.setText(nonEmptyOr(event.getDescription(), ""));
+
+        // Prefer locationName, fall back to address, else default
+        String location = nonEmptyOr(event.getLocationName(), null);
+        if (location == null) {
+            location = nonEmptyOr(event.getAddress(), "No location");
+        }
+        holder.tvLocation.setText(location);
+
+        // startTimeMillis -> formatted date
+        long startMillis = event.getStartTimeMillis();
+        if (startMillis > 0) {
+            holder.tvDate.setText(dateFormat.format(new Date(startMillis)));
         } else {
             holder.tvDate.setText("TBA");
         }
 
-        if (event.getTags() != null && !event.getTags().isEmpty()) {
-            holder.tvTags.setText("Tags: " + String.join(", ", event.getTags()));
-        } else {
-            holder.tvTags.setText("No tags");
-        }
+        // If your item_event has tags, show guidelines or a placeholder.
+        // Otherwise set a simple line. Keep this safe and minimal.
+        String guidelines = nonEmptyOr(event.getLotteryGuidelines(), null);
+        holder.tvTags.setText(guidelines != null ? guidelines : "No lottery details");
 
-        holder.tvMaxEntrants.setText("Max: " + event.getMaxEntrants());
+        // Capacity maps to max entrants
+        holder.tvMaxEntrants.setText("Max: " + event.getCapacity());
     }
 
     @Override
     public int getItemCount() {
         return events.size();
+    }
+
+    private String nonEmptyOr(String value, String fallback) {
+        if (value == null) return fallback;
+        String t = value.trim();
+        return t.isEmpty() ? fallback : t;
     }
 
     static class EventViewHolder extends RecyclerView.ViewHolder {
