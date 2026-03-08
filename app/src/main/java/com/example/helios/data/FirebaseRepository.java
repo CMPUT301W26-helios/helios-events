@@ -82,7 +82,10 @@ public class FirebaseRepository {
         db.collection("admin_devices")
                 .document(installationId)
                 .get()
-                .addOnSuccessListener(snapshot -> onSuccess.onSuccess(snapshot.exists()))
+                .addOnSuccessListener(snapshot -> {
+                    boolean isAdmin = snapshot.exists() && Boolean.TRUE.equals(snapshot.getBoolean("enabled"));
+                    onSuccess.onSuccess(isAdmin);
+                })
                 .addOnFailureListener(onFailure);
     }
     // EVENTS SECTION:

@@ -57,13 +57,26 @@ public class MainActivity extends AppCompatActivity {
         // Keep bottom nav in sync when back button / programmatic nav happens
         NavigationUI.setupWithNavController(bottomNav, navController);
 
-        // Intercept selection so we can gate Organize and also avoid tab stacking
+        // Intercept selection so we can gate Organize and avoid tab stacking
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
             if (id == R.id.organizeFragment) {
                 gateOrganizeAndNavigate();
-                return false; // we'll navigate manually if allowed
+                return false;
+            }
+
+            // Admin tab should only be reachable if visible, but guard anyway
+            if (id == R.id.adminFragment) {
+                if (cachedProfile != null && cachedProfile.isAdmin()) {
+                    boolean handled = navigateTopLevel(id);
+                    if (handled) lastSelectedItemId = id;
+                    return handled;
+                } else {
+                    Toast.makeText(this, "Admin access required.", Toast.LENGTH_SHORT).show();
+                    setCheckedTabSilently(lastSelectedItemId);
+                    return false;
+                }
             }
 
             boolean handled = navigateTopLevel(id);
@@ -106,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void gateOrganizeAndNavigate() {
-        // If already on Organize, do nothing
         if (navController.getCurrentDestination() != null
                 && navController.getCurrentDestination().getId() == R.id.organizeFragment) {
             setCheckedTabSilently(R.id.organizeFragment);
@@ -114,7 +126,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Fast path: use cache
         if (cachedProfileComplete != null) {
             if (!cachedProfileComplete) {
                 openProfileSetupPrompt();
@@ -127,7 +138,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Slow path only when cache is unknown
         Toast.makeText(this, "Loading profile...", Toast.LENGTH_SHORT).show();
         profileService.loadCurrentProfile(this, profile -> {
             cachedProfile = profile;
@@ -168,12 +178,11 @@ public class MainActivity extends AppCompatActivity {
         View topInsetContainer = findViewById(R.id.top_inset_container);
 
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+            int topInset = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top;
             int bottomInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
 
             int extraTop = getResources().getDimensionPixelSize(R.dimen.helios_top_safe_gap);
 
-            // Push banner below notch/camera + extra breathing room
             topInsetContainer.setPadding(
                     topInsetContainer.getPaddingLeft(),
                     topInset + extraTop,
@@ -181,7 +190,6 @@ public class MainActivity extends AppCompatActivity {
                     topInsetContainer.getPaddingBottom()
             );
 
-            // Push bottom nav above system nav bar
             bottomNav.setPadding(
                     bottomNav.getPaddingLeft(),
                     bottomNav.getPaddingTop(),
@@ -202,11 +210,31 @@ public class MainActivity extends AppCompatActivity {
             if (name == null) name = "Anonymous";
             bannerText.setText("Signed in as: " + name);
             bannerRole.setText(profile.isAdmin() ? "admin" : "user");
+
+            // Toggle Admin menu visibility
+            MenuItem adminItem = bottomNav.getMenu().findItem(R.id.adminFragment);
+            if (adminItem != null) {
+                adminItem.setVisible(profile.isAdmin());
+            }
+
+            // If admin got hidden while user is on Admin, bounce out
+            if (!profile.isAdmin()
+                    && navController.getCurrentDestination() != null
+                    && navController.getCurrentDestination().getId() == R.id.adminFragment) {
+                lastSelectedItemId = R.id.eventsFragment;
+                navigateTopLevel(R.id.eventsFragment);
+                setCheckedTabSilently(R.id.eventsFragment);
+            }
+
         }, error -> {
             cachedProfile = null;
             cachedProfileComplete = null;
             bannerText.setText("Signed in as: (error)");
             bannerRole.setText("");
+
+            // Hide admin tab on error
+            MenuItem adminItem = bottomNav.getMenu().findItem(R.id.adminFragment);
+            if (adminItem != null) adminItem.setVisible(false);
         });
     }
 

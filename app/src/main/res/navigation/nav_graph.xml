@@ -28,5 +28,9 @@
         android:id="@+id/notificationsFragment"
         android:name="com.example.helios.ui.nav.NotificationsFragment"
         android:label="Notifications" />
+    <fragment
+        android:id="@+id/adminFragment"
+        android:name="com.example.helios.ui.nav.AdminFragment"
+        android:label="Admin" />
 
 </navigation>
