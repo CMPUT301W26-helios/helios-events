@@ -1,28 +1,167 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/helios_background">
+    android:background="#F4FAF6">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- Top Sun Icon -->
+    <ImageView
+        android:id="@+id/helios_brand_logo"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="Helios logo"
+        android:src="@drawable/helios_logo_v1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_marginTop="60dp"
+        android:fontFamily="sans-serif-black"
+        android:gravity="center"
+        android:text="QR Code\nScanner"
+        android:textColor="#1A1C1E"
+        android:textSize="42sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Scan QR"
-            android:textStyle="bold"
-            android:textSize="24sp"
-            android:textColor="@color/helios_text_primary" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_scanner_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/bg_scanner_container"
+        android:padding="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_title">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Placeholder screen. QR scanning will be implemented here."
-            android:textColor="@color/helios_text_primary" />
-    </LinearLayout>
-</ScrollView>
+        <!-- Toggle Switch -->
+        <LinearLayout
+            android:id="@+id/ll_toggle_container"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:id="@+id/btn_toggle_upload"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_toggle_left_active"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/iv_upload_check"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@android:drawable/checkbox_on_background"
+                    app:tint="#44474E" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Upload"
+                    android:textColor="#44474E"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btn_toggle_camera"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_toggle_right_inactive"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/iv_camera_check"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@android:drawable/checkbox_on_background"
+                    android:visibility="gone"
+                    app:tint="#44474E" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Camera"
+                    android:textColor="#44474E"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Content Area -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cv_scanner_box"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="20dp"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ll_toggle_container">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <!-- Upload View -->
+                <LinearLayout
+                    android:id="@+id/ll_upload_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="#FFFFFF"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:src="@android:drawable/stat_sys_upload"
+                        app:tint="#1A1C1E" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:text="Image/File: PNG, JPG"
+                        android:textColor="#44474E"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <!-- Camera View -->
+                <androidx.camera.view.PreviewView
+                    android:id="@+id/view_finder"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:visibility="gone" />
+
+                <!-- Scanning Animation/Overlay (Optional, adds a scan line) -->
+                <View
+                    android:id="@+id/scan_line"
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:background="#80FFFFFF"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
