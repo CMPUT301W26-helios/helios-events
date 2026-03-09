@@ -45,7 +45,8 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private ImageView ivPoster;
     private TextView tvName;
     private TextView tvDate;
-    private TextView tvTime;
+    private TextView tvTimeStart;
+    private TextView tvTimeEnd;
     private TextView tvLocation;
     private TextView tvDescription;
     private TextView tvCapacity;
@@ -85,7 +86,8 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         ivPoster = view.findViewById(R.id.image_event_poster);
         tvName = view.findViewById(R.id.text_event_name);
         tvDate = view.findViewById(R.id.text_event_date);
-        tvTime = view.findViewById(R.id.text_event_time);
+        tvTimeStart = view.findViewById(R.id.text_event_starting_time);
+        tvTimeEnd = view.findViewById(R.id.text_event_ending_time);
         tvLocation = view.findViewById(R.id.text_event_location);
         tvDescription = view.findViewById(R.id.text_event_description);
         tvCapacity = view.findViewById(R.id.text_event_capacity);
@@ -145,14 +147,22 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
             tvDate.setText(start > 0 ? dateFormat.format(new Date(start)) : "Date TBD");
         }
 
-        if (tvTime != null) {
-            long start = event.getStartTimeMillis();
-            long end = event.getEndTimeMillis();
 
-            if (start > 0 && end > 0) {
-                tvTime.setText(timeFormat.format(new Date(start)) + " - " + timeFormat.format(new Date(end)));
+        if (tvTimeStart != null) {
+            long start = event.getStartTimeMillis();
+            if (start > 0) {
+                tvTimeStart.setText(timeFormat.format(new Date(start)));
             } else {
-                tvTime.setText("Time TBD");
+                tvTimeStart.setText("TBD");
+            }
+        }
+
+        if (tvTimeEnd != null) {
+            long end = event.getEndTimeMillis();
+            if (end > 0) {
+                tvTimeEnd.setText(timeFormat.format(new Date(end)));
+            } else {
+                tvTimeEnd.setText("TBD");
             }
         }
 
@@ -200,10 +210,10 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
         entrantEventService.getFilledSlotsCount(eventId, filled -> {
             if (!isAdded()) return;
-            tvCapacity.setText("Waiting list: " + filled + " / " + loadedEvent.getCapacity());
+            tvCapacity.setText("Waiting list capacity: " + filled + " / " + loadedEvent.getCapacity());
         }, error -> {
             if (!isAdded()) return;
-            tvCapacity.setText("Waiting list: ? / " + loadedEvent.getCapacity());
+            tvCapacity.setText("Waiting list capacity: ? / " + loadedEvent.getCapacity());
         });
     }
     private void showJoinWaitingListDialog() {
