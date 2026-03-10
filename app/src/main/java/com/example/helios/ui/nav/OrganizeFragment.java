@@ -2,6 +2,7 @@ package com.example.helios.ui.nav;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -12,7 +13,6 @@ import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
 import com.example.helios.service.ProfileService;
-import com.google.android.material.button.MaterialButton;
 
 public class OrganizeFragment extends Fragment {
 
@@ -25,7 +25,7 @@ public class OrganizeFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        MaterialButton seedButton = view.findViewById(R.id.button_seed_demo_event);
+        Button seedButton = view.findViewById(R.id.button_seed_demo_event);
 
         seedButton.setOnClickListener(v -> seedDemoEvent());
     }
