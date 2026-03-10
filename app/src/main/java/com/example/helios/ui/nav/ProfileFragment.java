@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.example.helios.R;
@@ -16,7 +17,7 @@ import com.example.helios.model.UserProfile;
 import com.example.helios.service.ProfileService;
 import com.example.helios.ui.ProfileSetupActivity;
 import com.google.android.material.button.MaterialButton;
-
+import com.example.helios.ui.LauncherActivity;
 public class ProfileFragment extends Fragment {
 
     private final ProfileService profileService = new ProfileService();
@@ -27,27 +28,27 @@ public class ProfileFragment extends Fragment {
 
     private MaterialButton btnEdit;
     private MaterialButton btnDelete;
+    private MaterialButton btnMute;
+
+    private boolean notificationsCurrentlyEnabled = true;
 
     public ProfileFragment() {
-        super(R.layout.fragment_profile);
+        super(R.layout.fragment_profile_screen);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        tvName = view.findViewById(R.id.tv_name);
+        tvName  = view.findViewById(R.id.tv_name);
         tvEmail = view.findViewById(R.id.tv_email);
         tvPhone = view.findViewById(R.id.tv_phone);
 
-        btnEdit = view.findViewById(R.id.btn_edit);
+        btnEdit   = view.findViewById(R.id.btn_edit);
         btnDelete = view.findViewById(R.id.btn_delete);
+        btnMute   = view.findViewById(R.id.btn_mute_notification);
 
         btnEdit.setOnClickListener(v -> openProfileEditorSafe());
-        btnDelete.setOnClickListener(v -> {
-            Context ctx = getContext();
-            if (ctx != null) {
-                Toast.makeText(ctx, "Delete profile not implemented yet.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        btnDelete.setOnClickListener(v -> showDeleteConfirmationDialog());
+        btnMute.setOnClickListener(v -> toggleMute());
 
         loadProfileSafe();
     }
@@ -57,6 +58,69 @@ public class ProfileFragment extends Fragment {
         super.onResume();
         loadProfileSafe();
     }
+
+    // ── Delete ────────────────────────────────────────────────────────────────
+
+    private void showDeleteConfirmationDialog() {
+        Context ctx = getContext();
+        if (ctx == null) return;
+
+        new AlertDialog.Builder(ctx)
+                .setTitle("Delete Profile")
+                .setMessage("Are you sure you want to delete your profile? This cannot be undone.")
+                .setPositiveButton("I'm sure", (dialog, which) -> deleteProfile())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void deleteProfile() {
+        Context ctx = getContext();
+        if (ctx == null) return;
+
+        profileService.deleteCurrentProfile(ctx,
+                unused -> {
+                    if (!isAdded() || getContext() == null) return;
+                    Intent intent = new Intent(getContext(), LauncherActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                },
+                error -> {
+                    if (!isAdded() || getContext() == null) return;
+                    Toast.makeText(getContext(),
+                            "Delete failed: " + error.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
+    }
+
+    // ── Mute / Unmute ─────────────────────────────────────────────────────────
+
+    private void toggleMute() {
+        Context ctx = getContext();
+        if (ctx == null) return;
+
+        boolean nowMuting = notificationsCurrentlyEnabled; // if enabled → we are muting
+        profileService.setNotificationsMuted(ctx, nowMuting,
+                unused -> {
+                    if (!isAdded() || getContext() == null) return;
+                    notificationsCurrentlyEnabled = !nowMuting;
+                    updateMuteButton();
+                    String msg = nowMuting ? "Notifications muted." : "Notifications unmuted.";
+                    Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    if (!isAdded() || getContext() == null) return;
+                    Toast.makeText(getContext(),
+                            "Failed to update notifications: " + error.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
+    }
+
+    private void updateMuteButton() {
+        // 🔇 when enabled (can mute), 🔊 when muted (can unmute)
+        btnMute.setText(notificationsCurrentlyEnabled ? "🔇" : "🔊");
+    }
+
+    // ── Profile loading ───────────────────────────────────────────────────────
 
     private void openProfileEditorSafe() {
         Context ctx = getContext();
@@ -70,13 +134,9 @@ public class ProfileFragment extends Fragment {
 
     private void loadProfileSafe() {
         Context ctx = getContext();
-        if (ctx == null) return;
-
-        // If our view is gone, don't try to update UI
-        if (getView() == null) return;
+        if (ctx == null || getView() == null) return;
 
         profileService.loadCurrentProfile(ctx, profile -> {
-            // Async callback can return after fragment is detached
             if (!isAdded() || getView() == null) return;
 
             if (profile == null) {
@@ -84,14 +144,15 @@ public class ProfileFragment extends Fragment {
                 return;
             }
 
+            notificationsCurrentlyEnabled = profile.isNotificationsEnabled();
+            updateMuteButton();
             bindProfile(profile);
 
         }, error -> {
             if (!isAdded() || getContext() == null) return;
             Toast.makeText(getContext(),
                     "Failed to load profile: " + error.getMessage(),
-                    Toast.LENGTH_LONG
-            ).show();
+                    Toast.LENGTH_LONG).show();
         });
     }
 
@@ -102,11 +163,11 @@ public class ProfileFragment extends Fragment {
     }
 
     private void bindProfile(@NonNull UserProfile profile) {
-        String name = normalize(profile.getName());
+        String name  = normalize(profile.getName());
         String email = normalize(profile.getEmail());
         String phone = normalize(profile.getPhone());
 
-        tvName.setText("Name: " + (name != null ? name : "(not set)"));
+        tvName.setText("Name: "  + (name  != null ? name  : "(not set)"));
         tvEmail.setText("Email: " + (email != null ? email : "(not set)"));
 
         if (phone != null) {

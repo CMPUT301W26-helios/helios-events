@@ -142,4 +142,26 @@ public class ProfileService {
                 unused -> onSuccess.onSuccess(new BootstrapResult(newProfile, true)),
                 onFailure);
     }
+    public void deleteCurrentProfile(
+            @NonNull Context context,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        authDeviceService.ensureSignedIn(firebaseUser -> {
+            String uid = firebaseUser.getUid();
+            repository.deleteUser(uid, onSuccess, onFailure);
+        }, onFailure);
+    }
+
+    public void setNotificationsMuted(
+            @NonNull Context context,
+            boolean muted,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        authDeviceService.ensureSignedIn(firebaseUser -> {
+            String uid = firebaseUser.getUid();
+            repository.setNotificationsMuted(uid, muted, onSuccess, onFailure);
+        }, onFailure);
+    }
 }
