@@ -21,9 +21,19 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     private final List<Event> events;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
 
-    public EventAdapter(@NonNull List<Event> events) {
-        this.events = events;
+    // add at top:
+    public interface OnEventClickListener {
+        void onEventClicked(Event event);
     }
+
+    private final OnEventClickListener onClick;
+
+    // update constructor:
+    public EventAdapter(@NonNull List<Event> events, @NonNull OnEventClickListener onClick) {
+        this.events = events;
+        this.onClick = onClick;
+    }
+
 
     @NonNull
     @Override
@@ -62,6 +72,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
 
         // Capacity maps to max entrants
         holder.tvMaxEntrants.setText("Max: " + event.getCapacity());
+        holder.itemView.setOnClickListener(v -> onClick.onEventClicked(event));
     }
 
     @Override

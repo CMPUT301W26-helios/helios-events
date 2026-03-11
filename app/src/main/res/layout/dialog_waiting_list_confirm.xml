@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/text_dialog_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Heads Up"
+        android:textColor="@color/helios_text_primary"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/text_dialog_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="The waiting system is based on the following:\n\nEntrants are added to a waiting list during the registration period. After registration closes, the system randomly draws a set number of entrants. If a selected entrant declines or is removed later, a replacement may be drawn from the remaining waiting list."
+        android:textColor="@color/helios_text_primary"
+        android:textSize="15sp" />
+</LinearLayout>

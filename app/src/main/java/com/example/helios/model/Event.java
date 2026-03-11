@@ -40,10 +40,12 @@ public class Event {
         this.description = description;
         this.locationName = locationName;
         this.address = address;
+
         this.startTimeMillis = startTimeMillis; // Use millis because this time representation is significantly more accurate than date.
         this.endTimeMillis = endTimeMillis;
         this.registrationOpensMillis = registrationOpensMillis;
         this.registrationClosesMillis = registrationClosesMillis;
+
         this.capacity = capacity;
         this.sampleSize = sampleSize;
         this.waitlistLimit = waitlistLimit;

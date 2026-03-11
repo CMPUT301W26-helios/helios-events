@@ -25,6 +25,7 @@ import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
 import com.example.helios.ui.EventAdapter;
+import com.example.helios.ui.event.EventDetailsBottomSheet;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 
@@ -95,11 +96,40 @@ public class EventsFragment extends Fragment {
             applyFilters();
         });
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Refresh list after returning from other screens (optional, but useful during dev)
+        if (loadedOnce) {
+            loadEvents();
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (pendingFilter != null) {
+            handler.removeCallbacks(pendingFilter);
+            pendingFilter = null;
+        }
         loadEvents();
     }
 
     private void setupRecyclerView() {
-        eventAdapter = new EventAdapter(filteredEvents);
+        eventAdapter = new EventAdapter(filteredEvents, event -> {
+            if (!isAdded()) return;
+
+            String eventId = event.getEventId();
+            if (eventId == null || eventId.trim().isEmpty()) {
+                Toast.makeText(requireContext(), "Event is missing an ID.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            EventDetailsBottomSheet
+                    .newInstance(eventId)
+                    .show(getParentFragmentManager(), "event_details");
+        });
+
         rvEvents.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvEvents.setAdapter(eventAdapter);
     }
@@ -118,6 +148,26 @@ public class EventsFragment extends Fragment {
         });
     }
 
+    private void loadEvents() {
+        eventService.getAllEvents(
+                events -> {
+                    if (!isAdded()) return;
+
+                    loadedOnce = true;
+
+                    allEvents.clear();
+                    allEvents.addAll(events);
+
+                    String currentQuery = etSearch.getText() != null ? etSearch.getText().toString() : "";
+                    filterEvents(currentQuery);
+                },
+                e -> {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(),
+                            "Failed to load events: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                }
+        );
     private void showFilterDialog() {
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_filter_events, null);
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
