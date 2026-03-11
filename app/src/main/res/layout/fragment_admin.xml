@@ -21,5 +21,9 @@
             android:layout_marginTop="8dp"
             android:text="Placeholder admin screen."
             android:textColor="@color/helios_text_primary" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_events"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
     </LinearLayout>
 </ScrollView>
