@@ -104,40 +104,30 @@
                     android:text="Preview Event Page"
                     android:textAllCaps="false"
                     android:textColor="@color/helios_text_primary" />
-
-                <!--
-                Upload QR is not used for create flow right now.
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/button_upload_qr"
-                        style="@style/Widget.Helios.Button.Secondary"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="@dimen/helios_button_height"
-                        android:text="Upload a QR" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:gravity="center"
-                        android:text="Image/File: PNG, JPG, PDF"
-                        android:textColor="@color/helios_text_hint"
-                        android:textSize="12sp" />
-                </LinearLayout>
-                -->
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.cardview.widget.CardView>
+
+    <!-- Red Back Button for viewing existing event QR codes -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_qr_back_view"
+        style="@style/Widget.Helios.Button.Secondary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="32dp"
+        android:minHeight="@dimen/helios_button_height"
+        android:text="Back to Manage Menu"
+        android:visibility="gone"
+        app:backgroundTint="#FFB4AB"
+        app:cornerRadius="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="#B3261E" />
 
     <LinearLayout
         android:id="@+id/layout_qr_bottom_actions"

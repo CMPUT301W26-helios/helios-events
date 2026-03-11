@@ -123,6 +123,7 @@ public class OrganizerQrFragment extends Fragment {
 
         MaterialButton cancelButton = view.findViewById(R.id.button_qr_cancel_back);
         MaterialButton confirmButton = view.findViewById(R.id.button_confirm_create_event);
+        MaterialButton viewModeBackButton = view.findViewById(R.id.button_qr_back_view);
 
         if (mode == Mode.CREATE) {
             // Create-flow UI
@@ -139,6 +140,9 @@ public class OrganizerQrFragment extends Fragment {
 
             if (bottomActions != null) {
                 bottomActions.setVisibility(View.VISIBLE);
+            }
+            if (viewModeBackButton != null) {
+                viewModeBackButton.setVisibility(View.GONE);
             }
 
             cancelButton.setOnClickListener(v ->
@@ -161,6 +165,13 @@ public class OrganizerQrFragment extends Fragment {
             }
             if (inlineActions != null) {
                 inlineActions.setVisibility(View.GONE);
+            }
+            
+            if (viewModeBackButton != null) {
+                viewModeBackButton.setVisibility(View.VISIBLE);
+                viewModeBackButton.setOnClickListener(v -> 
+                    NavHostFragment.findNavController(this).navigateUp()
+                );
             }
 
             // Card fits width (centered with padding) and wraps height: no stretch.
