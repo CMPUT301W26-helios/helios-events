@@ -43,6 +43,16 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.transport.api)
     implementation(libs.contentpager)
+    
+    // CameraX
+    implementation(libs.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    
+    // ML Kit Barcode Scanning
+    implementation(libs.barcode.scanning)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

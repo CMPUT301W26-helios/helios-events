@@ -23,7 +23,6 @@ public class UserProfile {
         this.notificationsEnabled = notificationsEnabled;
         this.installationId = installationId;
     }
-
     public String getUid() { return uid; }
     public void setUid(String uid) { this.uid = uid; }
 
