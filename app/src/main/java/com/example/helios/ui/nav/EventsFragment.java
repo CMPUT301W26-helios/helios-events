@@ -59,6 +59,7 @@ public class EventsFragment extends Fragment {
     private Long startDateFilter = null;
     private Long endDateFilter = null;
     private final List<String> selectedInterests = new ArrayList<>();
+    private boolean loadedOnce = false;
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -96,10 +97,12 @@ public class EventsFragment extends Fragment {
             applyFilters();
         });
 
+        loadEvents();
+    }
+
     @Override
     public void onResume() {
         super.onResume();
-        // Refresh list after returning from other screens (optional, but useful during dev)
         if (loadedOnce) {
             loadEvents();
         }
@@ -112,7 +115,6 @@ public class EventsFragment extends Fragment {
             handler.removeCallbacks(pendingFilter);
             pendingFilter = null;
         }
-        loadEvents();
     }
 
     private void setupRecyclerView() {
@@ -154,12 +156,10 @@ public class EventsFragment extends Fragment {
                     if (!isAdded()) return;
 
                     loadedOnce = true;
-
                     allEvents.clear();
                     allEvents.addAll(events);
 
-                    String currentQuery = etSearch.getText() != null ? etSearch.getText().toString() : "";
-                    filterEvents(currentQuery);
+                    applyFilters();
                 },
                 e -> {
                     if (!isAdded()) return;
@@ -168,6 +168,8 @@ public class EventsFragment extends Fragment {
                             Toast.LENGTH_SHORT).show();
                 }
         );
+    }
+
     private void showFilterDialog() {
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_filter_events, null);
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
@@ -210,15 +212,6 @@ public class EventsFragment extends Fragment {
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
     }
 
-    private void loadEvents() {
-        eventService.getAllEvents(events -> {
-            if (!isAdded()) return;
-            allEvents.clear();
-            allEvents.addAll(events);
-            applyFilters();
-        }, e -> Toast.makeText(requireContext(), "Load failed", Toast.LENGTH_SHORT).show());
-    }
-
     private void applyFilters() {
         filteredEvents.clear();
         String query = etSearch.getText().toString().toLowerCase().trim();
@@ -232,8 +225,6 @@ public class EventsFragment extends Fragment {
             if (startDateFilter != null && event.getStartTimeMillis() < startDateFilter) matchesDate = false;
             if (endDateFilter != null && event.getStartTimeMillis() > endDateFilter) matchesDate = false;
 
-            // Note: Currently Event model doesn't have interests/tags, assuming this matches title/desc for demo
-            // or placeholder for future field.
             boolean matchesInterests = selectedInterests.isEmpty();
             
             if (matchesSearch && matchesDate && matchesInterests) {
