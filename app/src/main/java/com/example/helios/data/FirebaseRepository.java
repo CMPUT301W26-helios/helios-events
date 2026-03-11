@@ -273,7 +273,6 @@ public class FirebaseRepository {
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        android.util.Log.d("HELIOS_MUTE", "repo setNotificationsMuted called, uid=" + uid + " muted=" + muted);
         if (!isNonEmpty(uid)) {
             onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
             return;
