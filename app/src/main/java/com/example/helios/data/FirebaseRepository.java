@@ -68,6 +68,39 @@ public class FirebaseRepository {
                 })
                 .addOnFailureListener(onFailure);
     }
+    public void deleteUser(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+
+        db.collection("users")
+                .document(uid)
+                .delete()
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    public void muteNotifications(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+
+        db.collection("users")
+                .document(uid)
+                .update("notificationsEnabled", false)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
 
     public void isAdminInstallation(
             @NonNull String installationId,
@@ -230,6 +263,23 @@ public class FirebaseRepository {
         );
 
         db.collection("events").document("demo_event_1").set(demo)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    public void setNotificationsMuted(
+            @NonNull String uid,
+            boolean muted,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+        db.collection("users")
+                .document(uid)
+                .update("notificationsEnabled", !muted)
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
