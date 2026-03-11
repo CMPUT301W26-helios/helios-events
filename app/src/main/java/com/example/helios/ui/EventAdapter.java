@@ -5,8 +5,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.helios.R;
@@ -21,17 +21,14 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
     private final List<Event> events;
+
     @Nullable
     private final OnEventClickListener onEventClick;
 
-    // add at top:
     public interface OnEventClickListener {
-        void onEventClicked(Event event);
+        void onEventClick(@NonNull Event event);
     }
 
-    private final OnEventClickListener onClick;
-
-    // update constructor:
     public EventAdapter(@NonNull List<Event> events) {
         this(events, null);
     }
@@ -40,7 +37,6 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         this.events = events;
         this.onEventClick = onEventClick;
     }
-
 
     @NonNull
     @Override
@@ -57,14 +53,12 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         holder.tvTitle.setText(nonEmptyOr(event.getTitle(), "Untitled Event"));
         holder.tvDescription.setText(nonEmptyOr(event.getDescription(), ""));
 
-        // Prefer locationName, fall back to address, else default
         String location = nonEmptyOr(event.getLocationName(), null);
         if (location == null) {
             location = nonEmptyOr(event.getAddress(), "No location");
         }
         holder.tvLocation.setText(location);
 
-        // startTimeMillis -> formatted date
         long startMillis = event.getStartTimeMillis();
         if (startMillis > 0) {
             holder.tvDate.setText(dateFormat.format(new Date(startMillis)));
@@ -72,12 +66,9 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             holder.tvDate.setText("TBA");
         }
 
-        // If your item_event has tags, show guidelines or a placeholder.
-        // Otherwise set a simple line. Keep this safe and minimal.
         String guidelines = nonEmptyOr(event.getLotteryGuidelines(), null);
         holder.tvTags.setText(guidelines != null ? guidelines : "No lottery details");
 
-        // Capacity maps to max entrants
         holder.tvMaxEntrants.setText("Max: " + event.getCapacity());
 
         holder.itemView.setOnClickListener(v -> {
@@ -94,8 +85,8 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
 
     private String nonEmptyOr(String value, String fallback) {
         if (value == null) return fallback;
-        String t = value.trim();
-        return t.isEmpty() ? fallback : t;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? fallback : trimmed;
     }
 
     static class EventViewHolder extends RecyclerView.ViewHolder {
@@ -115,9 +106,5 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             tvTags = itemView.findViewById(R.id.tv_event_tags);
             tvMaxEntrants = itemView.findViewById(R.id.tv_event_max_entrants);
         }
-    }
-
-    public interface OnEventClickListener {
-        void onEventClick(@NonNull Event event);
     }
 }

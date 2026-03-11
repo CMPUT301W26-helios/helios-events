@@ -6,6 +6,8 @@
     android:layout_height="match_parent"
     android:background="@color/helios_background"
     android:fillViewport="true"
+    android:clipToPadding="false"
+    android:paddingBottom="120dp"
     tools:context=".ui.nav.SetupEventFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -17,8 +19,8 @@
             android:id="@+id/helios_brand_logo"
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:layout_marginEnd="16dp"
             android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
             android:contentDescription="Helios logo"
             android:src="@drawable/helios_logo_v1"
             app:layout_constraintEnd_toEndOf="parent"
@@ -29,14 +31,14 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginEnd="8dp"
             android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp"
             android:fontFamily="sans-serif-black"
             android:text="Create Event"
             android:textColor="@color/helios_text_primary"
             android:textSize="42sp"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/helios_brand_logo"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <LinearLayout
@@ -47,17 +49,17 @@
             android:background="@drawable/bg_container"
             android:orientation="vertical"
             android:padding="18dp"
-            app:layout_constraintTop_toBottomOf="@id/tv_create_event_title"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/tv_create_event_title">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Event Name:"
                 android:textColor="@color/helios_text_primary"
-                android:textStyle="bold"
-                android:textSize="@dimen/helios_label_size" />
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edit_event_name"
@@ -81,8 +83,8 @@
                 android:layout_marginTop="16dp"
                 android:text="Maximum # of Entrants (Optional):"
                 android:textColor="@color/helios_text_primary"
-                android:textStyle="bold"
-                android:textSize="@dimen/helios_label_size" />
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edit_max_entrants"
@@ -106,8 +108,8 @@
                 android:layout_marginTop="16dp"
                 android:text="Event Description:"
                 android:textColor="@color/helios_text_primary"
-                android:textStyle="bold"
-                android:textSize="@dimen/helios_label_size" />
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edit_event_description"
@@ -131,8 +133,8 @@
                 android:layout_marginTop="16dp"
                 android:text="Set Registration Date:"
                 android:textColor="@color/helios_text_primary"
-                android:textStyle="bold"
-                android:textSize="@dimen/helios_label_size" />
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -177,8 +179,8 @@
                 android:layout_marginTop="16dp"
                 android:text="Require Geolocation:"
                 android:textColor="@color/helios_text_primary"
-                android:textStyle="bold"
-                android:textSize="@dimen/helios_label_size" />
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -248,12 +250,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginBottom="24dp"
             android:gravity="center"
             android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/layout_create_event_form"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/layout_create_event_form">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_cancel_back"
@@ -263,9 +265,9 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:minHeight="@dimen/helios_button_height"
-                app:backgroundTint="#FFB4AB"
+                android:text="Cancel - Back"
                 android:textColor="#B3261E"
-                android:text="Cancel - Back" />
+                app:backgroundTint="#FFB4AB" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_next_qr"
@@ -281,4 +283,3 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.core.widget.NestedScrollView>
-
