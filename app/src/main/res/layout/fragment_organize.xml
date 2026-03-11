@@ -4,102 +4,269 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/helios_background">
+    android:background="@color/helios_background"
+    android:fillViewport="true">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="24dp">
+        android:paddingBottom="24dp">
 
         <ImageView
             android:id="@+id/helios_brand_logo"
             android:layout_width="44dp"
             android:layout_height="44dp"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
-            android:layout_marginEnd="20dp"
             android:contentDescription="Helios logo"
             android:src="@drawable/helios_logo_v1"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tv_organize_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="16dp"
+            android:ellipsize="end"
             android:fontFamily="sans-serif-black"
+            android:maxLines="1"
             android:text="My Events"
             android:textColor="@color/helios_text_primary"
-            android:textSize="42sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/helios_brand_logo"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:textSize="32sp"
+            app:layout_constraintBottom_toBottomOf="@id/helios_brand_logo"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/helios_brand_logo"
+            app:layout_constraintTop_toTopOf="@id/helios_brand_logo" />
 
-        <TextView
-            android:id="@+id/tv_current_events_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="My Current Events"
+        <EditText
+            android:id="@+id/et_search_my_events"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="18dp"
+            android:layout_marginEnd="24dp"
+            android:background="@drawable/bg_search_bar"
+            android:drawableEnd="@android:drawable/ic_menu_search"
+            android:drawablePadding="10dp"
+            android:hint="Search my events"
+            android:inputType="text"
+            android:maxLines="1"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
             android:textColor="@color/helios_text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold"
+            android:textColorHint="@color/helios_text_hint"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_organize_title" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_current_events"
+        <LinearLayout
+            android:id="@+id/ll_current_events_header"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:nestedScrollingEnabled="false"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_current_events_label"
-            tools:itemCount="3"
-            tools:listitem="@layout/item_profile_event" />
-
-        <TextView
-            android:id="@+id/tv_past_events_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="My Past Events"
-            android:textColor="@color/helios_text_primary"
-            android:textSize="18sp"
-            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/rv_current_events" />
+            app:layout_constraintTop_toBottomOf="@id/et_search_my_events">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_past_events"
+            <TextView
+                android:id="@+id/tv_current_events_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Current:"
+                android:textColor="@color/helios_text_hint"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tv_current_events_chip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_filter_chip"
+                android:paddingStart="12dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="6dp"
+                android:text="My Current Events"
+                android:textColor="@color/helios_text_primary"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/iv_current_events_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Current events section"
+                android:src="@android:drawable/ic_menu_agenda" />
+        </LinearLayout>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_current_events"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:nestedScrollingEnabled="false"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="24dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_past_events_label"
-            tools:itemCount="3"
-            tools:listitem="@layout/item_profile_event" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ll_current_events_header">
 
-        <Button
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_container"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_current_events"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    tools:itemCount="3"
+                    tools:listitem="@layout/item_profile_event" />
+
+                <TextView
+                    android:id="@+id/tv_current_events_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="4dp"
+                    android:text="No current events yet."
+                    android:textColor="@color/helios_text_hint"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:visibility="gone" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:id="@+id/ll_past_events_header"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/card_current_events">
+
+            <TextView
+                android:id="@+id/tv_past_events_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Past:"
+                android:textColor="@color/helios_text_hint"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tv_past_events_chip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_filter_chip"
+                android:paddingStart="12dp"
+                android:paddingTop="6dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="6dp"
+                android:text="My Past Events"
+                android:textColor="@color/helios_text_primary"
+                android:textSize="14sp" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/iv_past_events_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:contentDescription="Past events section"
+                android:src="@android:drawable/ic_menu_recent_history" />
+        </LinearLayout>
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/card_past_events"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="24dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ll_past_events_header">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_container"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_past_events"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    tools:itemCount="3"
+                    tools:listitem="@layout/item_profile_event" />
+
+                <TextView
+                    android:id="@+id/tv_past_events_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="4dp"
+                    android:text="No past events yet."
+                    android:textColor="@color/helios_text_hint"
+                    android:textSize="14sp"
+                    android:visibility="gone"
+                    tools:visibility="gone" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/button_seed_demo_event"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="24dp"
             android:layout_marginBottom="16dp"
-            android:minHeight="48dp"
-            android:background="@drawable/bg_container"
-            android:textColor="@color/helios_text_primary"
+            android:minHeight="54dp"
             android:text="+ New Event"
             android:textAllCaps="false"
-            app:layout_constraintTop_toBottomOf="@id/rv_past_events"
+            android:textColor="@color/helios_text_primary"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:backgroundTint="@color/helios_button_primary"
+            app:cornerRadius="28dp"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/card_past_events" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
