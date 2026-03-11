@@ -15,22 +15,26 @@
             android:id="@+id/helios_brand_logo"
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
+            android:layout_marginEnd="20dp"
             android:contentDescription="Helios logo"
             android:src="@drawable/helios_logo_v1"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tv_organize_title"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp"
             android:fontFamily="sans-serif-black"
             android:text="My Events"
             android:textColor="@color/helios_text_primary"
             android:textSize="42sp"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/helios_brand_logo"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView

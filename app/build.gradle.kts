@@ -53,6 +53,9 @@ dependencies {
     // ML Kit Barcode Scanning
     implementation(libs.barcode.scanning)
 
+    // ZXing core for QR code generation
+    implementation("com.google.zxing:core:3.5.3")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

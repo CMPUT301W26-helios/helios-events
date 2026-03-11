@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -20,9 +21,17 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
 
     private final List<Event> events;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+    @Nullable
+    private final OnEventClickListener onEventClick;
 
     public EventAdapter(@NonNull List<Event> events) {
         this.events = events;
+        this.onEventClick = null;
+    }
+
+    public EventAdapter(@NonNull List<Event> events, @Nullable OnEventClickListener onEventClick) {
+        this.events = events;
+        this.onEventClick = onEventClick;
     }
 
     @NonNull
@@ -62,6 +71,12 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
 
         // Capacity maps to max entrants
         holder.tvMaxEntrants.setText("Max: " + event.getCapacity());
+
+        if (onEventClick != null) {
+            holder.itemView.setOnClickListener(v -> onEventClick.onEventClick(event));
+        } else {
+            holder.itemView.setOnClickListener(null);
+        }
     }
 
     @Override
@@ -92,5 +107,9 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             tvTags = itemView.findViewById(R.id.tv_event_tags);
             tvMaxEntrants = itemView.findViewById(R.id.tv_event_max_entrants);
         }
+    }
+
+    public interface OnEventClickListener {
+        void onEventClick(@NonNull Event event);
     }
 }

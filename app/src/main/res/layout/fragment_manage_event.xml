@@ -13,11 +13,11 @@
         android:padding="24dp">
 
         <ImageView
-            android:id="@+id/iv_sun_icon"
-            android:layout_width="48dp"
+            android:id="@+id/helios_brand_logo"
+            android:layout_width="54dp"
             android:layout_height="48dp"
             android:layout_marginTop="16dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginEnd="16dp"
             android:contentDescription="Helios logo"
             android:src="@drawable/helios_logo_v1"
             app:layout_constraintEnd_toEndOf="parent"
@@ -27,14 +27,14 @@
             android:id="@+id/tv_manage_event_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
             android:fontFamily="sans-serif-black"
             android:text="Manage Event"
             android:textColor="@color/helios_text_primary"
             android:textSize="42sp"
-            app:layout_constraintEnd_toStartOf="@id/iv_sun_icon"
+            app:layout_constraintEnd_toStartOf="@id/helios_brand_logo"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

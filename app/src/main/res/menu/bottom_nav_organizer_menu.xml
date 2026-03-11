@@ -1,25 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/organizer_my_events"
+        android:id="@+id/organizeFragment"
         android:icon="@android:drawable/ic_menu_today"
         android:title="My Events" />
     <item
-        android:id="@+id/organizer_manage"
+        android:id="@+id/manageEventFragment"
         android:icon="@android:drawable/ic_menu_manage"
         android:title="Manage" />
     <item
-        android:id="@+id/organizer_profiles"
-        android:icon="@android:drawable/ic_menu_edit"
-        android:title="Profiles" />
-    <item
-        android:id="@+id/organizer_entrant"
+        android:id="@+id/eventsFragment"
         android:icon="@android:drawable/ic_menu_myplaces"
         android:title="Entrant" />
     <item
-        android:id="@+id/organizer_notifications"
+        android:id="@+id/profileFragment"
+        android:icon="@android:drawable/ic_menu_edit"
+        android:title="Profiles" />
+    <item
+        android:id="@+id/notificationsFragment"
         android:icon="@android:drawable/ic_popup_reminder"
         android:title="Notifications" />
 </menu>
-
-<!-- A little bit confused here how we go from entrant to organizer -->

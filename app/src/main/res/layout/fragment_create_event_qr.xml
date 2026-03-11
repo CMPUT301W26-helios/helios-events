@@ -8,28 +8,28 @@
     tools:context=".ui.nav.CreateEventQrFragment">
 
     <ImageView
-        android:id="@+id/iv_sun_icon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="24dp"
-        android:src="@android:drawable/ic_menu_day"
+        android:id="@+id/helios_brand_logo"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginTop="36dp"
+        android:layout_marginEnd="64dp"
+        android:contentDescription="Helios logo"
+        android:src="@drawable/helios_logo_v1"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="#FFC107" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tv_qr_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
         android:layout_marginEnd="8dp"
         android:fontFamily="sans-serif-black"
         android:text="QR Code\nand Preview"
         android:textColor="@color/helios_text_primary"
         android:textSize="42sp"
-        app:layout_constraintEnd_toStartOf="@id/iv_sun_icon"
+        app:layout_constraintEnd_toStartOf="@id/helios_brand_logo"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -95,10 +95,8 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_preview_event_page"
-                    android:layout_width="0dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
                     android:backgroundTint="#C5E1E0"
                     app:cornerRadius="24dp"
                     android:minHeight="@dimen/helios_button_height"
@@ -106,6 +104,8 @@
                     android:textAllCaps="false"
                     android:textColor="@color/helios_text_primary" />
 
+                <!--
+                Upload QR is not used for create flow right now.
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -131,6 +131,7 @@
                         android:textColor="@color/helios_text_hint"
                         android:textSize="12sp" />
                 </LinearLayout>
+                -->
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
