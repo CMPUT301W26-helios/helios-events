@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/helios_background"
-    tools:context=".ui.nav.CreateEventQrFragment">
+    tools:context=".ui.nav.OrganizerQrFragment">
 
     <ImageView
         android:id="@+id/helios_brand_logo"
@@ -48,6 +48,7 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layout_qr_card_inner"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@drawable/bg_container"

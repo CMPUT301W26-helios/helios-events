@@ -1,7 +1,8 @@
 package com.example.helios.ui.nav;
 
-import android.os.Bundle;
 import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
@@ -25,13 +28,24 @@ import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 /**
- * Organizer flow: step 2 of creating an event.
- * Shows QR placeholder and, on confirm, persists the event.
+ * Organizer flow:
+ * - Step 2 of creating an event (show QR and confirm to save).
+ * - Viewing an existing event's QR from the Manage Event screen.
  */
-public class CreateEventQrFragment extends Fragment {
+public class OrganizerQrFragment extends Fragment {
+
+    private enum Mode {
+        CREATE,
+        VIEW_EXISTING
+    }
 
     private final EventService eventService = new EventService();
     private final ProfileService profileService = new ProfileService();
+
+    private Mode mode = Mode.CREATE;
+
+    @Nullable
+    private String eventIdForView;
 
     private String title;
     private String description;
@@ -42,15 +56,31 @@ public class CreateEventQrFragment extends Fragment {
     @Nullable
     private String posterUri;
 
-    public CreateEventQrFragment() {
-        super(R.layout.fragment_create_event_qr);
+    public OrganizerQrFragment() {
+        super(R.layout.fragment_organizer_qr);
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle args = getArguments();
-        if (args != null) {
+        if (args != null && args.containsKey("arg_event_id")
+                && !TextUtils.isEmpty(args.getString("arg_event_id"))) {
+            // Viewing an already-created event's QR code from ManageEventFragment.
+            mode = Mode.VIEW_EXISTING;
+            eventIdForView = args.getString("arg_event_id");
+
+            // Defaults for create-mode fields; not used in view mode.
+            title = "";
+            description = "";
+            maxEntrants = 0;
+            geoRequired = false;
+            registrationOpensMillis = 0L;
+            registrationClosesMillis = 0L;
+            posterUri = null;
+        } else if (args != null) {
+            // Normal create flow coming from SetupEventFragment.
+            mode = Mode.CREATE;
             title = args.getString("arg_event_title", "");
             description = args.getString("arg_event_description", "");
             maxEntrants = args.getInt("arg_event_max_entrants", 0);
@@ -59,6 +89,7 @@ public class CreateEventQrFragment extends Fragment {
             registrationClosesMillis = args.getLong("arg_registration_closes_millis", 0L);
             posterUri = args.getString("arg_poster_uri", null);
         } else {
+            mode = Mode.CREATE;
             title = "";
             description = "";
             maxEntrants = 0;
@@ -81,24 +112,117 @@ public class CreateEventQrFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        TextView titleView = view.findViewById(R.id.tv_generated_qr_label);
-        titleView.setText("Generated QR for: " + (title.isEmpty() ? "New Event" : title));
-
+        TextView headerTitle = view.findViewById(R.id.tv_qr_title);
+        TextView labelView = view.findViewById(R.id.tv_generated_qr_label);
         ImageView qrImage = view.findViewById(R.id.image_qr_preview);
-        String qrPayload = buildQrPayload();
-        Bitmap qrBitmap = generateQrBitmap(qrPayload, 512);
-        if (qrBitmap != null) {
-            qrImage.setImageBitmap(qrBitmap);
-        }
+        View bottomActions = view.findViewById(R.id.layout_qr_bottom_actions);
+        View previewEventButton = view.findViewById(R.id.button_preview_event_page);
+        View inlineActions = view.findViewById(R.id.layout_qr_inline_actions);
+        View cardView = view.findViewById(R.id.cv_qr_box);
+        View innerLayout = view.findViewById(R.id.layout_qr_card_inner);
 
         MaterialButton cancelButton = view.findViewById(R.id.button_qr_cancel_back);
         MaterialButton confirmButton = view.findViewById(R.id.button_confirm_create_event);
 
-        cancelButton.setOnClickListener(v ->
-                NavHostFragment.findNavController(this).navigateUp()
-        );
+        if (mode == Mode.CREATE) {
+            // Create-flow UI
+            if (headerTitle != null) {
+                headerTitle.setText("QR Code\nand Preview");
+            }
+            labelView.setText("Generated QR for: " + (title.isEmpty() ? "New Event" : title));
 
-        confirmButton.setOnClickListener(v -> saveEvent());
+            String qrPayload = buildQrPayload();
+            Bitmap qrBitmap = generateQrBitmap(qrPayload, 512);
+            if (qrBitmap != null) {
+                qrImage.setImageBitmap(qrBitmap);
+            }
+
+            if (bottomActions != null) {
+                bottomActions.setVisibility(View.VISIBLE);
+            }
+
+            cancelButton.setOnClickListener(v ->
+                    NavHostFragment.findNavController(this).navigateUp()
+            );
+
+            confirmButton.setOnClickListener(v -> saveEvent());
+        } else {
+            // View-existing-flow UI (from ManageEventFragment "View QR Code")
+            if (headerTitle != null) {
+                headerTitle.setText("QR Code");
+            }
+            labelView.setText("Generated QR:");
+
+            if (bottomActions != null) {
+                bottomActions.setVisibility(View.GONE);
+            }
+            if (previewEventButton != null) {
+                previewEventButton.setVisibility(View.GONE);
+            }
+            if (inlineActions != null) {
+                inlineActions.setVisibility(View.GONE);
+            }
+
+            // Card fits width (centered with padding) and wraps height: no stretch.
+            if (innerLayout instanceof ConstraintLayout) {
+                ConstraintSet innerSet = new ConstraintSet();
+                innerSet.clone((ConstraintLayout) innerLayout);
+                innerSet.connect(R.id.image_qr_preview, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0);
+                innerSet.applyTo((ConstraintLayout) innerLayout);
+            }
+            if (innerLayout != null) {
+                ViewGroup.LayoutParams lp = innerLayout.getLayoutParams();
+                lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                innerLayout.setLayoutParams(lp);
+            }
+            if (cardView != null) {
+                ViewGroup.LayoutParams cardLp = cardView.getLayoutParams();
+                cardLp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                cardView.setLayoutParams(cardLp);
+            }
+            if (view instanceof ConstraintLayout) {
+                ConstraintSet set = new ConstraintSet();
+                set.clone((ConstraintLayout) view);
+                set.clear(R.id.cv_qr_box, ConstraintSet.BOTTOM);
+                set.applyTo((ConstraintLayout) view);
+            }
+
+            if (eventIdForView == null || eventIdForView.trim().isEmpty()) {
+                Toast.makeText(requireContext(),
+                        "Missing event id for QR view.",
+                        Toast.LENGTH_SHORT).show();
+                NavHostFragment.findNavController(this).navigateUp();
+                return;
+            }
+
+            eventService.getEventById(eventIdForView, event -> {
+                if (!isAdded() || event == null) return;
+                String qrValue = event.getQrCodeValue();
+                if (qrValue == null || qrValue.trim().isEmpty()) {
+                    Toast.makeText(requireContext(),
+                            "This event has no stored QR value.",
+                            Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                Bitmap bmp = generateQrBitmap(qrValue, 512);
+                if (bmp != null) {
+                    qrImage.setImageBitmap(bmp);
+                }
+            }, error -> {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(),
+                        "Failed to load event QR: " + error.getMessage(),
+                        Toast.LENGTH_LONG).show();
+            });
+
+            cancelButton.setOnClickListener(v ->
+                    NavHostFragment.findNavController(this).navigateUp()
+            );
+
+            // Confirm button not used in view mode.
+            confirmButton.setVisibility(View.GONE);
+        }
     }
 
     private void saveEvent() {
@@ -186,4 +310,3 @@ public class CreateEventQrFragment extends Fragment {
         }
     }
 }
-

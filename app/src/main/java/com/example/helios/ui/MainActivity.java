@@ -62,21 +62,22 @@ public class MainActivity extends AppCompatActivity {
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             int destId = destination.getId();
 
-            // Organizer flow screens that should keep the "entrant" bottom nav menu.
+            // Screens that should keep the "entrant" bottom nav menu.
             boolean shouldUseEntrantMenu =
                     destId == R.id.eventsFragment
                             || destId == R.id.scanQrFragment
                             || destId == R.id.organizeFragment
                             || destId == R.id.createEventFragment
-                            || destId == R.id.createEventQrFragment
                             || destId == R.id.profileFragment
                             || destId == R.id.notificationsFragment
                             || destId == R.id.adminFragment;
 
-            // Manage/Edit screens use the organizer bottom nav menu.
+            // Manage/Edit/QR screens use the organizer bottom nav menu.
             boolean shouldUseOrganizerMenu =
                     destId == R.id.manageEventFragment
-                            || destId == R.id.editEventFragment;
+                            || destId == R.id.editEventFragment
+                            || destId == R.id.createEventQrFragment
+                            || destId == R.id.viewEventQrFragment;
 
             if (shouldUseOrganizerMenu) {
                 setBottomNavMenu(R.menu.bottom_nav_organizer_menu);

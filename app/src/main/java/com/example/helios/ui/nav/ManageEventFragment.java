@@ -86,11 +86,18 @@ public class ManageEventFragment extends Fragment {
                         Toast.LENGTH_SHORT).show()
         );
 
-        viewQrButton.setOnClickListener(v ->
+        viewQrButton.setOnClickListener(v -> {
+            if (eventId == null || eventId.isEmpty()) {
                 Toast.makeText(requireContext(),
-                        "View QR Code not implemented yet.",
-                        Toast.LENGTH_SHORT).show()
-        );
+                        "Missing event id for QR view.",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Bundle args = new Bundle();
+            args.putString("arg_event_id", eventId);
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.viewEventQrFragment, args);
+        });
 
         mapButton.setOnClickListener(v ->
                 Toast.makeText(requireContext(),
