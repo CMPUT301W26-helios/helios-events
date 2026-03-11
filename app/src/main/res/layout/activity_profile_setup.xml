@@ -131,17 +131,5 @@
             android:text="Sign up  >"
             android:textStyle="bold" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_skip"
-            style="@style/Widget.Helios.Button.Secondary"
-            android:layout_width="@dimen/helios_button_width"
-            android:layout_height="wrap_content"
-            android:minHeight="@dimen/helios_button_height"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="14dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="12dp"
-            android:text="Skip profile setup (required later)" />
-
     </LinearLayout>
 </ScrollView>
