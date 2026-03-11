@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.MenuRes;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -20,12 +21,16 @@ import com.example.helios.R;
 import com.example.helios.model.UserProfile;
 import com.example.helios.service.ProfileService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
 
 public class MainActivity extends AppCompatActivity {
 
     private final ProfileService profileService = new ProfileService();
 
     private BottomNavigationView bottomNav;
+    private BottomNavigationView bottomNavOrganizer;
+    private String organizerEventId;
+
     private NavController navController;
 
     private TextView bannerText;
@@ -35,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private Boolean cachedProfileComplete = null; // null = unknown
 
     private int lastSelectedItemId = R.id.eventsFragment;
+    private @MenuRes int currentBottomMenuRes = R.menu.bottom_nav_menu;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         bottomNav = findViewById(R.id.bottom_nav);
+        bottomNavOrganizer = findViewById(R.id.bottom_nav_organizer);
 
         View banner = findViewById(R.id.include_user_banner);
         bannerText = banner.findViewById(R.id.user_banner_text);
@@ -54,35 +61,70 @@ public class MainActivity extends AppCompatActivity {
         if (navHost == null) throw new IllegalStateException("NavHostFragment missing");
         navController = navHost.getNavController();
 
-        // Keep bottom nav in sync when back button / programmatic nav happens
         NavigationUI.setupWithNavController(bottomNav, navController);
+        bottomNav.setOnItemSelectedListener(createBottomNavListener());
 
-        // Intercept selection so we can gate Organize and avoid tab stacking
-        bottomNav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
+        bottomNavOrganizer.setOnItemSelectedListener(createOrganizerBottomNavListener());
 
-            if (id == R.id.organizeFragment) {
-                gateOrganizeAndNavigate();
-                return false;
+        navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
+            int destId = destination.getId();
+
+            if (arguments != null && arguments.containsKey("arg_event_id")) {
+                organizerEventId = arguments.getString("arg_event_id");
             }
 
-            // Admin tab should only be reachable if visible, but guard anyway
-            if (id == R.id.adminFragment) {
-                if (cachedProfile != null && cachedProfile.isAdmin()) {
-                    boolean handled = navigateTopLevel(id);
-                    if (handled) lastSelectedItemId = id;
-                    return handled;
-                } else {
-                    Toast.makeText(this, "Admin access required.", Toast.LENGTH_SHORT).show();
-                    setCheckedTabSilently(lastSelectedItemId);
-                    return false;
+            boolean shouldUseEntrantMenu =
+                    destId == R.id.eventsFragment
+                            || destId == R.id.scanQrFragment
+                            || destId == R.id.organizeFragment
+                            || destId == R.id.createEventFragment
+                            || destId == R.id.createEventQrFragment
+                            || destId == R.id.profileFragment
+                            || destId == R.id.notificationsFragment
+                            || destId == R.id.adminFragment;
+
+            boolean shouldUseOrganizerMenu =
+                    destId == R.id.manageEventFragment
+                            || destId == R.id.editEventFragment
+                            || destId == R.id.viewEventQrFragment;
+
+            if (shouldUseOrganizerMenu) {
+                showOrganizerBottomNav(destId);
+            } else if (shouldUseEntrantMenu) {
+                showMainBottomNav(destId);
+                if (destId == R.id.organizeFragment) {
+                    organizerEventId = null;
                 }
             }
-
-            boolean handled = navigateTopLevel(id);
-            if (handled) lastSelectedItemId = id;
-            return handled;
         });
+
+        // Intercept selection so we can gate Organize and avoid tab stacking
+        // bottomNav.setOnItemSelectedListener(item -> {
+        //     int id = item.getItemId();
+
+        //     if (id == R.id.organizeFragment) {
+        //         gateOrganizeAndNavigate();
+        //         return false;
+        //     }
+
+        //     // Admin tab should only be reachable if visible, but guard anyway
+        //     if (id == R.id.adminFragment) {
+        //         if (cachedProfile != null && cachedProfile.isAdmin()) {
+        //             boolean handled = navigateTopLevel(id);
+        //             if (handled) lastSelectedItemId = id;
+        //             return handled;
+        //         } else {
+        //             Toast.makeText(this, "Admin access required.", Toast.LENGTH_SHORT).show();
+        //             setCheckedTabSilently(lastSelectedItemId);
+        //             return false;
+        //         }
+        //     }
+
+        //     boolean handled = navigateTopLevel(id);
+        //     if (handled) lastSelectedItemId = id;
+        //     return handled;
+        // });
+        bottomNav.setOnItemSelectedListener(createBottomNavListener());
 
         applyInsets();
         refreshUserBanner();
@@ -96,6 +138,71 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+    private void showMainBottomNav(int destinationId) {
+        bottomNav.setVisibility(View.VISIBLE);
+        bottomNavOrganizer.setVisibility(View.GONE);
+        setCheckedTabSilently(destinationId);
+
+        MenuItem adminItem = bottomNav.getMenu().findItem(R.id.adminFragment);
+        if (adminItem != null && cachedProfile != null) {
+            adminItem.setVisible(cachedProfile.isAdmin());
+        }
+    }
+
+    private void showOrganizerBottomNav(int destinationId) {
+        bottomNav.setVisibility(View.GONE);
+        bottomNavOrganizer.setVisibility(View.VISIBLE);
+        setOrganizerCheckedTabSilently(mapOrganizerTab(destinationId));
+    }
+
+    private int mapOrganizerTab(int destinationId) {
+        if (destinationId == R.id.editEventFragment) {
+            return R.id.manageEventFragment;
+        }
+        return destinationId;
+    }
+
+    private void setOrganizerCheckedTabSilently(int itemId) {
+        MenuItem item = bottomNavOrganizer.getMenu().findItem(itemId);
+        if (item != null) {
+            item.setChecked(true);
+        }
+    }
+    private NavigationBarView.OnItemSelectedListener createOrganizerBottomNavListener() {
+        return item -> {
+            int itemId = item.getItemId();
+
+            if (itemId == R.id.organizeFragment) {
+                navController.navigate(R.id.organizeFragment);
+                return true;
+            }
+
+            if (organizerEventId == null || organizerEventId.trim().isEmpty()) {
+                Toast.makeText(this, "Missing event id.", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+
+            Bundle args = new Bundle();
+            args.putString("arg_event_id", organizerEventId);
+
+            if (itemId == R.id.manageEventFragment) {
+                navController.navigate(R.id.manageEventFragment, args);
+                return true;
+            }
+
+            if (itemId == R.id.viewEventQrFragment) {
+                navController.navigate(R.id.viewEventQrFragment, args);
+                return true;
+            }
+
+            if (itemId == R.id.notificationsFragment) {
+                navController.navigate(R.id.notificationsFragment, args);
+                return true;
+            }
+
+            return false;
+        };
     }
 
     private boolean navigateTopLevel(int destinationId) {
@@ -173,6 +280,25 @@ public class MainActivity extends AppCompatActivity {
         if (item != null) item.setChecked(true);
     }
 
+//    private void setBottomNavMenu(@MenuRes int menuRes) {
+//        if (currentBottomMenuRes == menuRes) return;
+//        currentBottomMenuRes = menuRes;
+//
+//        bottomNav.getMenu().clear();
+//        bottomNav.inflateMenu(menuRes);
+//        NavigationUI.setupWithNavController(bottomNav, navController);
+//        // Re-attach our custom listener so behavior is consistent after menu swaps
+//        bottomNav.setOnItemSelectedListener(createBottomNavListener());
+//
+//        // Ensure admin visibility reflects current profile when switching back.
+//        if (menuRes == R.menu.bottom_nav_menu) {
+//            MenuItem adminItem = bottomNav.getMenu().findItem(R.id.adminFragment);
+//            if (adminItem != null && cachedProfile != null) {
+//                adminItem.setVisible(cachedProfile.isAdmin());
+//            }
+//        }
+//    }
+
     private void applyInsets() {
         View root = findViewById(R.id.root);
         View topInsetContainer = findViewById(R.id.top_inset_container);
@@ -242,5 +368,37 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         refreshUserBanner();
+    }
+
+    /**
+     * Creates the BottomNavigationView listener used for both the entrant
+     * and organizer bottom nav menus.
+     */
+    private BottomNavigationView.OnItemSelectedListener createBottomNavListener() {
+        return item -> {
+            int id = item.getItemId();
+
+            if (id == R.id.organizeFragment) {
+                gateOrganizeAndNavigate();
+                return false;
+            }
+
+            // Admin tab should only be reachable if visible, but guard anyway
+            if (id == R.id.adminFragment) {
+                if (cachedProfile != null && cachedProfile.isAdmin()) {
+                    boolean handled = navigateTopLevel(id);
+                    if (handled) lastSelectedItemId = id;
+                    return handled;
+                } else {
+                    Toast.makeText(this, "Admin access required.", Toast.LENGTH_SHORT).show();
+                    setCheckedTabSilently(lastSelectedItemId);
+                    return false;
+                }
+            }
+
+            boolean handled = navigateTopLevel(id);
+            if (handled) lastSelectedItemId = id;
+            return handled;
+        };
     }
 }

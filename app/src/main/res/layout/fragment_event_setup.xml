@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/helios_background"
+    android:fillViewport="true"
+    android:clipToPadding="false"
+    android:paddingBottom="120dp"
+    tools:context=".ui.nav.SetupEventFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
+
+        <ImageView
+            android:id="@+id/helios_brand_logo"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:contentDescription="Helios logo"
+            android:src="@drawable/helios_logo_v1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_create_event_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp"
+            android:fontFamily="sans-serif-black"
+            android:text="Create Event"
+            android:textColor="@color/helios_text_primary"
+            android:textSize="42sp"
+            app:layout_constraintEnd_toStartOf="@id/helios_brand_logo"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/layout_create_event_form"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_container"
+            android:orientation="vertical"
+            android:padding="18dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_create_event_title">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Event Name:"
+                android:textColor="@color/helios_text_primary"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/edit_event_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_helios_input"
+                android:hint="Dance Class for Elders"
+                android:inputType="textCapSentences"
+                android:minHeight="48dp"
+                android:paddingStart="12dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="10dp"
+                android:textColor="@color/helios_text_primary"
+                android:textColorHint="@color/helios_text_hint" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Maximum # of Entrants (Optional):"
+                android:textColor="@color/helios_text_primary"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/edit_max_entrants"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_helios_input"
+                android:hint="## - Ex. 25"
+                android:inputType="number"
+                android:minHeight="48dp"
+                android:paddingStart="12dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="10dp"
+                android:textColor="@color/helios_text_primary"
+                android:textColorHint="@color/helios_text_hint" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Event Description:"
+                android:textColor="@color/helios_text_primary"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/edit_event_description"
+                android:layout_width="match_parent"
+                android:layout_height="120dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_helios_input"
+                android:gravity="top|start"
+                android:hint="blah blah blah"
+                android:inputType="textMultiLine"
+                android:paddingStart="12dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="10dp"
+                android:textColor="@color/helios_text_primary"
+                android:textColorHint="@color/helios_text_hint" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Set Registration Date:"
+                android:textColor="@color/helios_text_primary"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_registration_start"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_filter_chip"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="March 1, 2025"
+                    android:textColor="@color/helios_text_primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="6dp"
+                    android:gravity="center"
+                    android:text="-"
+                    android:textColor="@color/helios_text_primary" />
+
+                <TextView
+                    android:id="@+id/tv_registration_end"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_filter_chip"
+                    android:gravity="center"
+                    android:padding="10dp"
+                    android:text="March 5, 2025"
+                    android:textColor="@color/helios_text_primary" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Require Geolocation:"
+                android:textColor="@color/helios_text_primary"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_filter_chip"
+                android:orientation="horizontal"
+                android:padding="4dp">
+
+                <TextView
+                    android:id="@+id/tv_geo_on"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_toggle_left_active"
+                    android:gravity="center"
+                    android:text="On"
+                    android:textColor="@color/helios_text_primary" />
+
+                <TextView
+                    android:id="@+id/tv_geo_off"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_toggle_right_inactive"
+                    android:gravity="center"
+                    android:text="Off"
+                    android:textColor="@color/helios_text_primary" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Attach/Upload An Image/Visual"
+                android:textColor="@color/helios_text_primary"
+                android:textSize="@dimen/helios_label_size" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/iv_upload_image"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:background="@drawable/bg_helios_input"
+                    android:padding="8dp"
+                    android:src="@android:drawable/ic_menu_upload"
+                    app:tint="@color/helios_text_primary" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Image/File: PNG, JPG, PDF"
+                    android:textColor="@color/helios_text_hint"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_create_event_actions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/layout_create_event_form">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_cancel_back"
+                style="@style/Widget.Helios.Button.Secondary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:minHeight="@dimen/helios_button_height"
+                android:text="Cancel - Back"
+                android:textColor="#B3261E"
+                app:backgroundTint="#FFB4AB" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_next_qr"
+                style="@style/Widget.Helios.Button.Primary"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:minHeight="@dimen/helios_button_height"
+                android:text="Next - QR Code" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.core.widget.NestedScrollView>

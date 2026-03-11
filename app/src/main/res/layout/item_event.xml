@@ -5,7 +5,8 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
-    app:cardCornerRadius="12dp"
+    app:cardBackgroundColor="@color/helios_surface"
+    app:cardCornerRadius="16dp"
     app:cardElevation="2dp">
 
     <LinearLayout
@@ -16,22 +17,24 @@
 
         <TextView
             android:id="@+id/tv_event_title"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:text="Event Title"
-            android:textColor="#1A1C1E"
+            android:textColor="@color/helios_text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tv_event_description"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:ellipsize="end"
             android:maxLines="2"
             android:text="Event description"
-            android:textColor="#44474E"
+            android:textColor="@color/helios_text_hint"
             android:textSize="14sp" />
 
         <LinearLayout
@@ -43,28 +46,29 @@
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
+                android:contentDescription="@null"
                 android:src="@android:drawable/ic_menu_myplaces"
-                app:tint="#666666" />
+                app:tint="@color/helios_text_hint" />
 
             <TextView
                 android:id="@+id/tv_event_location"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Location"
-                android:textColor="#666666"
+                android:textColor="@color/helios_text_hint"
                 android:textSize="12sp" />
-
-            <View
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
 
             <ImageView
                 android:layout_width="16dp"
                 android:layout_height="16dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@null"
                 android:src="@android:drawable/ic_menu_today"
-                app:tint="#666666" />
+                app:tint="@color/helios_text_hint" />
 
             <TextView
                 android:id="@+id/tv_event_date"
@@ -72,14 +76,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:text="Date"
-                android:textColor="#666666"
+                android:textColor="@color/helios_text_hint"
                 android:textSize="12sp" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="6dp"
             android:orientation="horizontal">
 
             <TextView
@@ -87,8 +91,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Tags: Tag1, Tag2"
-                android:textColor="#00796B"
+                android:textColor="@color/helios_text_hint"
                 android:textSize="12sp"
                 android:textStyle="italic" />
 
@@ -96,8 +102,9 @@
                 android:id="@+id/tv_event_max_entrants"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
                 android:text="Max: 100"
-                android:textColor="#44474E"
+                android:textColor="@color/helios_text_primary"
                 android:textSize="12sp" />
         </LinearLayout>
 
