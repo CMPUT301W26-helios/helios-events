@@ -19,20 +19,28 @@ import java.util.Locale;
 
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHolder> {
 
-    private final List<Event> events;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+    private final List<Event> events;
     @Nullable
     private final OnEventClickListener onEventClick;
 
+    // add at top:
+    public interface OnEventClickListener {
+        void onEventClicked(Event event);
+    }
+
+    private final OnEventClickListener onClick;
+
+    // update constructor:
     public EventAdapter(@NonNull List<Event> events) {
-        this.events = events;
-        this.onEventClick = null;
+        this(events, null);
     }
 
     public EventAdapter(@NonNull List<Event> events, @Nullable OnEventClickListener onEventClick) {
         this.events = events;
         this.onEventClick = onEventClick;
     }
+
 
     @NonNull
     @Override
@@ -72,11 +80,11 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         // Capacity maps to max entrants
         holder.tvMaxEntrants.setText("Max: " + event.getCapacity());
 
-        if (onEventClick != null) {
-            holder.itemView.setOnClickListener(v -> onEventClick.onEventClick(event));
-        } else {
-            holder.itemView.setOnClickListener(null);
-        }
+        holder.itemView.setOnClickListener(v -> {
+            if (onEventClick != null) {
+                onEventClick.onEventClick(event);
+            }
+        });
     }
 
     @Override

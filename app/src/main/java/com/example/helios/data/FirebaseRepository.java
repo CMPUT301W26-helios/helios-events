@@ -5,6 +5,8 @@ import androidx.annotation.Nullable;
 
 import com.example.helios.model.Event;
 import com.example.helios.model.UserProfile;
+import com.example.helios.model.WaitingListEntry;
+
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -66,6 +68,39 @@ public class FirebaseRepository {
                     }
                     onSuccess.onSuccess(user);
                 })
+                .addOnFailureListener(onFailure);
+    }
+    public void deleteUser(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+
+        db.collection("users")
+                .document(uid)
+                .delete()
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    public void muteNotifications(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+
+        db.collection("users")
+                .document(uid)
+                .update("notificationsEnabled", false)
+                .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
 
@@ -187,6 +222,87 @@ public class FirebaseRepository {
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
+    // WAITING LIST SECTION:
+    public void getWaitingListEntry(
+            @NonNull String eventId,
+            @NonNull String entrantUid,
+            @NonNull OnSuccessListener<WaitingListEntry> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(eventId) || !isNonEmpty(entrantUid)) {
+            onFailure.onFailure(new IllegalArgumentException("eventId and entrantUid must not be empty."));
+            return;
+        }
+
+        db.collection("events")
+                .document(eventId)
+                .collection("waiting_list")
+                .document(entrantUid)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    WaitingListEntry entry = null;
+                    if (snapshot.exists()) {
+                        entry = snapshot.toObject(WaitingListEntry.class);
+                    }
+                    onSuccess.onSuccess(entry);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    public void upsertWaitingListEntry(
+            @NonNull String eventId,
+            @NonNull String entrantUid,
+            @NonNull WaitingListEntry entry,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(eventId) || !isNonEmpty(entrantUid)) {
+            onFailure.onFailure(new IllegalArgumentException("eventId and entrantUid must not be empty."));
+            return;
+        }
+
+        db.collection("events")
+                .document(eventId)
+                .collection("waiting_list")
+                .document(entrantUid)
+                .set(entry)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+    public void getAllWaitingListEntries(
+            @NonNull String eventId,
+            @NonNull OnSuccessListener<List<WaitingListEntry>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(eventId)) {
+            onFailure.onFailure(new IllegalArgumentException("eventId must not be empty."));
+            return;
+        }
+
+        db.collection("events")
+                .document(eventId)
+                .collection("waiting_list")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<WaitingListEntry> entries = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        WaitingListEntry entry = doc.toObject(WaitingListEntry.class);
+                        entries.add(entry);
+                    }
+                    onSuccess.onSuccess(entries);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    public void updateWaitingListEntry(
+            @NonNull String eventId,
+            @NonNull String entrantUid,
+            @NonNull WaitingListEntry entry,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        upsertWaitingListEntry(eventId, entrantUid, entry, onSuccess, onFailure);
+    }
 
     // VALIDATION SECTION:
     private boolean isValidUser(@Nullable UserProfile user) {
@@ -230,6 +346,23 @@ public class FirebaseRepository {
         );
 
         db.collection("events").document("demo_event_1").set(demo)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    public void setNotificationsMuted(
+            @NonNull String uid,
+            boolean muted,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+        db.collection("users")
+                .document(uid)
+                .update("notificationsEnabled", !muted)
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }

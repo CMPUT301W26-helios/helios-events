@@ -4,20 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/helios_background"
+    android:background="#F4FAF6"
     android:paddingBottom="8dp">
 
-    <!-- Top Sun Icon
-    <ImageView
-        android:id="@+id/iv_sun_icon"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        android:src="@android:drawable/ic_menu_day"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="#FFC107" /> -->
     <!-- Header row: logo + title aligned -->
     <ImageView
         android:id="@+id/helios_brand_logo"
@@ -26,7 +15,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:contentDescription="Helios logo"
-        android:src="@drawable/helios_logo_v1"
+        android:src="@android:drawable/ic_menu_today"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -38,7 +27,7 @@
         android:layout_marginEnd="16dp"
         android:fontFamily="sans-serif-black"
         android:text="Event List"
-        android:textColor="@color/helios_text_primary"
+        android:textColor="#1A1C1E"
         android:textSize="32sp"
         android:maxLines="1"
         android:ellipsize="end"
@@ -47,38 +36,50 @@
         app:layout_constraintTop_toTopOf="@id/helios_brand_logo"
         app:layout_constraintBottom_toBottomOf="@id/helios_brand_logo" />
 
-    <!-- Search Bar -->
-    <EditText
-        android:id="@+id/et_search"
-        android:layout_width="0dp"
-        android:layout_height="54dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginEnd="24dp"
+    <!-- Search Bar Row -->
+    <LinearLayout
+        android:id="@+id/ll_search_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginTop="18dp"
-        android:background="@drawable/bg_search_bar"
-        android:drawableEnd="@android:drawable/ic_menu_search"
-        android:hint="Search for Event"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:textColor="@color/helios_text_primary"
-        android:textColorHint="@color/helios_text_hint"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_title" />
+        android:paddingHorizontal="24dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toBottomOf="@id/tv_title">
 
-    <!-- Date Filters -->
+        <EditText
+            android:id="@+id/et_search"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_search_bar"
+            android:drawableEnd="@android:drawable/ic_menu_search"
+            android:hint="Search for Event"
+            android:paddingHorizontal="20dp"
+            android:textColor="#1A1C1E"
+            android:textColorHint="#44474E" />
+
+        <ImageButton
+            android:id="@+id/btn_filter"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_search_bar"
+            android:src="@android:drawable/ic_menu_manage"
+            app:tint="#1A1C1E" />
+    </LinearLayout>
+
+    <!-- Date Filters Visual State -->
     <LinearLayout
         android:id="@+id/ll_date_filters"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="14dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        app:layout_constraintTop_toBottomOf="@id/et_search"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:paddingHorizontal="24dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/ll_search_row">
 
         <TextView
             android:layout_width="wrap_content"
@@ -87,55 +88,48 @@
             android:textColor="#44474E" />
 
         <TextView
+            android:id="@+id/tv_filter_start_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_filter_chip"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:text="March 1, 2025" />
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            tools:text="March 1, 2025" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginHorizontal="8dp"
             android:text="-" />
 
         <TextView
+            android:id="@+id/tv_filter_end_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_filter_chip"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:text="Apr 1, 2025" />
-
-        <View
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="6dp"
+            tools:text="Apr 1, 2025" />
 
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@android:drawable/ic_menu_manage" />
+            android:id="@+id/btn_clear_date_filter"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="8dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:tint="#44474E" />
     </LinearLayout>
 
-    <!-- Interest Chips -->
+    <!-- Interest Chips Visual State -->
     <LinearLayout
         android:id="@+id/ll_interest_filters"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:orientation="horizontal"
-        android:paddingStart="24dp"
-        android:paddingEnd="24dp"
-        app:layout_constraintTop_toBottomOf="@id/ll_date_filters"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:paddingHorizontal="24dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/ll_date_filters">
 
         <TextView
             android:layout_width="wrap_content"
@@ -143,39 +137,21 @@
             android:text="Interests: "
             android:textColor="#44474E" />
 
-        <TextView
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/cg_filter_display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_filter_chip"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:text="Education X" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_filter_chip"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:text="Fun X" />
+            android:layout_marginStart="8dp" />
     </LinearLayout>
 
     <!-- Event List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_events"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@id/ll_interest_filters"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/item_event" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
