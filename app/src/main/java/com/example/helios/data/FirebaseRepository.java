@@ -267,6 +267,21 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
-    public void setNotificationsMuted(String uid, boolean muted, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+    public void setNotificationsMuted(
+            @NonNull String uid,
+            boolean muted,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        android.util.Log.d("HELIOS_MUTE", "repo setNotificationsMuted called, uid=" + uid + " muted=" + muted);
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+        db.collection("users")
+                .document(uid)
+                .update("notificationsEnabled", !muted)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
     }
 }

@@ -45,10 +45,21 @@ public class ProfileFragment extends Fragment {
         btnEdit   = view.findViewById(R.id.btn_edit);
         btnDelete = view.findViewById(R.id.btn_delete);
         btnMute   = view.findViewById(R.id.btn_mute_notification);
-
+        btnMute.post(() -> {
+            int[] location = new int[2];
+            btnMute.getLocationOnScreen(location);
+            android.util.Log.d("HELIOS_MUTE", "btnMute position: x=" + location[0] + " y=" + location[1] + " w=" + btnMute.getWidth() + " h=" + btnMute.getHeight());
+        });
+        android.util.Log.d("HELIOS_MUTE", "onViewCreated fired, btnMute=" + btnMute);
+        btnMute.setOnClickListener(v -> {
+            android.util.Log.d("HELIOS_MUTE", "CLICKED");
+            toggleMute();
+        });
+        android.util.Log.d("HELIOS_MUTE", "listener set on btnMute");
         btnEdit.setOnClickListener(v -> openProfileEditorSafe());
         btnDelete.setOnClickListener(v -> showDeleteConfirmationDialog());
         btnMute.setOnClickListener(v -> toggleMute());
+
 
         loadProfileSafe();
     }
@@ -95,7 +106,12 @@ public class ProfileFragment extends Fragment {
     // ── Mute / Unmute ─────────────────────────────────────────────────────────
 
     private void toggleMute() {
+        android.util.Log.d("HELIOS_MUTE", "toggleMute called, notificationsCurrentlyEnabled=" + notificationsCurrentlyEnabled);
         Context ctx = getContext();
+        if (ctx == null) {
+            android.util.Log.d("HELIOS_MUTE", "ctx is null, returning");
+            return;
+        }
         if (ctx == null) return;
 
         boolean nowMuting = notificationsCurrentlyEnabled; // if enabled → we are muting

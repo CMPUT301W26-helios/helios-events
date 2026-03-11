@@ -99,20 +99,17 @@
                 android:id="@+id/btn_mute_notification"
                 style="@style/Widget.Material3.Button.TonalButton"
                 android:layout_width="wrap_content"
+                android:tooltipText="Mute/Unmute Notifications"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="12dp"
                 android:text="🔇"
                 android:textAllCaps="false"
                 android:textColor="#1A1C1E"
-                android:tooltipText="Mute/Unmute Notifications"
                 app:backgroundTint="#EDF2EB"
                 app:cornerRadius="20dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/btn_edit"
-                app:layout_constraintHorizontal_bias="0.955"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/ll_details"
-                app:layout_constraintVertical_bias="1.0" />
+                app:layout_constraintEnd_toStartOf="@id/btn_edit" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_edit"
@@ -120,11 +117,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                android:layout_marginStart="8dp"
                 android:text="Edit"
                 android:textAllCaps="false"
                 android:textColor="#1A1C1E"
                 app:backgroundTint="#EDF2EB"
                 app:cornerRadius="20dp"
+                app:layout_constraintStart_toEndOf="@id/btn_mute_notification"
                 app:layout_constraintEnd_toStartOf="@id/btn_delete"
                 app:layout_constraintTop_toBottomOf="@id/ll_details" />
 
@@ -140,9 +139,9 @@
                 android:textColor="#B3261E"
                 app:backgroundTint="#FFB4AB"
                 app:cornerRadius="20dp"
+                app:layout_constraintStart_toEndOf="@id/btn_edit"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/ll_details" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Current Events Section -->

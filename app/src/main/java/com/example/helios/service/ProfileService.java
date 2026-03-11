@@ -154,11 +154,13 @@ public class ProfileService {
     }
 
     public void setNotificationsMuted(
-            @NonNull Context context,
+
+
+    @NonNull Context context,
             boolean muted,
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
-    ) {
+    ) {android.util.Log.d("HELIOS_MUTE", "setNotificationsMuted called, muted=" + muted);
         authDeviceService.ensureSignedIn(firebaseUser -> {
             String uid = firebaseUser.getUid();
             repository.setNotificationsMuted(uid, muted, onSuccess, onFailure);
