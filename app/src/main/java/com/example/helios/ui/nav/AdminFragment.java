@@ -15,7 +15,7 @@ import com.example.helios.model.Event;
 import com.example.helios.model.UserProfile;
 import com.example.helios.service.EventService;
 import com.example.helios.service.ProfileService;
-import com.example.helios.ui.EventAdapter;
+import com.example.helios.ui.AdminEventAdapter;
 import com.example.helios.ui.UserAdapter;
 
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public class AdminFragment extends Fragment {
 
     // Events
     private RecyclerView rvEvents;
-    private EventAdapter eventAdapter;
+    private AdminEventAdapter eventAdapter;
     private final EventService eventService = new EventService();
     private final List<Event> allEvents = new ArrayList<>();
     private final List<Event> displayedEvents = new ArrayList<>();
@@ -47,7 +47,7 @@ public class AdminFragment extends Fragment {
 
         // Events RV
         rvEvents = view.findViewById(R.id.rv_events);
-        eventAdapter = new EventAdapter(displayedEvents, event -> {
+        eventAdapter = new AdminEventAdapter(displayedEvents, event -> {
             String eventId = event.getEventId();
             if (eventId == null || eventId.trim().isEmpty()) {
                 Toast.makeText(requireContext(), "Event is missing an ID.", Toast.LENGTH_SHORT).show();
@@ -92,7 +92,6 @@ public class AdminFragment extends Fragment {
         loadUsers();
     }
 
-    // ── Events ───────────────────────────────────────────────────────────────
 
     private void loadEvents() {
         eventService.getAllEvents(events -> {
@@ -127,7 +126,6 @@ public class AdminFragment extends Fragment {
                 });
     }
 
-    // ── Users ────────────────────────────────────────────────────────────────
 
     private void loadUsers() {
         profileService.getAllProfiles(users -> {
