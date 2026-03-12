@@ -44,6 +44,8 @@
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="4dp"
                 android:text="Delete"
+                android:textColor="#B3261E"
+                app:backgroundTint="#FFB4AB"
                 android:textSize="12sp" />
 
         </LinearLayout>

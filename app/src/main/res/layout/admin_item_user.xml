@@ -32,6 +32,7 @@
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
+
             <TextView
                 android:id="@+id/tv_user_email"
                 android:layout_width="wrap_content"
@@ -63,6 +64,8 @@
             android:paddingHorizontal="12dp"
             android:paddingVertical="4dp"
             android:text="Delete"
+            android:textColor="#B3261E"
+            app:backgroundTint="#FFB4AB"
             android:textSize="12sp" />
 
     </LinearLayout>

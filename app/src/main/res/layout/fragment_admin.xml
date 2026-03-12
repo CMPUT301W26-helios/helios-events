@@ -10,38 +10,64 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Header row: logo + title -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Admin"
-            android:textStyle="bold"
-            android:textSize="24sp"
-            android:textColor="@color/helios_text_primary" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:id="@+id/helios_brand_logo"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:contentDescription="Helios logo"
+                android:src="@android:drawable/ic_menu_today" />
+
+            <TextView
+                android:id="@+id/tv_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:fontFamily="sans-serif-black"
+                android:text="Admin"
+                android:textColor="#1A1C1E"
+                android:textSize="32sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+        </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Manage events:"
+            android:fontFamily="sans-serif-black"
+            android:text="Manage events"
+            android:textSize="24sp"
             android:textColor="@color/helios_text_primary" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_events"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="250dp"
             android:nestedScrollingEnabled="true" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Manage users:"
+            android:layout_marginTop="32dp"
+            android:fontFamily="sans-serif-black"
+            android:text="Manage users"
+            android:textSize="24sp"
             android:textColor="@color/helios_text_primary" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_users"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="250dp"
             android:nestedScrollingEnabled="true" />
 
     </LinearLayout>
