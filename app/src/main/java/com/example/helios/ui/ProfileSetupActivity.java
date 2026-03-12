@@ -30,7 +30,6 @@ public class ProfileSetupActivity extends AppCompatActivity {
     private EditText phoneInput;
 
     private Button primaryButton;    // "Sign up" / "Save"
-    private Button secondaryButton;  // "Skip" (hidden in edit mode)
 
     private TextView titleText;
     private TextView subtitleText;
@@ -55,7 +54,6 @@ public class ProfileSetupActivity extends AppCompatActivity {
         phoneInput = findViewById(R.id.edit_phone);
 
         primaryButton = findViewById(R.id.button_sign_up);
-        secondaryButton = findViewById(R.id.button_skip);
 
         configureUiForMode();
         attachValidationWatchers();
@@ -65,7 +63,6 @@ public class ProfileSetupActivity extends AppCompatActivity {
         }
 
         primaryButton.setOnClickListener(v -> saveProfile());
-        secondaryButton.setOnClickListener(v -> onSecondaryAction());
     }
 
     private void configureUiForMode() {
@@ -73,13 +70,10 @@ public class ProfileSetupActivity extends AppCompatActivity {
             titleText.setText("Edit Profile");
             subtitleText.setText("Update your info below.");
             primaryButton.setText("Save");
-            secondaryButton.setVisibility(View.GONE);
         } else {
             titleText.setText("Profile Required");
             subtitleText.setText("Name and email are required before signing up for events or organizing them.");
             primaryButton.setText("Save  >");
-            secondaryButton.setVisibility(View.VISIBLE);
-            secondaryButton.setText("Skip profile setup (required later)");
         }
 
         primaryButton.setEnabled(false);
@@ -131,13 +125,6 @@ public class ProfileSetupActivity extends AppCompatActivity {
                 },
                 error -> Toast.makeText(this, "Save failed: " + error.getMessage(), Toast.LENGTH_LONG).show()
         );
-    }
-
-    private void onSecondaryAction() {
-        Toast.makeText(this,
-                "You can continue browsing, but a profile will be required for sign-up and organizer actions.",
-                Toast.LENGTH_LONG).show();
-        finishOrGoMain();
     }
 
     private void finishOrGoMain() {

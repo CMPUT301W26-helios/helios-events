@@ -48,4 +48,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav_organizer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:background="@drawable/bg_organizer_bottom_nav"
+        app:menu="@menu/bottom_nav_organizer_menu"
+        app:labelVisibilityMode="labeled"
+        app:itemIconTint="@color/organizer_bottom_nav_colors"
+        app:itemTextColor="@color/organizer_bottom_nav_colors"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

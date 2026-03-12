@@ -20,6 +20,31 @@
         android:label="Organize" />
 
     <fragment
+        android:id="@+id/manageEventFragment"
+        android:name="com.example.helios.ui.nav.ManageEventFragment"
+        android:label="Manage Event" />
+
+    <fragment
+        android:id="@+id/createEventFragment"
+        android:name="com.example.helios.ui.nav.SetupEventFragment"
+        android:label="Create Event" />
+
+    <fragment
+        android:id="@+id/createEventQrFragment"
+        android:name="com.example.helios.ui.nav.OrganizerQrFragment"
+        android:label="Create Event QR" />
+
+    <fragment
+        android:id="@+id/viewEventQrFragment"
+        android:name="com.example.helios.ui.nav.OrganizerQrFragment"
+        android:label="QR Code" />
+
+    <fragment
+        android:id="@+id/editEventFragment"
+        android:name="com.example.helios.ui.nav.SetupEventFragment"
+        android:label="Edit Event" />
+
+    <fragment
         android:id="@+id/profileFragment"
         android:name="com.example.helios.ui.nav.ProfileFragment"
         android:label="Profile" />

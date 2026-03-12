@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/organizeFragment"
+        android:icon="@android:drawable/ic_menu_revert"
+        android:title="My Events" />
+
+    <item
+        android:id="@+id/manageEventFragment"
+        android:icon="@android:drawable/ic_menu_manage"
+        android:title="Manage" />
+
+    <item
+        android:id="@+id/viewEventQrFragment"
+        android:icon="@android:drawable/ic_menu_share"
+        android:title="QR Code" />
+
+    <item
+        android:id="@+id/notificationsFragment"
+        android:icon="@android:drawable/ic_popup_reminder"
+        android:title="Notify" />
+
+</menu>
