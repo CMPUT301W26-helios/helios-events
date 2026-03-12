@@ -11,6 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.helios.R;
 import com.example.helios.model.UserProfile;
@@ -25,6 +27,7 @@ public class ProfileFragment extends Fragment {
     private TextView tvName;
     private TextView tvEmail;
     private TextView tvPhone;
+    private MaterialButton btnAdmin;
 
     private MaterialButton btnEdit;
     private MaterialButton btnDelete;
@@ -38,16 +41,19 @@ public class ProfileFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        tvName  = view.findViewById(R.id.tv_name);
+        tvName = view.findViewById(R.id.tv_name);
         tvEmail = view.findViewById(R.id.tv_email);
         tvPhone = view.findViewById(R.id.tv_phone);
+        btnAdmin = view.findViewById(R.id.btn_admin);
+        btnAdmin.setVisibility(View.GONE); // hide by default
 
-        btnEdit   = view.findViewById(R.id.btn_edit);
+        btnEdit = view.findViewById(R.id.btn_edit);
         btnDelete = view.findViewById(R.id.btn_delete);
-        btnMute   = view.findViewById(R.id.btn_mute_notification);
+        btnMute = view.findViewById(R.id.btn_mute_notification);
         btnEdit.setOnClickListener(v -> openProfileEditorSafe());
         btnDelete.setOnClickListener(v -> showDeleteConfirmationDialog());
         btnMute.setOnClickListener(v -> toggleMute());
+        btnAdmin.setOnClickListener(v -> openAdminPanel());
 
 
         loadProfileSafe();
@@ -121,6 +127,12 @@ public class ProfileFragment extends Fragment {
         btnMute.setText(notificationsCurrentlyEnabled ? "🔇" : "🔊");
     }
 
+    // Admin
+    private void openAdminPanel() {
+        NavController navController = NavHostFragment.findNavController(this);
+        navController.navigate(R.id.adminFragment);
+    }
+
     // ── Profile loading ───────────────────────────────────────────────────────
 
     private void openProfileEditorSafe() {
@@ -148,6 +160,9 @@ public class ProfileFragment extends Fragment {
             notificationsCurrentlyEnabled = profile.isNotificationsEnabled();
             updateMuteButton();
             bindProfile(profile);
+            btnAdmin.setVisibility(
+                    "admin".equals((profile.getRole())) ? View.VISIBLE : View.GONE
+            );
 
         }, error -> {
             if (!isAdded() || getContext() == null) return;

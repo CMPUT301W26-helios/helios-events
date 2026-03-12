@@ -12,6 +12,8 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.List;
+
 public class ProfileService {
     public static class BootstrapResult {
         private final UserProfile profile;
@@ -151,6 +153,21 @@ public class ProfileService {
             String uid = firebaseUser.getUid();
             repository.deleteUser(uid, onSuccess, onFailure);
         }, onFailure);
+    }
+
+    public void getAllProfiles(
+            @NonNull OnSuccessListener<List<UserProfile>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.getAllUsers(onSuccess, onFailure);
+    }
+
+    public void deleteProfile(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.deleteUser(uid, onSuccess, onFailure);
     }
 
     public void setNotificationsMuted(
