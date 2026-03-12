@@ -2,6 +2,7 @@ package com.example.helios.ui.nav;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -37,6 +38,10 @@ public class AdminFragment extends Fragment {
     private final List<UserProfile> allUsers = new ArrayList<>();
     private final List<UserProfile> displayedUsers = new ArrayList<>();
 
+    // Tabs
+    private TextView btnTabEvents;
+    private TextView btnTabUsers;
+
     public AdminFragment() {
         super(R.layout.fragment_admin);
     }
@@ -44,6 +49,9 @@ public class AdminFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        btnTabEvents = view.findViewById(R.id.btn_tab_events);
+        btnTabUsers  = view.findViewById(R.id.btn_tab_users);
 
         // Events RV
         rvEvents = view.findViewById(R.id.rv_events);
@@ -81,6 +89,13 @@ public class AdminFragment extends Fragment {
         rvUsers.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvUsers.setAdapter(userAdapter);
 
+        // Tab click listeners
+        btnTabEvents.setOnClickListener(v -> showTab(true));
+        btnTabUsers.setOnClickListener(v -> showTab(false));
+
+        // Start on Events tab
+        showTab(true);
+
         loadEvents();
         loadUsers();
     }
@@ -91,7 +106,14 @@ public class AdminFragment extends Fragment {
         loadEvents();
         loadUsers();
     }
+    private void showTab(boolean showEvents) {
+        rvEvents.setVisibility(showEvents ? View.VISIBLE : View.GONE);
+        rvUsers.setVisibility(showEvents ? View.GONE : View.VISIBLE);
+        btnTabEvents.setAlpha(showEvents ? 0.5f : 1f);
+        btnTabUsers.setAlpha(showEvents ?  1f : .5f);
+    }
 
+    // E vents
 
     private void loadEvents() {
         eventService.getAllEvents(events -> {
@@ -126,6 +148,7 @@ public class AdminFragment extends Fragment {
                 });
     }
 
+    // Users
 
     private void loadUsers() {
         profileService.getAllProfiles(users -> {
