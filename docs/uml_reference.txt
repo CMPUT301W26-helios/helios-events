@@ -1,0 +1,1022 @@
+Android UML Extractor Report
+Generated: 2026-03-13T20:00:12.767809800Z
+Project root: C:\dev\helios-events
+Module: app
+Variant: debug
+
+Generated diagrams
+==================
+- full_reference.puml      : detailed classes with members and compacted relations
+- overview.puml            : architecture overview with structural relations only
+- domain_model.puml        : model-focused diagram with multiplicities
+- service_data.puml        : service/data/auth classes plus immediate collaborators
+- ui_structure.puml        : UI classes plus key collaborators and navigation edges
+- package_dependencies.puml: package-level relationship map
+
+Counts
+======
+Types: 49
+- GENERALIZATION: 3
+- REALIZATION: 0
+- ASSOCIATION: 24
+- COMPOSITION: 31
+- DEPENDENCY: 60
+- NAVIGATION: 0
+
+Types
+=====
+com.example.helios.model.AdminDevice [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/model/AdminDevice.java
+  fields:
+    - installationId: String
+    - enabled: boolean
+    - note: String
+    - addedAtMillis: long
+  methods:
+    + AdminDevice(): <ctor>
+    + AdminDevice(String, boolean, String, long): <ctor>
+    + getInstallationId(): String
+    + setInstallationId(String): void
+    + isEnabled(): boolean
+    + setEnabled(boolean): void
+    + getNote(): String
+    + setNote(String): void
+    + getAddedAtMillis(): long
+    + setAddedAtMillis(long): void
+
+com.example.helios.model.Event [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/model/Event.java
+  fields:
+    - eventId: String
+    - title: String
+    - description: String
+    - locationName: String
+    - address: String
+    - startTimeMillis: long
+    - endTimeMillis: long
+    - registrationOpensMillis: long
+    - registrationClosesMillis: long
+    - capacity: int
+    - sampleSize: int
+    - waitlistLimit: Integer
+    - geolocationRequired: boolean
+    - lotteryGuidelines: String
+    - organizerUid: String
+    - posterImageId: String
+    - qrCodeValue: String
+    - interests: List<String>
+    - drawHappened: boolean
+  methods:
+    + Event(): <ctor>
+    + Event(String, String, String, String, String, long, long, long, long, int, int, Integer, boolean, String, String, String, String, List<String>): <ctor>
+    + getEventId(): String
+    + setEventId(String): void
+    + getTitle(): String
+    + setTitle(String): void
+    + getDescription(): String
+    + setDescription(String): void
+    + getLocationName(): String
+    + setLocationName(String): void
+    + getAddress(): String
+    + setAddress(String): void
+    + getStartTimeMillis(): long
+    + setStartTimeMillis(long): void
+    + getEndTimeMillis(): long
+    + setEndTimeMillis(long): void
+    + getRegistrationOpensMillis(): long
+    + setRegistrationOpensMillis(long): void
+    + getRegistrationClosesMillis(): long
+    + setRegistrationClosesMillis(long): void
+    + getCapacity(): int
+    + setCapacity(int): void
+    + getSampleSize(): int
+    + setSampleSize(int): void
+    + getWaitlistLimit(): Integer
+    + setWaitlistLimit(Integer): void
+    + isGeolocationRequired(): boolean
+    + setGeolocationRequired(boolean): void
+    + getLotteryGuidelines(): String
+    + setLotteryGuidelines(String): void
+    + getOrganizerUid(): String
+    + setOrganizerUid(String): void
+    + getPosterImageId(): String
+    + setPosterImageId(String): void
+    + getQrCodeValue(): String
+    + setQrCodeValue(String): void
+    + getInterests(): List<String>
+    + setInterests(List<String>): void
+    + isDrawHappened(): boolean
+    + setDrawHappened(boolean): void
+
+com.example.helios.model.GeoPoint [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/model/GeoPoint.java
+  fields:
+    - latitude: double
+    - longitude: double
+  methods:
+    + GeoPoint(): <ctor>
+    + GeoPoint(double, double): <ctor>
+    + getLatitude(): double
+    + setLatitude(double): void
+    + getLongitude(): double
+    + setLongitude(double): void
+
+com.example.helios.model.ImageAsset [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/model/ImageAsset.java
+  fields:
+    - imageId: String
+    - ownerUid: String
+    - eventId: String
+    - storagePath: String
+    - uploadedAtMillis: long
+  methods:
+    + ImageAsset(): <ctor>
+    + ImageAsset(String, String, String, String, long): <ctor>
+    + getImageId(): String
+    + setImageId(String): void
+    + getOwnerUid(): String
+    + setOwnerUid(String): void
+    + getEventId(): String
+    + setEventId(String): void
+    + getStoragePath(): String
+    + setStoragePath(String): void
+    + getUploadedAtMillis(): long
+    + setUploadedAtMillis(long): void
+
+com.example.helios.model.NotificationAudience [ENUM]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/model/NotificationAudience.java
+  fields:
+    + INDIVIDUAL: NotificationAudience
+    + WAITING: NotificationAudience
+    + SELECTED: NotificationAudience
+    + CANCELLED: NotificationAudience
+
+com.example.helios.model.NotificationRecord [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/model/NotificationRecord.java
+  fields:
+    - notificationId: String
+    - eventId: String
+    - senderUid: String
+    - recipientUid: String
+    - audience: NotificationAudience
+    - title: String
+    - message: String
+    - sentAtMillis: long
+  methods:
+    + NotificationRecord(): <ctor>
+    + NotificationRecord(String, String, String, String, NotificationAudience, String, String, long): <ctor>
+    + getNotificationId(): String
+    + setNotificationId(String): void
+    + getEventId(): String
+    + setEventId(String): void
+    + getSenderUid(): String
+    + setSenderUid(String): void
+    + getRecipientUid(): String
+    + setRecipientUid(String): void
+    + getAudience(): NotificationAudience
+    + setAudience(NotificationAudience): void
+    + getTitle(): String
+    + setTitle(String): void
+    + getMessage(): String
+    + setMessage(String): void
+    + getSentAtMillis(): long
+    + setSentAtMillis(long): void
+
+com.example.helios.model.UserProfile [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/model/UserProfile.java
+  fields:
+    - uid: String
+    - name: String
+    - email: String
+    - phone: String
+    - role: String
+    - notificationsEnabled: boolean
+    - installationId: String
+  methods:
+    + UserProfile(): <ctor>
+    + UserProfile(String, String, String, String, String, boolean, String): <ctor>
+    + getUid(): String
+    + setUid(String): void
+    + getName(): String
+    + setName(String): void
+    + getEmail(): String
+    + setEmail(String): void
+    + getPhone(): String
+    + setPhone(String): void
+    + getRole(): String
+    + setRole(String): void
+    + isNotificationsEnabled(): boolean
+    + setNotificationsEnabled(boolean): void
+    + getInstallationId(): String
+    + setInstallationId(String): void
+    + isAdmin(): boolean
+    + hasRequiredProfileInfo(): boolean
+    + getDisplayNameOrFallback(): String
+    - isNonEmpty(String): boolean
+    - emptyToNull(String): String
+
+com.example.helios.model.WaitingListEntry [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/model/WaitingListEntry.java
+  fields:
+    - eventId: String
+    - entrantUid: String
+    - status: WaitingListStatus
+    - joinedAtMillis: long
+  methods:
+    + WaitingListEntry(): <ctor>
+    + WaitingListEntry(String, String, WaitingListStatus, long): <ctor>
+    + getEventId(): String
+    + setEventId(String): void
+    + getEntrantUid(): String
+    + setEntrantUid(String): void
+    + getStatus(): WaitingListStatus
+    + setStatus(WaitingListStatus): void
+    + getJoinedAtMillis(): long
+    + setJoinedAtMillis(long): void
+
+com.example.helios.model.WaitingListStatus [ENUM]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/model/WaitingListStatus.java
+  fields:
+    + WAITING: WaitingListStatus
+    + INVITED: WaitingListStatus
+    + ACCEPTED: WaitingListStatus
+    + DECLINED: WaitingListStatus
+    + CANCELLED: WaitingListStatus
+    + NOT_SELECTED: WaitingListStatus
+
+com.example.helios.auth.AuthDeviceService [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/auth/AuthDeviceService.java
+  fields:
+    - auth: FirebaseAuth
+  methods:
+    + AuthDeviceService(): <ctor>
+    + ensureSignedIn(OnSuccessListener<FirebaseUser>, OnFailureListener): void
+    + getCurrentUser(): FirebaseUser
+    + getCurrentUid(): String
+    + signOut(): void
+
+com.example.helios.auth.InstallationIdProvider [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/auth/InstallationIdProvider.java
+  fields:
+    - PREFS: String
+    - KEY_INSTALLATION_ID: String
+  methods:
+    - InstallationIdProvider(): <ctor>
+    + getInstallationId(Context): String
+    + clearInstallationId(Context): void
+
+com.example.helios.data.FirebaseRepository [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/data/FirebaseRepository.java
+  fields:
+    - db: FirebaseFirestore
+  methods:
+    + FirebaseRepository(): <ctor>
+    + saveUser(UserProfile, OnSuccessListener<Void>, OnFailureListener): void
+    + updateUser(UserProfile, OnSuccessListener<Void>, OnFailureListener): void
+    + getUser(String, OnSuccessListener<UserProfile>, OnFailureListener): void
+    + deleteUser(String, OnSuccessListener<Void>, OnFailureListener): void
+    + muteNotifications(String, OnSuccessListener<Void>, OnFailureListener): void
+    + isAdminInstallation(String, OnSuccessListener<Boolean>, OnFailureListener): void
+    + getAllEvents(OnSuccessListener<List<Event>>, OnFailureListener): void
+    + getEventById(String, OnSuccessListener<Event>, OnFailureListener): void
+    + saveEvent(Event, OnSuccessListener<Void>, OnFailureListener): void
+    + deleteEvent(String, OnSuccessListener<Void>, OnFailureListener): void
+    + getAllUsers(OnSuccessListener<List<UserProfile>>, OnFailureListener): void
+    + getWaitingListEntry(String, String, OnSuccessListener<WaitingListEntry>, OnFailureListener): void
+    + upsertWaitingListEntry(String, String, WaitingListEntry, OnSuccessListener<Void>, OnFailureListener): void
+    + getAllWaitingListEntries(String, OnSuccessListener<List<WaitingListEntry>>, OnFailureListener): void
+    + updateWaitingListEntry(String, String, WaitingListEntry, OnSuccessListener<Void>, OnFailureListener): void
+    + deleteWaitingListEntry(String, String, OnSuccessListener<Void>, OnFailureListener): void
+    - isValidUser(UserProfile): boolean
+    - isValidEvent(Event): boolean
+    - isNonEmpty(String): boolean
+    + seedDemoEvent(OnSuccessListener<Void>, OnFailureListener): void
+    + setNotificationsMuted(String, boolean, OnSuccessListener<Void>, OnFailureListener): void
+
+com.example.helios.service.EntrantEventService [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/service/EntrantEventService.java
+  fields:
+    - repository: FirebaseRepository
+    - profileService: ProfileService
+  methods:
+    + joinWaitingList(Context, String, OnSuccessListener<Void>, OnFailureListener): void
+    + leaveWaitingList(Context, String, OnSuccessListener<Void>, OnFailureListener): void
+    + getCurrentUserWaitingListEntry(Context, String, OnSuccessListener<WaitingListEntry>, OnFailureListener): void
+    + getFilledSlotsCount(String, OnSuccessListener<Integer>, OnFailureListener): void
+    - doJoin(String, FirebaseUser, OnSuccessListener<Void>, OnFailureListener): void
+    - doLeave(String, FirebaseUser, OnSuccessListener<Void>, OnFailureListener): void
+
+com.example.helios.service.EventService [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/service/EventService.java
+  fields:
+    - repository: FirebaseRepository
+  methods:
+    + EventService(): <ctor>
+    + getAllEvents(OnSuccessListener<List<Event>>, OnFailureListener): void
+    + getEventById(String, OnSuccessListener<Event>, OnFailureListener): void
+    + saveEvent(Event, OnSuccessListener<Void>, OnFailureListener): void
+    + deleteEvent(String, OnSuccessListener<Void>, OnFailureListener): void
+
+com.example.helios.service.ProfileService [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/service/ProfileService.java
+  fields:
+    - authDeviceService: AuthDeviceService
+    - repository: FirebaseRepository
+  methods:
+    + ProfileService(): <ctor>
+    + bootstrapCurrentUser(Context, OnSuccessListener<BootstrapResult>, OnFailureListener): void
+    + ensureSignedIn(OnSuccessListener<FirebaseUser>, OnFailureListener): void
+    + completeCurrentProfile(Context, String, String, String, OnSuccessListener<UserProfile>, OnFailureListener): void
+    + loadCurrentProfile(Context, OnSuccessListener<UserProfile>, OnFailureListener): void
+    + getUserProfile(String, OnSuccessListener<UserProfile>, OnFailureListener): void
+    + requiresProfileCompletion(UserProfile): boolean
+    - createDefaultProfile(String, String, String, OnSuccessListener<BootstrapResult>, OnFailureListener): void
+    + deleteCurrentProfile(Context, OnSuccessListener<Void>, OnFailureListener): void
+    + getAllProfiles(OnSuccessListener<List<UserProfile>>, OnFailureListener): void
+    + deleteProfile(String, OnSuccessListener<Void>, OnFailureListener): void
+    + setNotificationsMuted(Context, boolean, OnSuccessListener<Void>, OnFailureListener): void
+
+com.example.helios.service.ProfileService.BootstrapResult [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/service/ProfileService.java
+  fields:
+    - profile: UserProfile
+    - isNewUser: boolean
+  methods:
+    + BootstrapResult(UserProfile, boolean): <ctor>
+    + getProfile(): UserProfile
+    + isNewUser(): boolean
+
+com.example.helios.service.WaitingListService [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/service/WaitingListService.java
+  fields:
+    - repository: FirebaseRepository
+  methods:
+    + WaitingListService(): <ctor>
+    + getEntriesForEvent(String, OnSuccessListener<List<WaitingListEntry>>, OnFailureListener): void
+    + updateEntry(String, WaitingListEntry, OnSuccessListener<Void>, OnFailureListener): void
+    + removeEntry(String, String, OnSuccessListener<Void>, OnFailureListener): void
+
+com.example.helios.ui.AdminEventAdapter [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/AdminEventAdapter.java
+  extends: RecyclerView.Adapter<AdminEventAdapter.ViewHolder>
+  fields:
+    - dateFormat: SimpleDateFormat
+    - events: List<Event>
+    - onClick: OnEventClickListener
+  methods:
+    + AdminEventAdapter(List<Event>, OnEventClickListener): <ctor>
+    + onCreateViewHolder(ViewGroup, int): ViewHolder
+    + onBindViewHolder(ViewHolder, int): void
+    + getItemCount(): int
+    - nonEmptyOr(String, String): String
+
+com.example.helios.ui.AdminEventAdapter.OnEventClickListener [INTERFACE]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/AdminEventAdapter.java
+  methods:
+    ~ onEventClick(Event): void
+
+com.example.helios.ui.AdminEventAdapter.ViewHolder [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/AdminEventAdapter.java
+  extends: RecyclerView.ViewHolder
+  fields:
+    ~ tvTitle: TextView
+    ~ tvDescription: TextView
+    ~ tvLocation: TextView
+    ~ tvDate: TextView
+    ~ tvTags: TextView
+    ~ tvMaxEntrants: TextView
+    ~ btnDelete: Button
+  methods:
+    + ViewHolder(View): <ctor>
+
+com.example.helios.ui.AppNavigator [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/AppNavigator.java
+  fields:
+    - activity: AppCompatActivity
+    - navController: NavController
+    - profileService: ProfileService
+    - lastSelectedItemId: int
+  methods:
+    + AppNavigator(AppCompatActivity, NavController): <ctor>
+    + getLastSelectedItemId(): int
+    + setLastSelectedItemId(int): void
+    + goEvents(): void
+    + goScanQr(): void
+    + goProfile(): void
+    + goNotifications(): void
+    + goOrganizeOrPrompt(): void
+    - safeNavigate(int): void
+
+com.example.helios.ui.EventAdapter [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/EventAdapter.java
+  extends: RecyclerView.Adapter<EventAdapter.EventViewHolder>
+  fields:
+    - dateFormat: SimpleDateFormat
+    - events: List<Event>
+    - onEventClick: OnEventClickListener
+  methods:
+    + EventAdapter(List<Event>): <ctor>
+    + EventAdapter(List<Event>, OnEventClickListener): <ctor>
+    + onCreateViewHolder(ViewGroup, int): EventViewHolder
+    + onBindViewHolder(EventViewHolder, int): void
+    + getItemCount(): int
+    - nonEmptyOr(String, String): String
+
+com.example.helios.ui.EventAdapter.EventViewHolder [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/EventAdapter.java
+  extends: RecyclerView.ViewHolder
+  fields:
+    ~ tvTitle: TextView
+    ~ tvDescription: TextView
+    ~ tvLocation: TextView
+    ~ tvDate: TextView
+    ~ tvTags: TextView
+    ~ tvMaxEntrants: TextView
+  methods:
+    + EventViewHolder(View): <ctor>
+
+com.example.helios.ui.EventAdapter.OnEventClickListener [INTERFACE]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/EventAdapter.java
+  methods:
+    ~ onEventClick(Event): void
+
+com.example.helios.ui.LauncherActivity [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/LauncherActivity.java
+  extends: AppCompatActivity
+  fields:
+    - MIN_LOADING_DELAY_MS: long
+    - profileService: ProfileService
+    - welcomeText: TextView
+  methods:
+    # onCreate(Bundle): void
+    - openProfileSetupRequired(): void
+    - openMain(UserProfile): void
+
+com.example.helios.ui.MainActivity [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/MainActivity.java
+  extends: AppCompatActivity
+  fields:
+    - profileService: ProfileService
+    - bottomNav: BottomNavigationView
+    - bottomNavOrganizer: BottomNavigationView
+    - organizerEventId: String
+    - navController: NavController
+    - bannerText: TextView
+    - bannerRole: TextView
+    - cachedProfile: UserProfile
+    - cachedProfileComplete: Boolean
+    - lastSelectedItemId: int
+    - currentBottomMenuRes: int
+  methods:
+    # onCreate(Bundle): void
+    - showMainBottomNav(int): void
+    - showOrganizerBottomNav(int): void
+    - mapOrganizerTab(int): int
+    - setOrganizerCheckedTabSilently(int): void
+    - createOrganizerBottomNavListener(): NavigationBarView.OnItemSelectedListener
+    - navigateTopLevel(int): boolean
+    - gateOrganizeAndNavigate(): void
+    - openProfileSetupPrompt(): void
+    - setCheckedTabSilently(int): void
+    - applyInsets(): void
+    - refreshUserBanner(): void
+    # onResume(): void
+    - createBottomNavListener(): BottomNavigationView.OnItemSelectedListener
+
+com.example.helios.ui.ProfileSetupActivity [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/ProfileSetupActivity.java
+  extends: AppCompatActivity
+  fields:
+    + EXTRA_RETURN_TO_MAIN: String
+    + EXTRA_MODE: String
+    + MODE_SETUP_REQUIRED: String
+    + MODE_EDIT_PROFILE: String
+    - profileService: ProfileService
+    - nameInput: EditText
+    - emailInput: EditText
+    - phoneInput: EditText
+    - primaryButton: Button
+    - titleText: TextView
+    - subtitleText: TextView
+    - returnToMain: boolean
+    - mode: String
+  methods:
+    # onCreate(Bundle): void
+    - configureUiForMode(): void
+    - attachValidationWatchers(): void
+    - prefillCurrentProfile(): void
+    - updatePrimaryButtonState(): void
+    - hasRequiredInputs(): boolean
+    - saveProfile(): void
+    - finishOrGoMain(): void
+
+com.example.helios.ui.ProfileSetupActivity.SimpleWatcher [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/ProfileSetupActivity.java
+  implements: TextWatcher
+  fields:
+    - callback: Runnable
+  methods:
+    ~ SimpleWatcher(Runnable): <ctor>
+    + beforeTextChanged(CharSequence, int, int, int): void
+    + onTextChanged(CharSequence, int, int, int): void
+    + afterTextChanged(Editable): void
+
+com.example.helios.ui.UserAdapter [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/UserAdapter.java
+  extends: RecyclerView.Adapter<UserAdapter.UserViewHolder>
+  fields:
+    - users: List<UserProfile>
+    - onClick: OnUserClickListener
+  methods:
+    + UserAdapter(List<UserProfile>, OnUserClickListener): <ctor>
+    + onCreateViewHolder(ViewGroup, int): UserViewHolder
+    + onBindViewHolder(UserViewHolder, int): void
+    + getItemCount(): int
+
+com.example.helios.ui.UserAdapter.OnUserClickListener [INTERFACE]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/UserAdapter.java
+  methods:
+    ~ onUserClick(UserProfile): void
+
+com.example.helios.ui.UserAdapter.UserViewHolder [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/UserAdapter.java
+  extends: RecyclerView.ViewHolder
+  fields:
+    ~ tvName: TextView
+    ~ tvEmail: TextView
+    ~ tvRole: TextView
+    ~ btnDelete: Button
+  methods:
+    + UserViewHolder(View): <ctor>
+
+com.example.helios.ui.event.EventDetailsBottomSheet [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/event/EventDetailsBottomSheet.java
+  extends: BottomSheetDialogFragment
+  fields:
+    + ARG_EVENT_ID: String
+    + ARG_HIDE_JOIN_BUTTON: String
+    - eventService: EventService
+    - entrantEventService: EntrantEventService
+    - dateFormat: SimpleDateFormat
+    - timeFormat: SimpleDateFormat
+    - ivPoster: ImageView
+    - tvName: TextView
+    - tvDate: TextView
+    - tvTimeStart: TextView
+    - tvTimeEnd: TextView
+    - tvLocation: TextView
+    - tvDescription: TextView
+    - tvCapacity: TextView
+    - btnWaitingList: MaterialButton
+    - eventId: String
+    - hideJoinButton: boolean
+    - loadedEvent: Event
+    - isCurrentlyOnWaitingList: boolean
+  methods:
+    + newInstance(String): EventDetailsBottomSheet
+    + newInstance(String, boolean): EventDetailsBottomSheet
+    + EventDetailsBottomSheet(): <ctor>
+    + onStart(): void
+    + onViewCreated(View, Bundle): void
+    - loadEvent(): void
+    - bindEvent(Event): void
+    - refreshWaitingListState(): void
+    - refreshCapacityCount(): void
+    - showJoinWaitingListDialog(): void
+    - joinWaitingListConfirmed(): void
+    - leaveWaitingList(): void
+    - onWaitingListButtonPressed(): void
+    - updateWaitingListButton(): void
+    - setLoading(boolean): void
+    - toast(String): void
+    - nonEmptyOr(String, String): String
+    - getEventIdArg(): String
+
+com.example.helios.ui.nav.AdminFragment [CLASS] <<fragment>>
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/AdminFragment.java
+  extends: Fragment
+  fields:
+    - rvEvents: RecyclerView
+    - eventAdapter: AdminEventAdapter
+    - eventService: EventService
+    - allEvents: List<Event>
+    - displayedEvents: List<Event>
+    - rvUsers: RecyclerView
+    - userAdapter: UserAdapter
+    - profileService: ProfileService
+    - allUsers: List<UserProfile>
+    - displayedUsers: List<UserProfile>
+    - btnTabEvents: TextView
+    - btnTabUsers: TextView
+  methods:
+    + AdminFragment(): <ctor>
+    + onViewCreated(View, Bundle): void
+    + onResume(): void
+    - showTab(boolean): void
+    - loadEvents(): void
+    - deleteEvent(Event): void
+    - loadUsers(): void
+    - deleteUser(UserProfile): void
+
+com.example.helios.ui.nav.EventsFragment [CLASS] <<fragment>>
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/EventsFragment.java
+  extends: Fragment
+  fields:
+    - rvEvents: RecyclerView
+    - etSearch: EditText
+    - btnFilter: View
+    - llDateFilters: View
+    - tvFilterStartDate: TextView
+    - tvFilterEndDate: TextView
+    - llInterestFilters: View
+    - cgFilterDisplay: ChipGroup
+    - eventAdapter: EventAdapter
+    - eventService: EventService
+    - allEvents: List<Event>
+    - filteredEvents: List<Event>
+    - startDateFilter: Long
+    - endDateFilter: Long
+    - selectedInterests: List<String>
+    - loadedOnce: boolean
+    - dateFormat: SimpleDateFormat
+    - handler: Handler
+    - pendingFilter: Runnable
+  methods:
+    + EventsFragment(): <ctor>
+    + onCreateView(LayoutInflater, ViewGroup, Bundle): View
+    + onViewCreated(View, Bundle): void
+    + onResume(): void
+    + onDestroyView(): void
+    - setupRecyclerView(): void
+    - setupSearch(): void
+    - loadEvents(): void
+    - showFilterDialog(): void
+    - showDatePicker(OnDateSelectedListener): void
+    - applyFilters(): void
+    - updateFilterVisuals(): void
+
+com.example.helios.ui.nav.EventsFragment.OnDateSelectedListener [INTERFACE]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/EventsFragment.java
+  methods:
+    ~ onDateSelected(long): void
+
+com.example.helios.ui.nav.ManageEventFragment [CLASS] <<fragment>>
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/ManageEventFragment.java
+  extends: Fragment
+  fields:
+    - eventService: EventService
+    - eventId: String
+  methods:
+    + ManageEventFragment(): <ctor>
+    + onCreate(Bundle): void
+    + onCreateView(LayoutInflater, ViewGroup, Bundle): View
+    + onViewCreated(View, Bundle): void
+
+com.example.helios.ui.nav.NotificationsFragment [CLASS] <<fragment>>
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/NotificationsFragment.java
+  extends: Fragment
+  methods:
+    + NotificationsFragment(): <ctor>
+
+com.example.helios.ui.nav.OrganizeFragment [CLASS] <<fragment>>
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/OrganizeFragment.java
+  extends: Fragment
+  fields:
+    - eventService: EventService
+    - profileService: ProfileService
+    - allOrganizerEvents: List<com.example.helios.model.Event>
+    - currentEvents: List<com.example.helios.model.Event>
+    - pastEvents: List<com.example.helios.model.Event>
+    - currentAdapter: EventAdapter
+    - pastAdapter: EventAdapter
+    - searchEditText: EditText
+    - currentEmptyText: TextView
+    - pastEmptyText: TextView
+  methods:
+    + OrganizeFragment(): <ctor>
+    + onViewCreated(View, Bundle): void
+    - loadOrganizerEvents(): void
+    - applyOrganizerFilter(String): void
+    - matchesQuery(com.example.helios.model.Event, String): boolean
+    - safeLower(String): String
+    - updateEmptyStates(): void
+
+com.example.helios.ui.nav.OrganizerQrFragment [CLASS] <<fragment>>
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/OrganizerQrFragment.java
+  extends: Fragment
+  fields:
+    - eventService: EventService
+    - profileService: ProfileService
+    - mode: Mode
+    - eventIdForView: String
+    - title: String
+    - description: String
+    - maxEntrants: int
+    - geoRequired: boolean
+    - registrationOpensMillis: long
+    - registrationClosesMillis: long
+    - posterUri: String
+    - tagsRaw: String
+    - qrImage: ImageView
+  methods:
+    + OrganizerQrFragment(): <ctor>
+    + onCreate(Bundle): void
+    + onCreateView(LayoutInflater, ViewGroup, Bundle): View
+    + onViewCreated(View, Bundle): void
+    - saveEvent(): void
+    - generateQrBitmap(String, int): Bitmap
+
+com.example.helios.ui.nav.OrganizerQrFragment.Mode [ENUM]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/OrganizerQrFragment.java
+  fields:
+    + CREATE: Mode
+    + VIEW_EXISTING: Mode
+
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment [CLASS] <<fragment>>
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/OrganizerViewEntrantsFragment.java
+  extends: Fragment
+  fields:
+    - eventId: String
+    - event: Event
+    - eventService: EventService
+    - waitingListService: WaitingListService
+    - profileService: ProfileService
+    - allEntries: List<WaitingListEntry>
+    - displayList: List<EntrantDisplayModel>
+    - adapter: EntrantAdapter
+    - removeEntrantMode: boolean
+    - tvDrawIndicator: TextView
+    - tvListHeader: TextView
+    - tvInfoStats: TextView
+    - llFilters: View
+    - layoutDrawControls: View
+    - layoutDeclinedActions: View
+    - layoutInvitedActions: View
+    - etSearch: EditText
+    - etDrawCount: EditText
+    - btnRemoveEntrant: MaterialButton
+    - cgStatus: ChipGroup
+  methods:
+    + OrganizerViewEntrantsFragment(): <ctor>
+    + onCreate(Bundle): void
+    + onViewCreated(View, Bundle): void
+    - initViews(View): void
+    - setupRecyclerView(View): void
+    - setupListeners(View): void
+    - loadData(): void
+    - refreshEntries(): void
+    - updateUiState(): void
+    - updateDisplayList(): void
+    - performDraw(): void
+    - runInitialDraw(int): void
+    - increaseDrawCount(int): void
+    - decreaseDrawCount(int, List<WaitingListEntry>): void
+    - completeDrawEventUpdate(int): void
+    - parseRequestedDrawCount(): int
+    - isSelectedStatus(WaitingListEntry): boolean
+    - isWaitlistStatus(WaitingListEntry): boolean
+    - updateEntries(List<WaitingListEntry>, Runnable): void
+    - toggleRemoveEntrantMode(): void
+    - updateRemoveEntrantButtonState(): void
+    - removeEntrant(EntrantDisplayModel): void
+    - updateDrawCountDisplay(): void
+    - deleteSelectedDeclined(): void
+    - redrawReplacements(): void
+    - toast(String): void
+
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantAdapter [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/OrganizerViewEntrantsFragment.java
+  extends: RecyclerView.Adapter<EntrantAdapter.ViewHolder>
+  fields:
+    - list: List<EntrantDisplayModel>
+    - selectedUids: Set<String>
+  methods:
+    ~ EntrantAdapter(List<EntrantDisplayModel>): <ctor>
+    + onCreateViewHolder(ViewGroup, int): ViewHolder
+    + onBindViewHolder(ViewHolder, int): void
+    + getItemCount(): int
+    + getSelectedUids(): Set<String>
+
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantAdapter.ViewHolder [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/OrganizerViewEntrantsFragment.java
+  extends: RecyclerView.ViewHolder
+  fields:
+    ~ tvName: TextView
+    ~ checkbox: CheckBox
+    ~ ivStatus: ImageView
+  methods:
+    ~ ViewHolder(View): <ctor>
+
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantDisplayModel [CLASS]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/OrganizerViewEntrantsFragment.java
+  fields:
+    ~ entry: WaitingListEntry
+    ~ name: String
+  methods:
+    ~ EntrantDisplayModel(WaitingListEntry): <ctor>
+
+com.example.helios.ui.nav.ProfileFragment [CLASS] <<fragment>>
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/ProfileFragment.java
+  extends: Fragment
+  fields:
+    - profileService: ProfileService
+    - tvName: TextView
+    - tvEmail: TextView
+    - tvPhone: TextView
+    - btnAdmin: MaterialButton
+    - btnEdit: MaterialButton
+    - btnDelete: MaterialButton
+    - btnMute: MaterialButton
+    - notificationsCurrentlyEnabled: boolean
+  methods:
+    + ProfileFragment(): <ctor>
+    + onViewCreated(View, Bundle): void
+    + onResume(): void
+    - showDeleteConfirmationDialog(): void
+    - deleteProfile(): void
+    - toggleMute(): void
+    - updateMuteButton(): void
+    - openAdminPanel(): void
+    - openProfileEditorSafe(): void
+    - loadProfileSafe(): void
+    - bindEmptyProfile(): void
+    - bindProfile(UserProfile): void
+    - normalize(String): String
+
+com.example.helios.ui.nav.ScanQrFragment [CLASS] <<fragment>>
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/ScanQrFragment.java
+  extends: Fragment
+  fields:
+    - pickImageLauncher: ActivityResultLauncher<Intent>
+    - requestPermissionLauncher: ActivityResultLauncher<String>
+    - viewFinder: PreviewView
+    - cameraExecutor: ExecutorService
+    - cameraProvider: ProcessCameraProvider
+  methods:
+    + ScanQrFragment(): <ctor>
+    + onCreate(Bundle): void
+    + onCreateView(LayoutInflater, ViewGroup, Bundle): View
+    + onViewCreated(View, Bundle): void
+    - updateToggleState(View, boolean): void
+    - startCamera(): void
+    - bindCameraUseCases(): void
+    - stopCamera(): void
+    - handleQrFromUri(Uri): void
+    - handleQrCode(String): void
+    + onDestroy(): void
+
+com.example.helios.ui.nav.SetupEventFragment [CLASS] <<fragment>>
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/SetupEventFragment.java
+  extends: Fragment
+  fields:
+    - dateFormat: SimpleDateFormat
+    - eventService: EventService
+    - eventId: String
+    - loadedEvent: Event
+    - mode: Mode
+    - registrationOpensMillis: long
+    - registrationClosesMillis: long
+    - geolocationRequired: boolean
+    - selectedPosterUri: Uri
+    - pickImageLauncher: ActivityResultLauncher<String[]>
+  methods:
+    + SetupEventFragment(): <ctor>
+    + onCreate(Bundle): void
+    + onCreateView(LayoutInflater, ViewGroup, Bundle): View
+    + onViewCreated(View, Bundle): void
+    - persistReadPermission(Uri): void
+    - safeText(EditText): String
+    - openDatePicker(long, DatePickedCallback): void
+    - updateGeoToggle(TextView, TextView, boolean): void
+
+com.example.helios.ui.nav.SetupEventFragment.DatePickedCallback [INTERFACE]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/SetupEventFragment.java
+  methods:
+    ~ onPicked(long): void
+
+com.example.helios.ui.nav.SetupEventFragment.Mode [ENUM]
+  file: file:///C:/dev/helios-events/app/src/main/java/com/example/helios/ui/nav/SetupEventFragment.java
+  fields:
+    + CREATE: Mode
+    + EDIT: Mode
+
+Relations (raw)
+===============
+com.example.helios.model.NotificationRecord --[ASSOCIATION 1/0..1]--> com.example.helios.model.NotificationAudience | label=audience | evidence=field | confidence=medium
+com.example.helios.model.WaitingListEntry --[ASSOCIATION 1/0..1]--> com.example.helios.model.WaitingListStatus | label=status | evidence=field | confidence=medium
+com.example.helios.service.EventService --[ASSOCIATION 1/0..1]--> com.example.helios.data.FirebaseRepository | label=repository | evidence=field | confidence=medium
+com.example.helios.service.ProfileService --[ASSOCIATION 1/0..1]--> com.example.helios.auth.AuthDeviceService | label=authDeviceService | evidence=field | confidence=medium
+com.example.helios.service.ProfileService --[ASSOCIATION 1/0..1]--> com.example.helios.data.FirebaseRepository | label=repository | evidence=field | confidence=medium
+com.example.helios.service.ProfileService.BootstrapResult --[ASSOCIATION 1/0..1]--> com.example.helios.model.UserProfile | label=profile | evidence=field | confidence=medium
+com.example.helios.service.WaitingListService --[ASSOCIATION 1/0..1]--> com.example.helios.data.FirebaseRepository | label=repository | evidence=field | confidence=medium
+com.example.helios.ui.AdminEventAdapter --[ASSOCIATION 1/0..*]--> com.example.helios.model.Event | label=events | evidence=field | confidence=medium
+com.example.helios.ui.AppNavigator --[ASSOCIATION 1/0..1]--> com.example.helios.service.ProfileService | label=profileService | evidence=field | confidence=medium
+com.example.helios.ui.EventAdapter --[ASSOCIATION 1/0..*]--> com.example.helios.model.Event | label=events | evidence=field | confidence=medium
+com.example.helios.ui.MainActivity --[ASSOCIATION 1/0..1]--> com.example.helios.model.UserProfile | label=cachedProfile | evidence=field | confidence=medium
+com.example.helios.ui.UserAdapter --[ASSOCIATION 1/0..*]--> com.example.helios.model.UserProfile | label=users | evidence=field | confidence=medium
+com.example.helios.ui.UserAdapter --[ASSOCIATION 1/0..1]--> com.example.helios.ui.UserAdapter.OnUserClickListener | label=onClick | evidence=field | confidence=medium
+com.example.helios.ui.event.EventDetailsBottomSheet --[ASSOCIATION 1/0..1]--> com.example.helios.model.Event | label=loadedEvent | evidence=field | confidence=medium
+com.example.helios.ui.nav.AdminFragment --[ASSOCIATION 1/0..1]--> com.example.helios.ui.AdminEventAdapter | label=eventAdapter | evidence=field | confidence=medium
+com.example.helios.ui.nav.AdminFragment --[ASSOCIATION 1/0..1]--> com.example.helios.ui.UserAdapter | label=userAdapter | evidence=field | confidence=medium
+com.example.helios.ui.nav.EventsFragment --[ASSOCIATION 1/0..1]--> com.example.helios.ui.EventAdapter | label=eventAdapter | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizeFragment --[ASSOCIATION 1/0..1]--> com.example.helios.ui.EventAdapter | label=currentAdapter | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizeFragment --[ASSOCIATION 1/0..1]--> com.example.helios.ui.EventAdapter | label=pastAdapter | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[ASSOCIATION 1/0..1]--> com.example.helios.model.Event | label=event | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[ASSOCIATION 1/0..1]--> com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantAdapter | label=adapter | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantAdapter --[ASSOCIATION 1/0..*]--> com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantDisplayModel | label=list | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantDisplayModel --[ASSOCIATION 1/0..1]--> com.example.helios.model.WaitingListEntry | label=entry | evidence=field | confidence=medium
+com.example.helios.ui.nav.SetupEventFragment --[ASSOCIATION 1/0..1]--> com.example.helios.model.Event | label=loadedEvent | evidence=field | confidence=medium
+com.example.helios.service.EntrantEventService --[COMPOSITION 1/0..1]--> com.example.helios.data.FirebaseRepository | label=repository | evidence=field | confidence=medium
+com.example.helios.service.EntrantEventService --[COMPOSITION 1/0..1]--> com.example.helios.service.ProfileService | label=profileService | evidence=field | confidence=medium
+com.example.helios.ui.LauncherActivity --[COMPOSITION 1/0..1]--> com.example.helios.service.ProfileService | label=profileService | evidence=field | confidence=medium
+com.example.helios.ui.MainActivity --[COMPOSITION 1/0..1]--> com.example.helios.service.ProfileService | label=profileService | evidence=field | confidence=medium
+com.example.helios.ui.ProfileSetupActivity --[COMPOSITION 1/0..1]--> com.example.helios.service.ProfileService | label=profileService | evidence=field | confidence=medium
+com.example.helios.ui.event.EventDetailsBottomSheet --[COMPOSITION 1/0..1]--> com.example.helios.service.EntrantEventService | label=entrantEventService | evidence=field | confidence=medium
+com.example.helios.ui.event.EventDetailsBottomSheet --[COMPOSITION 1/0..1]--> com.example.helios.service.EventService | label=eventService | evidence=field | confidence=medium
+com.example.helios.ui.nav.AdminFragment --[COMPOSITION 1/0..*]--> com.example.helios.model.Event | label=allEvents | evidence=field | confidence=medium
+com.example.helios.ui.nav.AdminFragment --[COMPOSITION 1/0..*]--> com.example.helios.model.Event | label=displayedEvents | evidence=field | confidence=medium
+com.example.helios.ui.nav.AdminFragment --[COMPOSITION 1/0..*]--> com.example.helios.model.UserProfile | label=allUsers | evidence=field | confidence=medium
+com.example.helios.ui.nav.AdminFragment --[COMPOSITION 1/0..*]--> com.example.helios.model.UserProfile | label=displayedUsers | evidence=field | confidence=medium
+com.example.helios.ui.nav.AdminFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.EventService | label=eventService | evidence=field | confidence=medium
+com.example.helios.ui.nav.AdminFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.ProfileService | label=profileService | evidence=field | confidence=medium
+com.example.helios.ui.nav.EventsFragment --[COMPOSITION 1/0..*]--> com.example.helios.model.Event | label=allEvents | evidence=field | confidence=medium
+com.example.helios.ui.nav.EventsFragment --[COMPOSITION 1/0..*]--> com.example.helios.model.Event | label=filteredEvents | evidence=field | confidence=medium
+com.example.helios.ui.nav.EventsFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.EventService | label=eventService | evidence=field | confidence=medium
+com.example.helios.ui.nav.ManageEventFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.EventService | label=eventService | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizeFragment --[COMPOSITION 1/0..*]--> com.example.helios.model.Event | label=allOrganizerEvents | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizeFragment --[COMPOSITION 1/0..*]--> com.example.helios.model.Event | label=currentEvents | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizeFragment --[COMPOSITION 1/0..*]--> com.example.helios.model.Event | label=pastEvents | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizeFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.EventService | label=eventService | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizeFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.ProfileService | label=profileService | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerQrFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.EventService | label=eventService | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerQrFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.ProfileService | label=profileService | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[COMPOSITION 1/0..*]--> com.example.helios.model.WaitingListEntry | label=allEntries | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.EventService | label=eventService | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.ProfileService | label=profileService | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.WaitingListService | label=waitingListService | evidence=field | confidence=medium
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[COMPOSITION 1/0..*]--> com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantDisplayModel | label=displayList | evidence=field | confidence=medium
+com.example.helios.ui.nav.ProfileFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.ProfileService | label=profileService | evidence=field | confidence=medium
+com.example.helios.ui.nav.SetupEventFragment --[COMPOSITION 1/0..1]--> com.example.helios.service.EventService | label=eventService | evidence=field | confidence=medium
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=getAllEvents() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=getEventById() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=isValidEvent() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=saveEvent() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=getAllUsers() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=getUser() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=isValidUser() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=saveUser() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=updateUser() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=getAllWaitingListEntries() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=getWaitingListEntry() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=updateWaitingListEntry() uses | evidence=method | confidence=low
+com.example.helios.data.FirebaseRepository --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=upsertWaitingListEntry() uses | evidence=method | confidence=low
+com.example.helios.model.NotificationRecord --[DEPENDENCY -/-]--> com.example.helios.model.NotificationAudience | label=NotificationRecord() uses | evidence=method | confidence=low
+com.example.helios.model.NotificationRecord --[DEPENDENCY -/-]--> com.example.helios.model.NotificationAudience | label=getAudience() returns | evidence=method | confidence=low
+com.example.helios.model.NotificationRecord --[DEPENDENCY -/-]--> com.example.helios.model.NotificationAudience | label=setAudience() uses | evidence=method | confidence=low
+com.example.helios.model.WaitingListEntry --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListStatus | label=WaitingListEntry() uses | evidence=method | confidence=low
+com.example.helios.model.WaitingListEntry --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListStatus | label=getStatus() returns | evidence=method | confidence=low
+com.example.helios.model.WaitingListEntry --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListStatus | label=setStatus() uses | evidence=method | confidence=low
+com.example.helios.service.EntrantEventService --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=getCurrentUserWaitingListEntry() uses | evidence=method | confidence=low
+com.example.helios.service.EventService --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=getAllEvents() uses | evidence=method | confidence=low
+com.example.helios.service.EventService --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=getEventById() uses | evidence=method | confidence=low
+com.example.helios.service.EventService --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=saveEvent() uses | evidence=method | confidence=low
+com.example.helios.service.ProfileService --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=completeCurrentProfile() uses | evidence=method | confidence=low
+com.example.helios.service.ProfileService --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=getAllProfiles() uses | evidence=method | confidence=low
+com.example.helios.service.ProfileService --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=getUserProfile() uses | evidence=method | confidence=low
+com.example.helios.service.ProfileService --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=loadCurrentProfile() uses | evidence=method | confidence=low
+com.example.helios.service.ProfileService --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=requiresProfileCompletion() uses | evidence=method | confidence=low
+com.example.helios.service.ProfileService --[DEPENDENCY -/-]--> com.example.helios.service.ProfileService.BootstrapResult | label=bootstrapCurrentUser() uses | evidence=method | confidence=low
+com.example.helios.service.ProfileService --[DEPENDENCY -/-]--> com.example.helios.service.ProfileService.BootstrapResult | label=createDefaultProfile() uses | evidence=method | confidence=low
+com.example.helios.service.ProfileService.BootstrapResult --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=BootstrapResult() uses | evidence=method | confidence=low
+com.example.helios.service.ProfileService.BootstrapResult --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=getProfile() returns | evidence=method | confidence=low
+com.example.helios.service.WaitingListService --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=getEntriesForEvent() uses | evidence=method | confidence=low
+com.example.helios.service.WaitingListService --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=updateEntry() uses | evidence=method | confidence=low
+com.example.helios.ui.AdminEventAdapter --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=AdminEventAdapter() uses | evidence=method | confidence=low
+com.example.helios.ui.AdminEventAdapter.OnEventClickListener --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=onEventClick() uses | evidence=method | confidence=low
+com.example.helios.ui.EventAdapter --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=EventAdapter() uses | evidence=method | confidence=low
+com.example.helios.ui.EventAdapter --[DEPENDENCY -/-]--> com.example.helios.ui.EventAdapter.EventViewHolder | label=onBindViewHolder() uses | evidence=method | confidence=low
+com.example.helios.ui.EventAdapter --[DEPENDENCY -/-]--> com.example.helios.ui.EventAdapter.EventViewHolder | label=onCreateViewHolder() returns | evidence=method | confidence=low
+com.example.helios.ui.EventAdapter.OnEventClickListener --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=onEventClick() uses | evidence=method | confidence=low
+com.example.helios.ui.LauncherActivity --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=openMain() uses | evidence=method | confidence=low
+com.example.helios.ui.UserAdapter --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=UserAdapter() uses | evidence=method | confidence=low
+com.example.helios.ui.UserAdapter --[DEPENDENCY -/-]--> com.example.helios.ui.UserAdapter.OnUserClickListener | label=UserAdapter() uses | evidence=method | confidence=low
+com.example.helios.ui.UserAdapter --[DEPENDENCY -/-]--> com.example.helios.ui.UserAdapter.UserViewHolder | label=onBindViewHolder() uses | evidence=method | confidence=low
+com.example.helios.ui.UserAdapter --[DEPENDENCY -/-]--> com.example.helios.ui.UserAdapter.UserViewHolder | label=onCreateViewHolder() returns | evidence=method | confidence=low
+com.example.helios.ui.UserAdapter.OnUserClickListener --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=onUserClick() uses | evidence=method | confidence=low
+com.example.helios.ui.event.EventDetailsBottomSheet --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=bindEvent() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.AdminFragment --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=deleteEvent() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.AdminFragment --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=deleteUser() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.EventsFragment --[DEPENDENCY -/-]--> com.example.helios.ui.nav.EventsFragment.OnDateSelectedListener | label=showDatePicker() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.OrganizeFragment --[DEPENDENCY -/-]--> com.example.helios.model.Event | label=matchesQuery() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=decreaseDrawCount() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=isSelectedStatus() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=isWaitlistStatus() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=updateEntries() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment --[DEPENDENCY -/-]--> com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantDisplayModel | label=removeEntrant() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantAdapter --[DEPENDENCY -/-]--> com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantDisplayModel | label=EntrantAdapter() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.OrganizerViewEntrantsFragment.EntrantDisplayModel --[DEPENDENCY -/-]--> com.example.helios.model.WaitingListEntry | label=EntrantDisplayModel() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.ProfileFragment --[DEPENDENCY -/-]--> com.example.helios.model.UserProfile | label=bindProfile() uses | evidence=method | confidence=low
+com.example.helios.ui.nav.SetupEventFragment --[DEPENDENCY -/-]--> com.example.helios.ui.nav.SetupEventFragment.DatePickedCallback | label=openDatePicker() uses | evidence=method | confidence=low
+com.example.helios.ui.AdminEventAdapter --[GENERALIZATION -/-]--> com.example.helios.ui.AdminEventAdapter.ViewHolder | label=extends | evidence=java | confidence=high
+com.example.helios.ui.EventAdapter --[GENERALIZATION -/-]--> com.example.helios.ui.EventAdapter.EventViewHolder | label=extends | evidence=java | confidence=high
+com.example.helios.ui.UserAdapter --[GENERALIZATION -/-]--> com.example.helios.ui.UserAdapter.UserViewHolder | label=extends | evidence=java | confidence=high
