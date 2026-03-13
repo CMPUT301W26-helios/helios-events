@@ -4,7 +4,6 @@ import com.example.helios.data.FirebaseRepository;
 import com.example.helios.model.Event;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.example.helios.testutil.UnsafeTestHelper;
 
 import org.junit.Test;
 
@@ -17,105 +16,126 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 public class EventServiceTest {
 
-    private static class FakeRepository extends FirebaseRepository {
-        List<Event> allEventsToReturn = new ArrayList<>();
-        String requestedEventId;
-        Event eventToReturn;
-        Event savedEvent;
-        String deletedEventId;
-
-        @Override
-        public void getAllEvents(@androidx.annotation.NonNull OnSuccessListener<List<Event>> onSuccess,
-                                 @androidx.annotation.NonNull OnFailureListener onFailure) {
-            onSuccess.onSuccess(allEventsToReturn);
-        }
-
-        @Override
-        public void getEventById(@androidx.annotation.NonNull String eventId,
-                                 @androidx.annotation.NonNull OnSuccessListener<Event> onSuccess,
-                                 @androidx.annotation.NonNull OnFailureListener onFailure) {
-            requestedEventId = eventId;
-            onSuccess.onSuccess(eventToReturn);
-        }
-
-        @Override
-        public void saveEvent(@androidx.annotation.NonNull Event event,
-                              @androidx.annotation.NonNull OnSuccessListener<Void> onSuccess,
-                              @androidx.annotation.NonNull OnFailureListener onFailure) {
-            savedEvent = event;
-            onSuccess.onSuccess(null);
-        }
-
-        @Override
-        public void deleteEvent(@androidx.annotation.NonNull String eventId,
-                                @androidx.annotation.NonNull OnSuccessListener<Void> onSuccess,
-                                @androidx.annotation.NonNull OnFailureListener onFailure) {
-            deletedEventId = eventId;
-            onSuccess.onSuccess(null);
-        }
-    }
-
-    private EventService createServiceWithFakeRepository(FakeRepository repository) {
-        EventService service = UnsafeTestHelper.allocateWithoutConstructor(EventService.class);
-        UnsafeTestHelper.setObjectField(service, "repository", repository);
-        return service;
-    }
-
     @Test
     public void getAllEvents_returnsRepositoryEvents() {
-        FakeRepository repository = UnsafeTestHelper.allocateWithoutConstructor(FakeRepository.class);
-        repository.allEventsToReturn.add(new Event());
-        repository.allEventsToReturn.add(new Event());
+        FirebaseRepository repository = mock(FirebaseRepository.class);
 
-        EventService service = createServiceWithFakeRepository(repository);
+        List<Event> expectedEvents = new ArrayList<>();
+        expectedEvents.add(new Event());
+        expectedEvents.add(new Event());
+
+        doAnswer(invocation -> {
+            OnSuccessListener<List<Event>> onSuccess = invocation.getArgument(0);
+            onSuccess.onSuccess(expectedEvents);
+            return null;
+        }).when(repository).getAllEvents(any(), any());
+
+        EventService service = new EventService(repository);
         AtomicReference<List<Event>> result = new AtomicReference<>();
 
         service.getAllEvents(result::set, e -> fail("Unexpected failure: " + e.getMessage()));
 
         assertEquals(2, result.get().size());
+        assertSame(expectedEvents, result.get());
+        verify(repository).getAllEvents(any(), any());
     }
 
     @Test
     public void getEventById_passesIdAndReturnsRepositoryResult() {
-        FakeRepository repository = UnsafeTestHelper.allocateWithoutConstructor(FakeRepository.class);
+        FirebaseRepository repository = mock(FirebaseRepository.class);
         Event expectedEvent = new Event();
-        repository.eventToReturn = expectedEvent;
 
-        EventService service = createServiceWithFakeRepository(repository);
+        doAnswer(invocation -> {
+            String eventId = invocation.getArgument(0);
+            OnSuccessListener<Event> onSuccess = invocation.getArgument(1);
+            assertEquals("event-123", eventId);
+            onSuccess.onSuccess(expectedEvent);
+            return null;
+        }).when(repository).getEventById(eq("event-123"), any(), any());
+
+        EventService service = new EventService(repository);
         AtomicReference<Event> result = new AtomicReference<>();
 
         service.getEventById("event-123", result::set, e -> fail("Unexpected failure: " + e.getMessage()));
 
-        assertEquals("event-123", repository.requestedEventId);
         assertSame(expectedEvent, result.get());
+        verify(repository).getEventById(eq("event-123"), any(), any());
     }
 
     @Test
     public void saveEvent_passesSameEventToRepository() {
-        FakeRepository repository = UnsafeTestHelper.allocateWithoutConstructor(FakeRepository.class);
-        EventService service = createServiceWithFakeRepository(repository);
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+
+        doAnswer(invocation -> {
+            Event eventArg = invocation.getArgument(0);
+            OnSuccessListener<Void> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(repository).saveEvent(any(Event.class), any(), any());
+
+        EventService service = new EventService(repository);
 
         Event event = new Event();
         AtomicBoolean successCalled = new AtomicBoolean(false);
 
-        service.saveEvent(event, unused -> successCalled.set(true), e -> fail("Unexpected failure: " + e.getMessage()));
+        service.saveEvent(event,
+                unused -> successCalled.set(true),
+                e -> fail("Unexpected failure: " + e.getMessage()));
 
         assertTrue(successCalled.get());
-        assertSame(event, repository.savedEvent);
+        verify(repository).saveEvent(eq(event), any(), any());
     }
 
     @Test
     public void deleteEvent_passesEventIdToRepository() {
-        FakeRepository repository = UnsafeTestHelper.allocateWithoutConstructor(FakeRepository.class);
-        EventService service = createServiceWithFakeRepository(repository);
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+
+        doAnswer(invocation -> {
+            String eventId = invocation.getArgument(0);
+            OnSuccessListener<Void> onSuccess = invocation.getArgument(1);
+            assertEquals("delete-me", eventId);
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(repository).deleteEvent(eq("delete-me"), any(), any());
+
+        EventService service = new EventService(repository);
         AtomicBoolean successCalled = new AtomicBoolean(false);
 
-        service.deleteEvent("delete-me", unused -> successCalled.set(true), e -> fail("Unexpected failure: " + e.getMessage()));
+        service.deleteEvent("delete-me",
+                unused -> successCalled.set(true),
+                e -> fail("Unexpected failure: " + e.getMessage()));
 
         assertTrue(successCalled.get());
-        assertEquals("delete-me", repository.deletedEventId);
+        verify(repository).deleteEvent(eq("delete-me"), any(), any());
+    }
+
+    @Test
+    public void getEventById_forwardsRepositoryFailure() {
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+        RuntimeException expected = new RuntimeException("boom");
+
+        doAnswer(invocation -> {
+            OnFailureListener onFailure = invocation.getArgument(2);
+            onFailure.onFailure(expected);
+            return null;
+        }).when(repository).getEventById(eq("event-404"), any(), any());
+
+        EventService service = new EventService(repository);
+        AtomicReference<Exception> failure = new AtomicReference<>();
+
+        service.getEventById("event-404",
+                event -> fail("Success should not be called"),
+                failure::set);
+
+        assertSame(expected, failure.get());
+        verify(repository).getEventById(eq("event-404"), any(), any());
     }
 }

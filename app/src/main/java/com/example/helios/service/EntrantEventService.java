@@ -13,8 +13,21 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class EntrantEventService {
 
-    private final FirebaseRepository repository = new FirebaseRepository();
-    private final ProfileService profileService = new ProfileService();
+    private final FirebaseRepository repository;
+    private final ProfileService profileService;
+
+    public EntrantEventService() {
+        this(new FirebaseRepository(), new ProfileService());
+    }
+
+    // Package-private test seam
+    EntrantEventService(
+            @NonNull FirebaseRepository repository,
+            @NonNull ProfileService profileService
+    ) {
+        this.repository = repository;
+        this.profileService = profileService;
+    }
 
     public void joinWaitingList(
             @NonNull Context context,

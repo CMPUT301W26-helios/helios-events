@@ -1,18 +1,28 @@
 package com.example.helios.service;
 
+import com.example.helios.auth.AuthDeviceService;
+import com.example.helios.data.FirebaseRepository;
 import com.example.helios.model.UserProfile;
-import com.example.helios.testutil.UnsafeTestHelper;
 
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public class ProfileServiceTest {
+
+    private ProfileService createService() {
+        return new ProfileService(
+                mock(AuthDeviceService.class),
+                mock(FirebaseRepository.class)
+        );
+    }
+
     @Test
     public void requiresProfileCompletion_returnsTrueWhenNameMissing() {
-        ProfileService service = UnsafeTestHelper.allocateWithoutConstructor(ProfileService.class);
+        ProfileService service = createService();
         UserProfile profile = new UserProfile("uid", null, "a@b.com", null, "user", true, "inst");
 
         assertTrue(service.requiresProfileCompletion(profile));
@@ -20,7 +30,7 @@ public class ProfileServiceTest {
 
     @Test
     public void requiresProfileCompletion_returnsTrueWhenEmailMissing() {
-        ProfileService service = UnsafeTestHelper.allocateWithoutConstructor(ProfileService.class);
+        ProfileService service = createService();
         UserProfile profile = new UserProfile("uid", "Alice", null, null, "user", true, "inst");
 
         assertTrue(service.requiresProfileCompletion(profile));
@@ -28,7 +38,7 @@ public class ProfileServiceTest {
 
     @Test
     public void requiresProfileCompletion_returnsFalseWhenNameAndEmailPresent() {
-        ProfileService service = UnsafeTestHelper.allocateWithoutConstructor(ProfileService.class);
+        ProfileService service = createService();
         UserProfile profile = new UserProfile("uid", "Alice", "a@b.com", null, "user", true, "inst");
 
         assertFalse(service.requiresProfileCompletion(profile));

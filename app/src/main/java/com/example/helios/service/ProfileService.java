@@ -37,8 +37,16 @@ public class ProfileService {
     private final FirebaseRepository repository;
 
     public ProfileService() {
-        this.authDeviceService = new AuthDeviceService();
-        this.repository = new FirebaseRepository();
+        this(new AuthDeviceService(), new FirebaseRepository());
+    }
+
+    // Package-private test seam
+    ProfileService(
+            @NonNull AuthDeviceService authDeviceService,
+            @NonNull FirebaseRepository repository
+    ) {
+        this.authDeviceService = authDeviceService;
+        this.repository = repository;
     }
 
     public void bootstrapCurrentUser(
@@ -73,9 +81,11 @@ public class ProfileService {
                     }
 
                     if (needsUpdate) {
-                        repository.updateUser(existingProfile,
+                        repository.updateUser(
+                                existingProfile,
                                 unused -> onSuccess.onSuccess(new BootstrapResult(existingProfile, false)),
-                                onFailure);
+                                onFailure
+                        );
                     } else {
                         onSuccess.onSuccess(new BootstrapResult(existingProfile, false));
                     }
@@ -105,9 +115,11 @@ public class ProfileService {
             profile.setEmail(email);
             profile.setPhone(phone);
 
-            repository.updateUser(profile,
+            repository.updateUser(
+                    profile,
                     unused -> onSuccess.onSuccess(profile),
-                    onFailure);
+                    onFailure
+            );
         }, onFailure);
     }
 
@@ -148,10 +160,13 @@ public class ProfileService {
                 installationId
         );
 
-        repository.saveUser(newProfile,
+        repository.saveUser(
+                newProfile,
                 unused -> onSuccess.onSuccess(new BootstrapResult(newProfile, true)),
-                onFailure);
+                onFailure
+        );
     }
+
     public void deleteCurrentProfile(
             @NonNull Context context,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -179,9 +194,7 @@ public class ProfileService {
     }
 
     public void setNotificationsMuted(
-
-
-    @NonNull Context context,
+            @NonNull Context context,
             boolean muted,
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure

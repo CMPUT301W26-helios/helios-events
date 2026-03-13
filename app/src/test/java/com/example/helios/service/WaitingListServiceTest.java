@@ -2,7 +2,6 @@ package com.example.helios.service;
 
 import com.example.helios.data.FirebaseRepository;
 import com.example.helios.model.WaitingListEntry;
-import com.example.helios.testutil.UnsafeTestHelper;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
@@ -18,118 +17,129 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 
 public class WaitingListServiceTest {
 
-    private static class FakeRepository extends FirebaseRepository {
-        List<WaitingListEntry> entriesToReturn = new ArrayList<>();
-        String listEventId;
-        String updateEventId;
-        String updateEntrantUid;
-        WaitingListEntry updateEntry;
-        String deleteEventId;
-        String deleteEntrantUid;
-
-        @Override
-        public void getAllWaitingListEntries(
-                @androidx.annotation.NonNull String eventId,
-                @androidx.annotation.NonNull OnSuccessListener<List<WaitingListEntry>> onSuccess,
-                @androidx.annotation.NonNull OnFailureListener onFailure
-        ) {
-            listEventId = eventId;
-            onSuccess.onSuccess(entriesToReturn);
-        }
-
-        @Override
-        public void updateWaitingListEntry(
-                @androidx.annotation.NonNull String eventId,
-                @androidx.annotation.NonNull String entrantUid,
-                @androidx.annotation.NonNull WaitingListEntry entry,
-                @androidx.annotation.NonNull OnSuccessListener<Void> onSuccess,
-                @androidx.annotation.NonNull OnFailureListener onFailure
-        ) {
-            updateEventId = eventId;
-            updateEntrantUid = entrantUid;
-            updateEntry = entry;
-            onSuccess.onSuccess(null);
-        }
-
-        @Override
-        public void deleteWaitingListEntry(
-                @androidx.annotation.NonNull String eventId,
-                @androidx.annotation.NonNull String entrantUid,
-                @androidx.annotation.NonNull OnSuccessListener<Void> onSuccess,
-                @androidx.annotation.NonNull OnFailureListener onFailure
-        ) {
-            deleteEventId = eventId;
-            deleteEntrantUid = entrantUid;
-            onSuccess.onSuccess(null);
-        }
-    }
-
-    private WaitingListService createServiceWithFakeRepository(FakeRepository repository) {
-        WaitingListService service = UnsafeTestHelper.allocateWithoutConstructor(WaitingListService.class);
-        UnsafeTestHelper.setObjectField(service, "repository", repository);
-        return service;
-    }
-
     @Test
     public void getEntriesForEvent_passesEventIdAndReturnsEntries() {
-        FakeRepository repository = UnsafeTestHelper.allocateWithoutConstructor(FakeRepository.class);
-        repository.entriesToReturn.add(new WaitingListEntry());
-        repository.entriesToReturn.add(new WaitingListEntry());
-        WaitingListService service = createServiceWithFakeRepository(repository);
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+
+        List<WaitingListEntry> expectedEntries = new ArrayList<>();
+        expectedEntries.add(new WaitingListEntry());
+        expectedEntries.add(new WaitingListEntry());
+
+        doAnswer(invocation -> {
+            OnSuccessListener<List<WaitingListEntry>> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(expectedEntries);
+            return null;
+        }).when(repository).getAllWaitingListEntries(eq("event-a"), any(), any());
+
+        WaitingListService service = new WaitingListService(repository);
 
         AtomicReference<List<WaitingListEntry>> result = new AtomicReference<>();
-        service.getEntriesForEvent("event-a", result::set, e -> fail("Unexpected failure: " + e.getMessage()));
+        service.getEntriesForEvent(
+                "event-a",
+                result::set,
+                e -> fail("Unexpected failure: " + e.getMessage())
+        );
 
-        assertEquals("event-a", repository.listEventId);
         assertNotNull(result.get());
         assertEquals(2, result.get().size());
+        assertSame(expectedEntries, result.get());
+        verify(repository).getAllWaitingListEntries(eq("event-a"), any(), any());
     }
 
     @Test
     public void updateEntry_withBlankEntrantUid_returnsFailure() {
-        FakeRepository repository = UnsafeTestHelper.allocateWithoutConstructor(FakeRepository.class);
-        WaitingListService service = createServiceWithFakeRepository(repository);
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+        WaitingListService service = new WaitingListService(repository);
+
         WaitingListEntry entry = new WaitingListEntry();
         entry.setEntrantUid("   ");
 
         AtomicReference<Exception> failure = new AtomicReference<>();
 
-        service.updateEntry("event-a", entry, unused -> fail("Success should not be called"), failure::set);
+        service.updateEntry(
+                "event-a",
+                entry,
+                unused -> fail("Success should not be called"),
+                failure::set
+        );
 
         assertNotNull(failure.get());
         assertTrue(failure.get() instanceof IllegalArgumentException);
         assertEquals("entrantUid must not be empty.", failure.get().getMessage());
+        verify(repository, never()).updateWaitingListEntry(any(), any(), any(), any(), any());
     }
 
     @Test
     public void updateEntry_withValidEntrantUid_delegatesToRepository() {
-        FakeRepository repository = UnsafeTestHelper.allocateWithoutConstructor(FakeRepository.class);
-        WaitingListService service = createServiceWithFakeRepository(repository);
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+
+        doAnswer(invocation -> {
+            String eventId = invocation.getArgument(0);
+            String entrantUid = invocation.getArgument(1);
+            WaitingListEntry entryArg = invocation.getArgument(2);
+            OnSuccessListener<Void> onSuccess = invocation.getArgument(3);
+
+            assertEquals("event-1", eventId);
+            assertEquals("user-1", entrantUid);
+            assertEquals("user-1", entryArg.getEntrantUid());
+
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(repository).updateWaitingListEntry(eq("event-1"), eq("user-1"), any(), any(), any());
+
+        WaitingListService service = new WaitingListService(repository);
+
         WaitingListEntry entry = new WaitingListEntry();
         entry.setEntrantUid("user-1");
 
         AtomicBoolean successCalled = new AtomicBoolean(false);
-        service.updateEntry("event-1", entry, unused -> successCalled.set(true), e -> fail("Unexpected failure: " + e.getMessage()));
+        service.updateEntry(
+                "event-1",
+                entry,
+                unused -> successCalled.set(true),
+                e -> fail("Unexpected failure: " + e.getMessage())
+        );
 
         assertTrue(successCalled.get());
-        assertEquals("event-1", repository.updateEventId);
-        assertEquals("user-1", repository.updateEntrantUid);
-        assertSame(entry, repository.updateEntry);
+        verify(repository).updateWaitingListEntry(eq("event-1"), eq("user-1"), eq(entry), any(), any());
     }
 
     @Test
     public void removeEntry_passesIdsToRepository() {
-        FakeRepository repository = UnsafeTestHelper.allocateWithoutConstructor(FakeRepository.class);
-        WaitingListService service = createServiceWithFakeRepository(repository);
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+
+        doAnswer(invocation -> {
+            String eventId = invocation.getArgument(0);
+            String entrantUid = invocation.getArgument(1);
+            OnSuccessListener<Void> onSuccess = invocation.getArgument(2);
+
+            assertEquals("event-z", eventId);
+            assertEquals("entrant-z", entrantUid);
+
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(repository).deleteWaitingListEntry(eq("event-z"), eq("entrant-z"), any(), any());
+
+        WaitingListService service = new WaitingListService(repository);
 
         AtomicBoolean successCalled = new AtomicBoolean(false);
-        service.removeEntry("event-z", "entrant-z", unused -> successCalled.set(true), e -> fail("Unexpected failure: " + e.getMessage()));
+        service.removeEntry(
+                "event-z",
+                "entrant-z",
+                unused -> successCalled.set(true),
+                e -> fail("Unexpected failure: " + e.getMessage())
+        );
 
         assertTrue(successCalled.get());
-        assertEquals("event-z", repository.deleteEventId);
-        assertEquals("entrant-z", repository.deleteEntrantUid);
+        verify(repository).deleteWaitingListEntry(eq("event-z"), eq("entrant-z"), any(), any());
     }
 }
