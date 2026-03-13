@@ -11,6 +11,9 @@ import java.util.List;
 
 /**
  * Service wrapper for event-related repository operations.
+ *
+ * Role: thin service layer over the repository for event CRUD actions.
+ * Issues: currently adds little business logic beyond delegation.
  */
 public class EventService {
 

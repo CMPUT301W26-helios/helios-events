@@ -9,7 +9,15 @@ import androidx.annotation.Nullable;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;public class AuthDeviceService {
+import com.google.firebase.auth.FirebaseUser;
+/**
+ * Service wrapper around Firebase anonymous authentication for device-based sign-in.
+ *
+ * Role: infrastructure/auth service used by higher-level profile and entrant flows.
+ * Outstanding issues: directly constructs FirebaseAuth, which makes isolated unit testing harder;
+ * formatting/import cleanup is still needed in this file.
+ */
+public class AuthDeviceService {
     private final FirebaseAuth auth;
 
     public AuthDeviceService() {

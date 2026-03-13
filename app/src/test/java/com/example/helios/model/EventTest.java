@@ -2,9 +2,14 @@ package com.example.helios.model;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class EventTest {
+
+    private final List<String> interests = Arrays.asList("Tag1", "Tag2");
 
     @Test
     public void constructor_setsAllFields_andDefaultsDrawToFalse() {
@@ -25,7 +30,9 @@ public class EventTest {
                 "Lottery draw occurs after registration closes.",
                 "organizer-55",
                 "poster-900",
-                "helios://event/event-1001"
+                "helios://event/event-1001",
+                interests,
+                true
         );
 
         assertEquals("event-1001", event.getEventId());
@@ -45,6 +52,10 @@ public class EventTest {
         assertEquals("organizer-55", event.getOrganizerUid());
         assertEquals("poster-900", event.getPosterImageId());
         assertEquals("helios://event/event-1001", event.getQrCodeValue());
+        assertEquals(interests, event.getInterests());
+
+        // Constructor currently ignores the passed drawHappened argument
+        // and always sets drawHappened to false.
         assertFalse(event.isDrawHappened());
     }
 
@@ -69,12 +80,14 @@ public class EventTest {
         assertNull(event.getOrganizerUid());
         assertNull(event.getPosterImageId());
         assertNull(event.getQrCodeValue());
+        assertNull(event.getInterests());
         assertFalse(event.isDrawHappened());
     }
 
     @Test
     public void setters_roundTripUpdatedValues() {
         Event event = new Event();
+        List<String> updatedInterests = Arrays.asList("Dance", "Beginners");
 
         event.setEventId("event-2002");
         event.setTitle("Dance Lessons");
@@ -93,6 +106,7 @@ public class EventTest {
         event.setOrganizerUid("organizer-77");
         event.setPosterImageId(null);
         event.setQrCodeValue("qr://dance-lessons");
+        event.setInterests(updatedInterests);
         event.setDrawHappened(true);
 
         assertEquals("event-2002", event.getEventId());
@@ -112,6 +126,7 @@ public class EventTest {
         assertEquals("organizer-77", event.getOrganizerUid());
         assertNull(event.getPosterImageId());
         assertEquals("qr://dance-lessons", event.getQrCodeValue());
+        assertEquals(updatedInterests, event.getInterests());
         assertTrue(event.isDrawHappened());
     }
 
@@ -122,5 +137,32 @@ public class EventTest {
         event.setWaitlistLimit(120);
 
         assertEquals(Integer.valueOf(120), event.getWaitlistLimit());
+    }
+
+    @Test
+    public void constructor_ignoresPassedDrawHappenedValue_andStillSetsFalse() {
+        Event event = new Event(
+                "event-3003",
+                "Yoga Class",
+                "Morning yoga session.",
+                "Wellness Studio",
+                "101 Example Ave, Edmonton, AB",
+                1760000000000L,
+                1760003600000L,
+                1759000000000L,
+                1759500000000L,
+                15,
+                10,
+                null,
+                false,
+                "Lottery closes before the class starts.",
+                "organizer-99",
+                null,
+                null,
+                Arrays.asList("Wellness", "Fitness"),
+                true
+        );
+
+        assertFalse(event.isDrawHappened());
     }
 }

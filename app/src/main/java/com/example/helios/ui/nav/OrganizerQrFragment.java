@@ -238,7 +238,8 @@ public class OrganizerQrFragment extends Fragment {
                     null, geoRequired, "Lottery details TBD.",
                     uid, posterUri,
                     null, // qrCodeValue set after save
-                    interests
+                    interests,
+                    false
             );
 
             eventService.saveEvent(event, unused -> {
