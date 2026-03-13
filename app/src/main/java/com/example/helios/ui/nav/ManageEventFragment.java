@@ -20,8 +20,9 @@ import com.example.helios.ui.event.EventDetailsBottomSheet;
 import com.google.android.material.button.MaterialButton;
 
 /**
- * Organizer flow: manage a single event (from My Events).
- * Expects an argument "arg_event_id" with the event's id.
+ * Fragment that allows an organizer to manage a single event.
+ * Provides access to various management tools like viewing the event page,
+ * managing the entrant list, viewing the QR code, and editing event details.
  */
 public class ManageEventFragment extends Fragment {
 
@@ -29,6 +30,9 @@ public class ManageEventFragment extends Fragment {
     @Nullable
     private String eventId;
 
+    /**
+     * Default constructor for ManageEventFragment.
+     */
     public ManageEventFragment() {
         super(R.layout.fragment_manage_event);
     }
@@ -57,11 +61,9 @@ public class ManageEventFragment extends Fragment {
         TextView nameView = view.findViewById(R.id.tv_manage_event_name);
         Button viewPageButton = view.findViewById(R.id.button_view_event_page);
         Button entrantListButton = view.findViewById(R.id.button_entrant_list);
-        //Button manageNotificationsButton = view.findViewById(R.id.button_manage_notifications);
         Button viewQrButton = view.findViewById(R.id.button_view_qr_code);
         Button editButton = view.findViewById(R.id.button_edit_event);
         Button mapButton = view.findViewById(R.id.button_show_mapped_location);
-        //MaterialButton backButton = view.findViewById(R.id.button_manage_back);
 
         if (eventId == null || eventId.isEmpty()) {
             Toast.makeText(requireContext(),
@@ -82,12 +84,6 @@ public class ManageEventFragment extends Fragment {
             });
         }
 
-        /*if (backButton != null) {
-            backButton.setOnClickListener(v -> 
-                NavHostFragment.findNavController(this).popBackStack(R.id.organizeFragment, false)
-            );
-        }*/
-
         viewPageButton.setOnClickListener(v -> {
             if (eventId != null) {
                 // Pass 'true' to hide the Join Waiting List button for organizers
@@ -104,15 +100,6 @@ public class ManageEventFragment extends Fragment {
                         .navigate(R.id.organizerViewEntrantsFragment, args);
             }
         });
-
-/*        if (manageNotificationsButton != null) {
-            manageNotificationsButton.setOnClickListener(v -> {
-                Bundle args = new Bundle();
-                args.putString("arg_event_id", eventId);
-                NavHostFragment.findNavController(this)
-                        .navigate(R.id.notifyEntrantsFragment, args);
-            });
-        }*/
 
         viewQrButton.setOnClickListener(v -> {
             if (eventId != null) {

@@ -15,14 +15,29 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository class responsible for interacting with Firebase Firestore.
+ * Handles CRUD operations for users, events, and waiting lists.
+ */
 public class FirebaseRepository {
     private final FirebaseFirestore db;
 
+    /**
+     * Initializes the FirebaseRepository with a Firestore instance.
+     */
     public FirebaseRepository() {
         this.db = FirebaseFirestore.getInstance();
     }
 
     // USERS SECTION:
+
+    /**
+     * Saves a user profile to Firestore.
+     *
+     * @param user      The user profile to save.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void saveUser(
             @NonNull UserProfile user,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -40,6 +55,13 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Updates an existing user profile in Firestore.
+     *
+     * @param user      The updated user profile.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void updateUser(
             @NonNull UserProfile user,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -48,6 +70,13 @@ public class FirebaseRepository {
         saveUser(user, onSuccess, onFailure);
     }
 
+    /**
+     * Retrieves a user profile from Firestore by UID.
+     *
+     * @param uid       The unique identifier of the user.
+     * @param onSuccess Callback receiving the UserProfile (null if not found).
+     * @param onFailure Callback for failed operation.
+     */
     public void getUser(
             @NonNull String uid,
             @NonNull OnSuccessListener<UserProfile> onSuccess,
@@ -70,6 +99,14 @@ public class FirebaseRepository {
                 })
                 .addOnFailureListener(onFailure);
     }
+
+    /**
+     * Deletes a user profile from Firestore by UID.
+     *
+     * @param uid       The unique identifier of the user.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void deleteUser(
             @NonNull String uid,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -87,6 +124,13 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Disables notifications for a specific user.
+     *
+     * @param uid       The unique identifier of the user.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void muteNotifications(
             @NonNull String uid,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -104,6 +148,13 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Checks if a device installation ID is registered as an admin device and is enabled.
+     *
+     * @param installationId The device's installation ID.
+     * @param onSuccess      Callback receiving true if the device is an enabled admin.
+     * @param onFailure      Callback for failed operation.
+     */
     public void isAdminInstallation(
             @NonNull String installationId,
             @NonNull OnSuccessListener<Boolean> onSuccess,
@@ -123,7 +174,15 @@ public class FirebaseRepository {
                 })
                 .addOnFailureListener(onFailure);
     }
+
     // EVENTS SECTION:
+
+    /**
+     * Retrieves all events from Firestore, ordered by start time.
+     *
+     * @param onSuccess Callback receiving a list of all events.
+     * @param onFailure Callback for failed operation.
+     */
     public void getAllEvents(
             @NonNull OnSuccessListener<List<Event>> onSuccess,
             @NonNull OnFailureListener onFailure
@@ -148,6 +207,13 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Retrieves a single event by its ID.
+     *
+     * @param eventId   The unique identifier of the event.
+     * @param onSuccess Callback receiving the event (null if not found).
+     * @param onFailure Callback for failed operation.
+     */
     public void getEventById(
             @NonNull String eventId,
             @NonNull OnSuccessListener<Event> onSuccess,
@@ -174,6 +240,14 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Saves or updates an event in Firestore.
+     * If the event has no ID, a new document is created and the ID is updated.
+     *
+     * @param event     The event to save.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void saveEvent(
             @NonNull Event event,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -206,6 +280,13 @@ public class FirebaseRepository {
         }
     }
 
+    /**
+     * Deletes an event from Firestore by its ID.
+     *
+     * @param eventId   The unique identifier of the event.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void deleteEvent(
             @NonNull String eventId,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -223,6 +304,12 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Retrieves all user profiles from Firestore.
+     *
+     * @param onSuccess Callback receiving a list of all user profiles.
+     * @param onFailure Callback for failed operation.
+     */
     public void getAllUsers(
             @NonNull OnSuccessListener<List<UserProfile>> onSuccess,
             @NonNull OnFailureListener onFailure
@@ -239,7 +326,17 @@ public class FirebaseRepository {
                 })
                 .addOnFailureListener(onFailure);
     }
+
     // WAITING LIST SECTION:
+
+    /**
+     * Retrieves a specific waiting list entry for a user and event.
+     *
+     * @param eventId    The ID of the event.
+     * @param entrantUid The UID of the entrant.
+     * @param onSuccess  Callback receiving the WaitingListEntry (null if not found).
+     * @param onFailure  Callback for failed operation.
+     */
     public void getWaitingListEntry(
             @NonNull String eventId,
             @NonNull String entrantUid,
@@ -266,6 +363,15 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Adds or updates a waiting list entry.
+     *
+     * @param eventId    The ID of the event.
+     * @param entrantUid The UID of the entrant.
+     * @param entry      The entry data to save.
+     * @param onSuccess  Callback for successful operation.
+     * @param onFailure  Callback for failed operation.
+     */
     public void upsertWaitingListEntry(
             @NonNull String eventId,
             @NonNull String entrantUid,
@@ -286,6 +392,14 @@ public class FirebaseRepository {
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
+
+    /**
+     * Retrieves all waiting list entries for a given event.
+     *
+     * @param eventId   The ID of the event.
+     * @param onSuccess Callback receiving a list of all waiting list entries.
+     * @param onFailure Callback for failed operation.
+     */
     public void getAllWaitingListEntries(
             @NonNull String eventId,
             @NonNull OnSuccessListener<List<WaitingListEntry>> onSuccess,
@@ -311,6 +425,15 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Updates an existing waiting list entry.
+     *
+     * @param eventId    The ID of the event.
+     * @param entrantUid The UID of the entrant.
+     * @param entry      The updated entry data.
+     * @param onSuccess  Callback for successful operation.
+     * @param onFailure  Callback for failed operation.
+     */
     public void updateWaitingListEntry(
             @NonNull String eventId,
             @NonNull String entrantUid,
@@ -321,6 +444,14 @@ public class FirebaseRepository {
         upsertWaitingListEntry(eventId, entrantUid, entry, onSuccess, onFailure);
     }
 
+    /**
+     * Removes a user from an event's waiting list.
+     *
+     * @param eventId    The ID of the event.
+     * @param entrantUid The UID of the entrant.
+     * @param onSuccess  Callback for successful operation.
+     * @param onFailure  Callback for failed operation.
+     */
     public void deleteWaitingListEntry(
             @NonNull String eventId,
             @NonNull String entrantUid,
@@ -361,6 +492,13 @@ public class FirebaseRepository {
     private boolean isNonEmpty(@Nullable String value) {
         return value != null && !value.trim().isEmpty();
     }
+
+    /**
+     * Seeds a demo event into Firestore for testing purposes.
+     *
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void seedDemoEvent(OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
         Event demo = new Event(
                 "demo_event_1",
@@ -388,6 +526,14 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Updates the notification mute status for a user.
+     *
+     * @param uid       The unique identifier of the user.
+     * @param muted     True to mute notifications, false to enable.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void setNotificationsMuted(
             @NonNull String uid,
             boolean muted,

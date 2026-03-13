@@ -5,6 +5,10 @@ import android.content.SharedPreferences;
 
 import java.util.UUID;
 
+/**
+ * Provides a unique, persistent installation ID for the application.
+ * This ID is generated once and stored in SharedPreferences.
+ */
 public final class InstallationIdProvider {
     private static final String PREFS = "app_prefs";
     private static final String KEY_INSTALLATION_ID = "installation_id";
@@ -12,6 +16,13 @@ public final class InstallationIdProvider {
     private InstallationIdProvider() {
     }
 
+    /**
+     * Returns the installation ID for the device. If one does not already exist,
+     * a new random UUID is generated, stored, and returned.
+     *
+     * @param context The application context to access SharedPreferences.
+     * @return The unique installation ID for this device.
+     */
     public static String getInstallationId(Context context) {
         SharedPreferences sp = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         String existing = sp.getString(KEY_INSTALLATION_ID, null);
@@ -25,6 +36,11 @@ public final class InstallationIdProvider {
         return generated;
     }
 
+    /**
+     * Clears the current installation ID from SharedPreferences.
+     *
+     * @param context The application context to access SharedPreferences.
+     */
     public static void clearInstallationId(Context context) {
         SharedPreferences sp = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         sp.edit().remove(KEY_INSTALLATION_ID).apply();

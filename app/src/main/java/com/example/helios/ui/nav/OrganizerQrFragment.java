@@ -27,6 +27,11 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;
 
+/**
+ * Fragment that displays the QR code for an event.
+ * In CREATE mode, it generates the QR code after the event is saved.
+ * In VIEW_EXISTING mode, it retrieves and displays the stored QR code value.
+ */
 public class OrganizerQrFragment extends Fragment {
 
     private enum Mode {
@@ -53,6 +58,9 @@ public class OrganizerQrFragment extends Fragment {
     // Field so saveEvent() can update the QR image after save
     private ImageView qrImage;
 
+    /**
+     * Default constructor for OrganizerQrFragment.
+     */
     public OrganizerQrFragment() {
         super(R.layout.fragment_organizer_qr);
     }
@@ -205,6 +213,10 @@ public class OrganizerQrFragment extends Fragment {
         }
     }
 
+    /**
+     * Saves the event to Firestore. Once the event is saved and an ID is assigned,
+     * updates the event with its QR code value (the event ID) and generates the QR bitmap.
+     */
     private void saveEvent() {
         if (title == null || title.trim().isEmpty()) {
             Toast.makeText(requireContext(),
@@ -274,6 +286,13 @@ public class OrganizerQrFragment extends Fragment {
         });
     }
 
+    /**
+     * Generates a QR code bitmap for the given string data using the ZXing library.
+     *
+     * @param data   The string to encode in the QR code.
+     * @param sizePx The size of the bitmap in pixels.
+     * @return The generated QR code bitmap, or null if generation fails.
+     */
     @Nullable
     private Bitmap generateQrBitmap(@NonNull String data, int sizePx) {
         if (data == null || data.trim().isEmpty()) return null;

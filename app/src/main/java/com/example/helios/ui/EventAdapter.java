@@ -17,6 +17,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * RecyclerView adapter for displaying a list of events.
+ * It handles basic event details like title, description, location, and date.
+ */
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHolder> {
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
@@ -25,14 +29,32 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     @Nullable
     private final OnEventClickListener onEventClick;
 
+    /**
+     * Listener interface for handling event click actions.
+     */
     public interface OnEventClickListener {
+        /**
+         * Called when an event item is clicked.
+         * @param event The event associated with the clicked item.
+         */
         void onEventClick(@NonNull Event event);
     }
 
+    /**
+     * Constructs an EventAdapter without a click listener.
+     *
+     * @param events The list of events to display.
+     */
     public EventAdapter(@NonNull List<Event> events) {
         this(events, null);
     }
 
+    /**
+     * Constructs an EventAdapter with a click listener.
+     *
+     * @param events       The list of events to display.
+     * @param onEventClick The listener for click events.
+     */
     public EventAdapter(@NonNull List<Event> events, @Nullable OnEventClickListener onEventClick) {
         this.events = events;
         this.onEventClick = onEventClick;
@@ -99,6 +121,9 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         return trimmed.isEmpty() ? fallback : trimmed;
     }
 
+    /**
+     * ViewHolder class for event items.
+     */
     static class EventViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle;
         TextView tvDescription;
@@ -107,6 +132,10 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         TextView tvTags;
         TextView tvMaxEntrants;
 
+        /**
+         * Constructs an EventViewHolder.
+         * @param itemView The view for a single list item.
+         */
         public EventViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tv_event_title);

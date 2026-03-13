@@ -34,8 +34,11 @@ import com.google.mlkit.vision.common.InputImage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import com.example.helios.ui.event.EventDetailsBottomSheet;
 
+/**
+ * Fragment that provides QR code scanning functionality.
+ * Supports scanning via the device camera or by uploading an image from the gallery.
+ */
 public class ScanQrFragment extends Fragment {
 
     private ActivityResultLauncher<Intent> pickImageLauncher;
@@ -45,6 +48,9 @@ public class ScanQrFragment extends Fragment {
     private ExecutorService cameraExecutor;
     private ProcessCameraProvider cameraProvider;
 
+    /**
+     * Default constructor for ScanQrFragment.
+     */
     public ScanQrFragment() {
         super(R.layout.fragment_scan_qr);
     }
@@ -110,6 +116,12 @@ public class ScanQrFragment extends Fragment {
         });
     }
 
+    /**
+     * Updates the UI state when switching between camera scan and image upload modes.
+     *
+     * @param view     The fragment's root view.
+     * @param isUpload True if switching to upload mode, false for camera mode.
+     */
     private void updateToggleState(View view, boolean isUpload) {
         view.findViewById(R.id.btn_toggle_upload).setBackgroundResource(isUpload ? R.drawable.bg_toggle_left_active : R.drawable.bg_toggle_left_inactive);
         view.findViewById(R.id.btn_toggle_camera).setBackgroundResource(isUpload ? R.drawable.bg_toggle_right_inactive : R.drawable.bg_toggle_right_active);
@@ -121,6 +133,9 @@ public class ScanQrFragment extends Fragment {
         view.findViewById(R.id.view_finder).setVisibility(isUpload ? View.GONE : View.VISIBLE);
     }
 
+    /**
+     * Initializes and starts the CameraX provider.
+     */
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext());
 
@@ -134,6 +149,9 @@ public class ScanQrFragment extends Fragment {
         }, ContextCompat.getMainExecutor(requireContext()));
     }
 
+    /**
+     * Binds the camera preview and image analysis (barcode scanning) use cases to the lifecycle.
+     */
     private void bindCameraUseCases() {
         Preview preview = new Preview.Builder().build();
         preview.setSurfaceProvider(viewFinder.getSurfaceProvider());
@@ -173,12 +191,20 @@ public class ScanQrFragment extends Fragment {
         }
     }
 
+    /**
+     * Stops the camera and unbinds all use cases.
+     */
     private void stopCamera() {
         if (cameraProvider != null) {
             cameraProvider.unbindAll();
         }
     }
 
+    /**
+     * Processes a QR code from a gallery image URI using ML Kit.
+     *
+     * @param uri The URI of the image to scan.
+     */
     private void handleQrFromUri(Uri uri) {
         try {
             InputImage image = InputImage.fromFilePath(requireContext(), uri);
@@ -197,6 +223,11 @@ public class ScanQrFragment extends Fragment {
         }
     }
 
+    /**
+     * Handles the detected QR code value by opening the event details bottom sheet.
+     *
+     * @param value The raw string value encoded in the QR code.
+     */
     private void handleQrCode(String value) {
         if (!isAdded()) return;
         EventDetailsBottomSheet.newInstance(value)
