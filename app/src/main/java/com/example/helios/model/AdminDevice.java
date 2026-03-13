@@ -1,4 +1,5 @@
 package com.example.helios.model;
+
 /**
  * Represents a device installation that has been explicitly granted or denied administrator access.
  *
@@ -7,22 +8,29 @@ package com.example.helios.model;
  *
  * <p>Outstanding issues: administrator privilege is tied to an installation identifier, so clearing
  * app data or moving devices changes the installation identity.
+ * 
+ * Alt Description: (TODO! update and combine descriptions properly)
+ * Represents a device with administrative privileges in the Helios application.
+ * Stores information about the device's installation ID and its status.
  */
 public class AdminDevice {
     private String installationId; // doc id can be this too
     private boolean enabled;
     private String note;
     private long addedAtMillis;
-    /** Creates an empty admin-device record for Firestore deserialization. */
+
+    /**
+     * Default constructor required for Firestore deserialization.
+     */
     public AdminDevice() {}
 
     /**
-     * Creates a populated admin-device record.
+     * Constructs a new AdminDevice with the specified details.
      *
-     * @param installationId installation identifier for the device
-     * @param enabled whether admin access is enabled for the installation
-     * @param note optional note describing why the device was added or disabled
-     * @param addedAtMillis timestamp, in epoch milliseconds, when the record was created
+     * @param installationId Unique identifier for the device installation.
+     * @param enabled        Whether this device is currently enabled as an admin device.
+     * @param note           A note or description for this device.
+     * @param addedAtMillis  Time when the device was added in epoch milliseconds.
      */
     public AdminDevice(String installationId, boolean enabled, String note, long addedAtMillis) {
         this.installationId = installationId;
@@ -31,28 +39,43 @@ public class AdminDevice {
         this.addedAtMillis = addedAtMillis;
     }
 
-    // Getters and Setters:
-    /** @return the installation identifier associated with this admin device record */
+    /**
+     * @return The unique identifier for the device installation.
+     */
     public String getInstallationId() { return installationId; }
 
-    /** @param installationId installation identifier associated with this admin device record */
+    /**
+     * @param installationId The unique identifier for the device installation.
+     */
     public void setInstallationId(String installationId) { this.installationId = installationId; }
 
-    /** @return {@code true} when administrator access is enabled for this installation */
+    /**
+     * @return True if the device is enabled as an admin, false otherwise.
+     */
     public boolean isEnabled() { return enabled; }
 
-    /** @param enabled whether administrator access is enabled for this installation */
+    /**
+     * @param enabled Whether the device should be enabled as an admin.
+     */
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
-    /** @return optional note describing the admin-device record */
+    /**
+     * @return A note or description for this device.
+     */
     public String getNote() { return note; }
 
-    /** @param note optional note describing the admin-device record */
+    /**
+     * @param note A note or description for this device.
+     */
     public void setNote(String note) { this.note = note; }
 
-    /** @return the creation timestamp for the record, in epoch milliseconds */
+    /**
+     * @return Time when the device was added in epoch milliseconds.
+     */
     public long getAddedAtMillis() { return addedAtMillis; }
 
-    /** @param addedAtMillis creation timestamp for the record, in epoch milliseconds */
+    /**
+     * @param addedAtMillis Time when the device was added in epoch milliseconds.
+     */
     public void setAddedAtMillis(long addedAtMillis) { this.addedAtMillis = addedAtMillis; }
 }

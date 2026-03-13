@@ -10,6 +10,11 @@ import java.util.List;
  * <p>Potential issues: the model does not enforce invariants such as the following:
  * positive capacity, valid date ordering, sample size limits, etc...
  * Those rules currently need to be enforced elsewhere.
+ *
+ * Alt Description:
+ * Represents an event in the Helios application.
+ * Contains details about the event, its location, timing, registration, and lottery settings.
+ * TODO! Update and consolidate these descriptions!
  */
 public class Event {
     private String eventId;
@@ -43,31 +48,33 @@ public class Event {
   
     private boolean drawHappened; // Track if the lottery draw has occurred
 
-    /** Creates an empty event for Firebase/Firestore deserialization. (loading from server into app) */
+    /**
+     * Default constructor required for Firestore deserialization.
+     */
     public Event() {}
 
     /**
-     * Creates a populated event.
+     * Constructs a new Event with the specified details.
      *
-     * @param eventId event identifier
-     * @param title public event title
-     * @param description public event description
-     * @param locationName human-readable venue name
-     * @param address event address
-     * @param startTimeMillis event start timestamp in epoch milliseconds
-     * @param endTimeMillis event end timestamp in epoch milliseconds
-     * @param registrationOpensMillis registration opening timestamp in epoch milliseconds
-     * @param registrationClosesMillis registration closing timestamp in epoch milliseconds
-     * @param capacity number of available participant spaces
-     * @param sampleSize number of entrants to sample in the draw
-     * @param waitlistLimit optional maximum waiting-list size
-     * @param geolocationRequired whether joining requires device geolocation
-     * @param lotteryGuidelines text shown to entrants about draw behavior
-     * @param organizerUid organizer profile identifier
-     * @param posterImageId optional poster/image reference
-     * @param qrCodeValue optional encoded QR payload value
-     * @param interests tags used for discovery and filtering
-     * @param drawHappened boolean denoting whether a draw has already occurred for this event
+     * @param eventId                  Unique identifier for the event.
+     * @param title                    Title of the event.
+     * @param description              Detailed description of the event.
+     * @param locationName             Name of the location.
+     * @param address                  Physical address of the event.
+     * @param startTimeMillis          Start time in epoch milliseconds.
+     * @param endTimeMillis            End time in epoch milliseconds.
+     * @param registrationOpensMillis  Time when registration starts.
+     * @param registrationClosesMillis Time when registration ends.
+     * @param capacity                 Maximum number of attendees.
+     * @param sampleSize               Number of people to be selected in the lottery.
+     * @param waitlistLimit            Optional limit for the waiting list.
+     * @param geolocationRequired      Whether geolocation is required for entrants.
+     * @param lotteryGuidelines        Guidelines for the lottery process.
+     * @param organizerUid             UID of the user who organized the event.
+     * @param posterImageId            ID of the poster image (optional).
+     * @param qrCodeValue              Value encoded in the QR code (optional).
+     * @param interests                List of interests associated with the event.
+     * @param drawHappened             Boolean denoting whether a draw has already occurred for this event
      * TODO: update drawHappened to instead store positive integer number of draws instead, for phased invites/inviting entrants after some canceled
      */
     public Event(String eventId, String title, String description, String locationName, String address,
@@ -96,81 +103,194 @@ public class Event {
         this.interests = interests;
         this.drawHappened = false;
     }
-    // Getters and Setters:
-    /** @return the unique event identifier */
+
+    /**
+     * @return The unique identifier for the event.
+     */
     public String getEventId() { return eventId; }
-    /** @param eventId unique event identifier */
+
+    /**
+     * @param eventId The unique identifier for the event.
+     */
     public void setEventId(String eventId) { this.eventId = eventId; }
-    /** @return the public event title */
+
+    /**
+     * @return The title of the event.
+     */
     public String getTitle() { return title; }
-    /** @param title public event title */
+
+    /**
+     * @param title The title of the event.
+     */
     public void setTitle(String title) { this.title = title; }
-    /** @return the public event description */
+
+    /**
+     * @return The detailed description of the event.
+     */
     public String getDescription() { return description; }
-    /** @param description public event description */
+
+    /**
+     * @param description The detailed description of the event.
+     */
     public void setDescription(String description) { this.description = description; }
-    /** @return the venue name shown to users */
+
+    /**
+     * @return The name of the location.
+     */
     public String getLocationName() { return locationName; }
-    /** @param locationName venue name shown to users */
+
+    /**
+     * @param locationName The name of the location.
+     */
     public void setLocationName(String locationName) { this.locationName = locationName; }
-    /** @return the event address */
+
+    /**
+     * @return The physical address of the event.
+     */
     public String getAddress() { return address; }
-    /** @param address event address */
+
+    /**
+     * @param address The physical address of the event.
+     */
     public void setAddress(String address) { this.address = address; }
-    /** @return event start time in epoch milliseconds */
+
+    /**
+     * @return Start time in epoch milliseconds.
+     */
     public long getStartTimeMillis() { return startTimeMillis; }
-    /** @param startTimeMillis event start time in epoch milliseconds */
+
+    /**
+     * @param startTimeMillis Start time in epoch milliseconds.
+     */
     public void setStartTimeMillis(long startTimeMillis) { this.startTimeMillis = startTimeMillis; }
-    /** @return event end time in epoch milliseconds */
+
+    /**
+     * @return End time in epoch milliseconds.
+     */
     public long getEndTimeMillis() { return endTimeMillis; }
-    /** @param endTimeMillis event end time in epoch milliseconds */
+
+    /**
+     * @param endTimeMillis End time in epoch milliseconds.
+     */
     public void setEndTimeMillis(long endTimeMillis) { this.endTimeMillis = endTimeMillis; }
-    /** @return registration opening time in epoch milliseconds */
+
+    /**
+     * @return Time when registration starts in epoch milliseconds.
+     */
     public long getRegistrationOpensMillis() { return registrationOpensMillis; }
-    /** @param registrationOpensMillis registration opening time in epoch milliseconds */
+
+    /**
+     * @param registrationOpensMillis Time when registration starts in epoch milliseconds.
+     */
     public void setRegistrationOpensMillis(long registrationOpensMillis) { this.registrationOpensMillis = registrationOpensMillis; }
-    /** @return registration closing time in epoch milliseconds */
+
+    /**
+     * @return Time when registration ends in epoch milliseconds.
+     */
     public long getRegistrationClosesMillis() { return registrationClosesMillis; }
-    /** @param registrationClosesMillis registration closing time in epoch milliseconds */
+
+    /**
+     * @param registrationClosesMillis Time when registration ends in epoch milliseconds.
+     */
     public void setRegistrationClosesMillis(long registrationClosesMillis) { this.registrationClosesMillis = registrationClosesMillis; }
-    /** @return participant capacity */
+
+    /**
+     * @return Maximum number of attendees.
+     */
     public int getCapacity() { return capacity; }
-    /** @param capacity participant capacity */
+
+    /**
+     * @param capacity Maximum number of attendees.
+     */
     public void setCapacity(int capacity) { this.capacity = capacity; }
-    /** @return requested draw sample size */
+
+    /**
+     * @return Number of people to be selected in the lottery.
+     */
     public int getSampleSize() { return sampleSize; }
-    /** @param sampleSize requested draw sample size */
+
+    /**
+     * @param sampleSize Number of people to be selected in the lottery.
+     */
     public void setSampleSize(int sampleSize) { this.sampleSize = sampleSize; }
-    /** @return optional waiting-list limit */
+
+    /**
+     * @return Optional limit for the waiting list.
+     */
     public Integer getWaitlistLimit() { return waitlistLimit; }
-    /** @param waitlistLimit optional waiting-list limit */
+
+    /**
+     * @param waitlistLimit Optional limit for the waiting list.
+     */
     public void setWaitlistLimit(Integer waitlistLimit) { this.waitlistLimit = waitlistLimit; }
-    /** @return {@code true} if joining requires geolocation */
+
+    /**
+     * @return True if geolocation is required for entrants, false otherwise.
+     */
     public boolean isGeolocationRequired() { return geolocationRequired; }
-    /** @param geolocationRequired whether joining requires geolocation */
+
+    /**
+     * @param geolocationRequired Whether geolocation is required for entrants.
+     */
     public void setGeolocationRequired(boolean geolocationRequired) { this.geolocationRequired = geolocationRequired; }
-    /** @return entrant-facing draw and lottery guidance text */
+
+    /**
+     * @return Guidelines for the lottery process.
+     */
     public String getLotteryGuidelines() { return lotteryGuidelines; }
-    /** @param lotteryGuidelines entrant-facing draw and lottery guidance text */
+
+    /**
+     * @param lotteryGuidelines Guidelines for the lottery process.
+     */
     public void setLotteryGuidelines(String lotteryGuidelines) { this.lotteryGuidelines = lotteryGuidelines; }
-    /** @return organizer profile identifier */
+
+    /**
+     * @return UID of the user who organized the event.
+     */
     public String getOrganizerUid() { return organizerUid; }
-    /** @param organizerUid organizer profile identifier */
+
+    /**
+     * @param organizerUid UID of the user who organized the event.
+     */
     public void setOrganizerUid(String organizerUid) { this.organizerUid = organizerUid; }
-    /** @return optional poster/image identifier */
+
+    /**
+     * @return ID of the poster image (optional).
+     */
     public String getPosterImageId() { return posterImageId; }
-    /** @param posterImageId optional poster/image identifier */
+
+    /**
+     * @param posterImageId ID of the poster image (optional).
+     */
     public void setPosterImageId(String posterImageId) { this.posterImageId = posterImageId; }
-    /** @return optional encoded QR payload */
+
+    /**
+     * @return Value encoded in the QR code (optional).
+     */
     public String getQrCodeValue() { return qrCodeValue; }
-    /** @param qrCodeValue optional encoded QR payload */
+
+    /**
+     * @param qrCodeValue Value encoded in the QR code (optional).
+     */
     public void setQrCodeValue(String qrCodeValue) { this.qrCodeValue = qrCodeValue; }
-    /** @return interest tags associated with the event */
+
+    /**
+     * @return List of interests associated with the event.
+     */
     public List<String> getInterests() { return interests; }
-    /** @param interests interest tags associated with the event */
+
+    /**
+     * @param interests List of interests associated with the event.
+     */
     public void setInterests(List<String> interests) { this.interests = interests; }
-    /** @return {@code true} if the organizer has already executed the draw */
+
+    /**
+     * @return True if the lottery draw has occurred, false otherwise.
+     */
     public boolean isDrawHappened() { return drawHappened; }
-    /** @param drawHappened whether the organizer has already executed the draw */
+
+    /**
+     * @param drawHappened Whether the lottery draw has occurred.
+     */
     public void setDrawHappened(boolean drawHappened) { this.drawHappened = drawHappened; }
 }

@@ -7,6 +7,9 @@ package com.example.helios.model;
  *
  * <p>Issues: allowed state transitions are not enforced in this model and are currently
  * handled elsewhere in services or UI code.
+ * Alt Description:
+ * Represents an entry in the waiting list for a specific event.
+ * Tracks the entrant's UID, their status, and when they joined the list.
  */
 public class WaitingListEntry {
     private String eventId;
@@ -14,16 +17,18 @@ public class WaitingListEntry {
     private WaitingListStatus status;
     private long joinedAtMillis;
 
-    /** Creates an empty waiting-list entry for Firestore deserialization. */
+    /**
+     * Default constructor required for Firestore deserialization.
+     */
     public WaitingListEntry() {}
 
     /**
-     * Creates a populated waiting-list entry.
+     * Constructs a new WaitingListEntry with the specified details.
      *
-     * @param eventId associated event identifier
-     * @param entrantUid entrant profile identifier
-     * @param status current waiting-list status
-     * @param joinedAtMillis join timestamp in epoch milliseconds
+     * @param eventId        The unique identifier for the event.
+     * @param entrantUid     The unique identifier for the entrant.
+     * @param status         The current status of the entrant on the waiting list.
+     * @param joinedAtMillis The time the entrant joined the waiting list in epoch milliseconds.
      */
     public WaitingListEntry(String eventId, String entrantUid, WaitingListStatus status, long joinedAtMillis) {
         this.eventId = eventId;
@@ -32,20 +37,43 @@ public class WaitingListEntry {
         this.joinedAtMillis = joinedAtMillis;
     }
 
-    /** @return associated event identifier */
+    /**
+     * @return The unique identifier for the event.
+     */
     public String getEventId() { return eventId; }
-    /** @param eventId associated event identifier */
+
+    /**
+     * @param eventId The unique identifier for the event.
+     */
     public void setEventId(String eventId) { this.eventId = eventId; }
-    /** @return entrant profile identifier */
+
+    /**
+     * @return The unique identifier for the entrant.
+     */
     public String getEntrantUid() { return entrantUid; }
-    /** @param entrantUid entrant profile identifier */
+
+    /**
+     * @param entrantUid The unique identifier for the entrant.
+     */
     public void setEntrantUid(String entrantUid) { this.entrantUid = entrantUid; }
-    /** @return current waiting-list status */
+
+    /**
+     * @return The current status of the entrant on the waiting list.
+     */
     public WaitingListStatus getStatus() { return status; }
-    /** @param status current waiting-list status */
+
+    /**
+     * @param status The current status of the entrant on the waiting list.
+     */
     public void setStatus(WaitingListStatus status) { this.status = status; }
-    /** @return join timestamp in epoch milliseconds */
+
+    /**
+     * @return The time the entrant joined the waiting list in epoch milliseconds.
+     */
     public long getJoinedAtMillis() { return joinedAtMillis; }
-    /** @param joinedAtMillis join timestamp in epoch milliseconds */
+
+    /**
+     * @param joinedAtMillis The time the entrant joined the waiting list in epoch milliseconds.
+     */
     public void setJoinedAtMillis(long joinedAtMillis) { this.joinedAtMillis = joinedAtMillis; }
 }

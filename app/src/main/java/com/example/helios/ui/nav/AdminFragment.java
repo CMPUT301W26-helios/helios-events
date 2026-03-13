@@ -22,6 +22,10 @@ import com.example.helios.ui.UserAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Fragment for administrative tasks, such as managing all events and users.
+ * Provides a tabbed interface to switch between event and user management.
+ */
 public class AdminFragment extends Fragment {
 
     // Events
@@ -42,6 +46,9 @@ public class AdminFragment extends Fragment {
     private TextView btnTabEvents;
     private TextView btnTabUsers;
 
+    /**
+     * Default constructor for AdminFragment.
+     */
     public AdminFragment() {
         super(R.layout.fragment_admin);
     }
@@ -106,6 +113,12 @@ public class AdminFragment extends Fragment {
         loadEvents();
         loadUsers();
     }
+
+    /**
+     * Switches between the Events tab and the Users tab.
+     *
+     * @param showEvents True to show the events list, false to show the users list.
+     */
     private void showTab(boolean showEvents) {
         rvEvents.setVisibility(showEvents ? View.VISIBLE : View.GONE);
         rvUsers.setVisibility(showEvents ? View.GONE : View.VISIBLE);
@@ -113,8 +126,9 @@ public class AdminFragment extends Fragment {
         btnTabUsers.setAlpha(showEvents ?  1f : .5f);
     }
 
-    // E vents
-
+    /**
+     * Loads all events from the {@link EventService}.
+     */
     private void loadEvents() {
         eventService.getAllEvents(events -> {
             if (!isAdded()) return;
@@ -131,6 +145,11 @@ public class AdminFragment extends Fragment {
         });
     }
 
+    /**
+     * Deletes a specific event.
+     *
+     * @param event The event object to delete.
+     */
     private void deleteEvent(Event event) {
         eventService.deleteEvent(event.getEventId(),
                 unused -> {
@@ -148,8 +167,9 @@ public class AdminFragment extends Fragment {
                 });
     }
 
-    // Users
-
+    /**
+     * Loads all user profiles from the {@link ProfileService}.
+     */
     private void loadUsers() {
         profileService.getAllProfiles(users -> {
             if (!isAdded()) return;
@@ -166,6 +186,11 @@ public class AdminFragment extends Fragment {
         });
     }
 
+    /**
+     * Deletes a specific user profile.
+     *
+     * @param user The user profile object to delete.
+     */
     private void deleteUser(UserProfile user) {
         profileService.deleteProfile(user.getUid(),
                 unused -> {

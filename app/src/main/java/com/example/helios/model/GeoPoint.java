@@ -1,37 +1,46 @@
 package com.example.helios.model;
 
-// placeholder custom geopoint class instead of using firestore GeoPoint (bad)
 /**
- * Simple latitude/longitude pair used to store event-related location information.
- *
- * <p>Role in the application: placeholder geographic model for geolocation-linked event features.
- *
- * <p>Issue: this is a custom placeholder instead of Firestore's native GeoPoint and has been marked for refactoring with a todo
+ * Represents a geographical point with latitude and longitude coordinates.
+ * This is a custom placeholder class for storing location data.
  */
-public class GeoPoint { // TODO: eventually refactor to use Firestore GeoPoint directly!!!
+public class GeoPoint {
     private double latitude;
     private double longitude;
 
-    /** Creates an empty geographic point for Firestore deserialization. */
+    /**
+     * Default constructor required for Firestore deserialization.
+     */
     public GeoPoint() {}
 
     /**
-     * Creates a populated geographic point.
+     * Constructs a new GeoPoint with the specified latitude and longitude.
      *
-     * @param latitude latitude in decimal degrees
-     * @param longitude longitude in decimal degrees
+     * @param latitude  The latitude coordinate.
+     * @param longitude The longitude coordinate.
      */
     public GeoPoint(double latitude, double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
     }
 
-    /** @return latitude in decimal degrees */
+    /**
+     * @return The latitude coordinate.
+     */
     public double getLatitude() { return latitude; }
-    /** @param latitude latitude in decimal degrees */
+
+    /**
+     * @param latitude The latitude coordinate.
+     */
     public void setLatitude(double latitude) { this.latitude = latitude; }
-    /** @return longitude in decimal degrees */
+
+    /**
+     * @return The longitude coordinate.
+     */
     public double getLongitude() { return longitude; }
-    /** @param longitude longitude in decimal degrees */
+
+    /**
+     * @param longitude The longitude coordinate.
+     */
     public void setLongitude(double longitude) { this.longitude = longitude; }
 }

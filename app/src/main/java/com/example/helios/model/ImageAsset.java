@@ -1,4 +1,5 @@
 package com.example.helios.model;
+
 /**
  * Represents an uploaded image resource such as an event poster.
  *
@@ -6,6 +7,10 @@ package com.example.helios.model;
  * which links uploaded media to organizers and optionally to specific events.
  *
  * <p>Issues: The current application UI still uses placeholder images in several places, so full image-persistence integration is incomplete.
+ * Alt Description:
+ * Represents an image asset in the Helios application.
+ * Stores information about uploaded images, their owners, and their storage locations.
+ * TODO: Consolidate descriptions
  */
 public class ImageAsset {
     private String imageId;
@@ -13,17 +18,20 @@ public class ImageAsset {
     private String eventId; // optional link
     private String storagePath; // Firebase Storage path or URL
     private long uploadedAtMillis;
-    /** Creates an empty image-asset record for Firestore deserialization. */
+
+    /**
+     * Default constructor required for Firestore deserialization.
+     */
     public ImageAsset() {}
 
     /**
-     * Creates a populated image-asset record.
+     * Constructs a new ImageAsset with the specified details.
      *
-     * @param imageId unique image identifier
-     * @param ownerUid organizer profile identifier that owns the image
-     * @param eventId optional related event identifier
-     * @param storagePath Firebase Storage path or URL for the image
-     * @param uploadedAtMillis upload timestamp in epoch milliseconds
+     * @param imageId          Unique identifier for the image.
+     * @param ownerUid         UID of the user who uploaded the image.
+     * @param eventId          Optional UID of the event associated with this image.
+     * @param storagePath      Path or URL where the image is stored in Firebase Storage.
+     * @param uploadedAtMillis Time when the image was uploaded in epoch milliseconds.
      */
     public ImageAsset(String imageId, String ownerUid, String eventId, String storagePath, long uploadedAtMillis) {
         this.imageId = imageId;
@@ -33,25 +41,53 @@ public class ImageAsset {
         this.uploadedAtMillis = uploadedAtMillis;
     }
 
-    // Getters and Setters:
-    /** @return unique image identifier */
+    /**
+     * @return The unique identifier for the image.
+     */
     public String getImageId() { return imageId; }
-    /** @param imageId unique image identifier */
+
+    /**
+     * @param imageId The unique identifier for the image.
+     */
     public void setImageId(String imageId) { this.imageId = imageId; }
-    /** @return organizer identifier that owns the image */
+
+    /**
+     * @return UID of the user who uploaded the image.
+     */
     public String getOwnerUid() { return ownerUid; }
-    /** @param ownerUid organizer identifier that owns the image */
+
+    /**
+     * @param ownerUid UID of the user who uploaded the image.
+     */
     public void setOwnerUid(String ownerUid) { this.ownerUid = ownerUid; }
-    /** @return optional related event identifier */
+
+    /**
+     * @return Optional UID of the event associated with this image.
+     */
     public String getEventId() { return eventId; }
-    /** @param eventId optional related event identifier */
+
+    /**
+     * @param eventId Optional UID of the event associated with this image.
+     */
     public void setEventId(String eventId) { this.eventId = eventId; }
-    /** @return Firebase Storage path or URL for the image */
+
+    /**
+     * @return Path or URL where the image is stored.
+     */
     public String getStoragePath() { return storagePath; }
-    /** @param storagePath Firebase Storage path or URL for the image */
+
+    /**
+     * @param storagePath Path or URL where the image is stored.
+     */
     public void setStoragePath(String storagePath) { this.storagePath = storagePath; }
-    /** @return upload timestamp in epoch milliseconds */
+
+    /**
+     * @return Time when the image was uploaded in epoch milliseconds.
+     */
     public long getUploadedAtMillis() { return uploadedAtMillis; }
-    /** @param uploadedAtMillis upload timestamp in epoch milliseconds */
+
+    /**
+     * @param uploadedAtMillis Time when the image was uploaded in epoch milliseconds.
+     */
     public void setUploadedAtMillis(long uploadedAtMillis) { this.uploadedAtMillis = uploadedAtMillis; }
 }

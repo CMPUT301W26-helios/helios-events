@@ -31,11 +31,8 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Shared fragment for creating a new event or editing an existing one.
- *
- * - If launched with an "arg_event_id", it loads and edits that event.
- * - If launched without "arg_event_id", it behaves like the old CreateEventFragment
- *   and forwards to the QR/preview step.
+ * Fragment for creating or editing an event.
+ * Handles event details such as name, description, capacity, registration dates, and posters.
  */
 public class SetupEventFragment extends Fragment {
 
@@ -80,6 +77,9 @@ public class SetupEventFragment extends Fragment {
                 }
             });
 
+    /**
+     * Default constructor for SetupEventFragment.
+     */
     public SetupEventFragment() {
         super(R.layout.fragment_event_setup);
     }
@@ -357,6 +357,11 @@ public class SetupEventFragment extends Fragment {
         }
     }
 
+    /**
+     * Attempts to persist read permissions for a given URI.
+     *
+     * @param uri The URI to persist permissions for.
+     */
     private void persistReadPermission(@NonNull Uri uri) {
         if (getContext() == null) return;
         try {
@@ -369,14 +374,33 @@ public class SetupEventFragment extends Fragment {
         }
     }
 
+    /**
+     * Safely retrieves trimmed text from an EditText.
+     *
+     * @param editText The EditText to read from.
+     * @return The trimmed string, or an empty string if the input was null.
+     */
     private String safeText(EditText editText) {
         return editText.getText() == null ? "" : editText.getText().toString().trim();
     }
 
+    /**
+     * Interface for date selection callbacks.
+     */
     private interface DatePickedCallback {
+        /**
+         * Called when a date is picked.
+         * @param millis The picked date in milliseconds.
+         */
         void onPicked(long millis);
     }
 
+    /**
+     * Opens a date picker dialog.
+     *
+     * @param initialMillis The initial date to show in the picker.
+     * @param callback      The callback to invoke when a date is selected.
+     */
     private void openDatePicker(long initialMillis, @NonNull DatePickedCallback callback) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(initialMillis > 0 ? initialMillis : System.currentTimeMillis());
@@ -395,6 +419,13 @@ public class SetupEventFragment extends Fragment {
         ).show();
     }
 
+    /**
+     * Updates the UI state of a geolocation toggle button.
+     *
+     * @param on       The "On" button view.
+     * @param off      The "Off" button view.
+     * @param required True if geolocation is required, false otherwise.
+     */
     private void updateGeoToggle(@NonNull TextView on, @NonNull TextView off, boolean required) {
         if (required) {
             on.setBackgroundResource(R.drawable.bg_toggle_left_active);

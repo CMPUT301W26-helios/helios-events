@@ -36,6 +36,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Fragment that displays a searchable and filterable list of all events.
+ * Users can filter events by date range and interests, and search by title or description.
+ */
 public class EventsFragment extends Fragment {
 
     private RecyclerView rvEvents;
@@ -65,6 +69,9 @@ public class EventsFragment extends Fragment {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Runnable pendingFilter;
 
+    /**
+     * Default constructor for EventsFragment.
+     */
     public EventsFragment() {}
 
     @Nullable
@@ -117,6 +124,9 @@ public class EventsFragment extends Fragment {
         }
     }
 
+    /**
+     * Initializes the RecyclerView and its adapter.
+     */
     private void setupRecyclerView() {
         eventAdapter = new EventAdapter(filteredEvents, event -> {
             if (!isAdded()) return;
@@ -136,6 +146,9 @@ public class EventsFragment extends Fragment {
         rvEvents.setAdapter(eventAdapter);
     }
 
+    /**
+     * Sets up the search bar with a debounced filter action.
+     */
     private void setupSearch() {
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -150,6 +163,9 @@ public class EventsFragment extends Fragment {
         });
     }
 
+    /**
+     * Loads events from the {@link EventService}.
+     */
     private void loadEvents() {
         eventService.getAllEvents(
                 events -> {
@@ -170,6 +186,9 @@ public class EventsFragment extends Fragment {
         );
     }
 
+    /**
+     * Displays a dialog for selecting filters (date range and interests).
+     */
     private void showFilterDialog() {
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_filter_events, null);
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
@@ -204,6 +223,11 @@ public class EventsFragment extends Fragment {
         dialog.show();
     }
 
+    /**
+     * Displays a date picker dialog.
+     *
+     * @param listener Callback receiving the selected date in milliseconds.
+     */
     private void showDatePicker(OnDateSelectedListener listener) {
         Calendar cal = Calendar.getInstance();
         new DatePickerDialog(requireContext(), (view, year, month, day) -> {
@@ -212,6 +236,9 @@ public class EventsFragment extends Fragment {
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
     }
 
+    /**
+     * Applies the current search query and filters to the event list.
+     */
     private void applyFilters() {
         filteredEvents.clear();
         String query = etSearch.getText().toString().toLowerCase().trim();
@@ -254,6 +281,9 @@ public class EventsFragment extends Fragment {
         eventAdapter.notifyDataSetChanged();
     }
 
+    /**
+     * Updates the UI to reflect the currently applied filters.
+     */
     private void updateFilterVisuals() {
         if (startDateFilter != null && endDateFilter != null) {
             llDateFilters.setVisibility(View.VISIBLE);
@@ -281,5 +311,14 @@ public class EventsFragment extends Fragment {
         }
     }
 
-    interface OnDateSelectedListener { void onDateSelected(long date); }
+    /**
+     * Interface for date selection callbacks.
+     */
+    interface OnDateSelectedListener { 
+        /**
+         * Called when a date is selected.
+         * @param date The selected date in milliseconds.
+         */
+        void onDateSelected(long date); 
+    }
 }

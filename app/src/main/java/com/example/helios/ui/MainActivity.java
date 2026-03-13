@@ -23,6 +23,11 @@ import com.example.helios.service.ProfileService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
 
+/**
+ * The main activity of the application.
+ * Manages the top-level navigation, bottom navigation bars (entrant and organizer),
+ * and user profile display.
+ */
 public class MainActivity extends AppCompatActivity {
 
     private final ProfileService profileService = new ProfileService();
@@ -98,32 +103,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Intercept selection so we can gate Organize and avoid tab stacking
-        // bottomNav.setOnItemSelectedListener(item -> {
-        //     int id = item.getItemId();
-
-        //     if (id == R.id.organizeFragment) {
-        //         gateOrganizeAndNavigate();
-        //         return false;
-        //     }
-
-        //     // Admin tab should only be reachable if visible, but guard anyway
-        //     if (id == R.id.adminFragment) {
-        //         if (cachedProfile != null && cachedProfile.isAdmin()) {
-        //             boolean handled = navigateTopLevel(id);
-        //             if (handled) lastSelectedItemId = id;
-        //             return handled;
-        //         } else {
-        //             Toast.makeText(this, "Admin access required.", Toast.LENGTH_SHORT).show();
-        //             setCheckedTabSilently(lastSelectedItemId);
-        //             return false;
-        //         }
-        //     }
-
-        //     boolean handled = navigateTopLevel(id);
-        //     if (handled) lastSelectedItemId = id;
-        //     return handled;
-        // });
         bottomNav.setOnItemSelectedListener(createBottomNavListener());
 
         applyInsets();
@@ -139,6 +118,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    /**
+     * Shows the main entrant bottom navigation bar.
+     *
+     * @param destinationId The current destination ID to set as checked.
+     */
     private void showMainBottomNav(int destinationId) {
         bottomNav.setVisibility(View.VISIBLE);
         bottomNavOrganizer.setVisibility(View.GONE);
@@ -150,12 +135,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Shows the organizer-specific bottom navigation bar.
+     *
+     * @param destinationId The current destination ID to set as checked.
+     */
     private void showOrganizerBottomNav(int destinationId) {
         bottomNav.setVisibility(View.GONE);
         bottomNavOrganizer.setVisibility(View.VISIBLE);
         setOrganizerCheckedTabSilently(mapOrganizerTab(destinationId));
     }
 
+    /**
+     * Maps complex destination IDs to their corresponding root tab ID in the organizer menu.
+     *
+     * @param destinationId The destination ID to map.
+     * @return The mapped menu item ID.
+     */
     private int mapOrganizerTab(int destinationId) {
         if (destinationId == R.id.editEventFragment) {
             return R.id.manageEventFragment;
@@ -163,12 +159,23 @@ public class MainActivity extends AppCompatActivity {
         return destinationId;
     }
 
+    /**
+     * Sets the checked state of an item in the organizer bottom navigation bar without triggering listeners.
+     *
+     * @param itemId The menu item ID to check.
+     */
     private void setOrganizerCheckedTabSilently(int itemId) {
         MenuItem item = bottomNavOrganizer.getMenu().findItem(itemId);
         if (item != null) {
             item.setChecked(true);
         }
     }
+
+    /**
+     * Creates a listener for the organizer bottom navigation bar.
+     *
+     * @return The navigation bar selection listener.
+     */
     private NavigationBarView.OnItemSelectedListener createOrganizerBottomNavListener() {
         return item -> {
             int itemId = item.getItemId();
@@ -205,6 +212,12 @@ public class MainActivity extends AppCompatActivity {
         };
     }
 
+    /**
+     * Navigates to a top-level destination within the navigation graph.
+     *
+     * @param destinationId The ID of the destination fragment.
+     * @return True if navigation was successful, false otherwise.
+     */
     private boolean navigateTopLevel(int destinationId) {
         if (navController.getCurrentDestination() != null
                 && navController.getCurrentDestination().getId() == destinationId) {
@@ -225,6 +238,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Checks if the user's profile is complete before allowing navigation to the Organize section.
+     * If incomplete, prompts the user to setup their profile.
+     */
     private void gateOrganizeAndNavigate() {
         if (navController.getCurrentDestination() != null
                 && navController.getCurrentDestination().getId() == R.id.organizeFragment) {
@@ -264,6 +281,9 @@ public class MainActivity extends AppCompatActivity {
                 Toast.LENGTH_LONG).show());
     }
 
+    /**
+     * Starts the ProfileSetupActivity when profile information is required.
+     */
     private void openProfileSetupPrompt() {
         Toast.makeText(this,
                 "Name and email are required to organize events.",
@@ -275,30 +295,19 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    /**
+     * Sets the checked state of an item in the main bottom navigation bar without triggering listeners.
+     *
+     * @param itemId The menu item ID to check.
+     */
     private void setCheckedTabSilently(int itemId) {
         MenuItem item = bottomNav.getMenu().findItem(itemId);
         if (item != null) item.setChecked(true);
     }
 
-//    private void setBottomNavMenu(@MenuRes int menuRes) {
-//        if (currentBottomMenuRes == menuRes) return;
-//        currentBottomMenuRes = menuRes;
-//
-//        bottomNav.getMenu().clear();
-//        bottomNav.inflateMenu(menuRes);
-//        NavigationUI.setupWithNavController(bottomNav, navController);
-//        // Re-attach our custom listener so behavior is consistent after menu swaps
-//        bottomNav.setOnItemSelectedListener(createBottomNavListener());
-//
-//        // Ensure admin visibility reflects current profile when switching back.
-//        if (menuRes == R.menu.bottom_nav_menu) {
-//            MenuItem adminItem = bottomNav.getMenu().findItem(R.id.adminFragment);
-//            if (adminItem != null && cachedProfile != null) {
-//                adminItem.setVisible(cachedProfile.isAdmin());
-//            }
-//        }
-//    }
-
+    /**
+     * Applies window insets to handle system bars (status bar, navigation bar) padding.
+     */
     private void applyInsets() {
         View root = findViewById(R.id.root);
         View topInsetContainer = findViewById(R.id.top_inset_container);
@@ -327,6 +336,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Refreshes the user information displayed in the top banner and manages admin menu visibility.
+     */
     private void refreshUserBanner() {
         profileService.loadCurrentProfile(this, profile -> {
             cachedProfile = profile;
@@ -371,8 +383,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Creates the BottomNavigationView listener used for both the entrant
-     * and organizer bottom nav menus.
+     * Creates the BottomNavigationView listener for the entrant bottom navigation menu.
+     * Handles specific gating logic for the Organize tab and Admin access.
+     *
+     * @return The navigation bar selection listener.
      */
     private BottomNavigationView.OnItemSelectedListener createBottomNavListener() {
         return item -> {

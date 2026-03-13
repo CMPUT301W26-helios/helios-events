@@ -1,19 +1,19 @@
 package com.example.helios.model;
 
 /**
- * Enumerates the supported states for an entrant in the event waiting list flow.
+ * Enumeration representing the possible statuses of an entrant in a waiting list.
  */
 public enum WaitingListStatus {
-    /** Entrant has joined the waiting list and has not yet been drawn. */
+    /** The entrant is currently waiting to be selected. */
     WAITING,
-    /** Entrant has been invited to register/confirm a spot. */
+    /** The entrant has been selected and invited to the event. */
     INVITED,
-    /** Entrant has accepted an invitation and confirmed participation. */
+    /** The entrant has accepted the invitation. */
     ACCEPTED,
-    /** Entrant declined an invitation. */
+    /** The entrant has declined the invitation. */
     DECLINED,
-    /** Entrant left the waiting list or was cancelled. */
+    /** The entrant has cancelled their participation or was removed. */
     CANCELLED,
-    /** Entrant was not selected during a draw. */
+    /** The entrant was not selected during the lottery process. */
     NOT_SELECTED
 }

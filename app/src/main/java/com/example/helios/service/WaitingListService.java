@@ -12,12 +12,19 @@ import java.util.List;
  * Service for organizer-side waiting-list retrieval, update, and removal actions.
  *
  * Role: control/service layer for waiting-list management.
- * Outstanding issues: validation is minimal and most operations delegate directly to the repository.
+ * Issues: validation is minimal and most operations delegate directly to the repository.
+ * 
+ * Alt Description:
+ * Service class that provides business logic for managing event waiting lists.
+ * It interacts with the {@link FirebaseRepository} to perform operations on waiting list entries.
  */
 public class WaitingListService {
 
     private final FirebaseRepository repository;
 
+    /**
+     * Initializes the WaitingListService with a new FirebaseRepository instance.
+     */
     public WaitingListService() {
         this(new FirebaseRepository());
     }
@@ -27,6 +34,13 @@ public class WaitingListService {
         this.repository = repository;
     }
 
+    /**
+     * Retrieves all waiting list entries for a specific event.
+     *
+     * @param eventId   The unique identifier for the event.
+     * @param onSuccess Callback receiving the list of waiting list entries.
+     * @param onFailure Callback for failed operation.
+     */
     public void getEntriesForEvent(
             @NonNull String eventId,
             @NonNull OnSuccessListener<List<WaitingListEntry>> onSuccess,
@@ -35,6 +49,14 @@ public class WaitingListService {
         repository.getAllWaitingListEntries(eventId, onSuccess, onFailure);
     }
 
+    /**
+     * Updates an existing waiting list entry.
+     *
+     * @param eventId   The unique identifier for the event.
+     * @param entry     The updated waiting list entry.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void updateEntry(
             @NonNull String eventId,
             @NonNull WaitingListEntry entry,
@@ -50,6 +72,14 @@ public class WaitingListService {
         repository.updateWaitingListEntry(eventId, entrantUid, entry, onSuccess, onFailure);
     }
 
+    /**
+     * Removes an entry from a waiting list.
+     *
+     * @param eventId    The unique identifier for the event.
+     * @param entrantUid The unique identifier for the entrant.
+     * @param onSuccess  Callback for successful operation.
+     * @param onFailure  Callback for failed operation.
+     */
     public void removeEntry(
             @NonNull String eventId,
             @NonNull String entrantUid,

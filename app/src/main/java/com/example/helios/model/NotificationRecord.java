@@ -1,13 +1,8 @@
 package com.example.helios.model;
 
 /**
- * Represents a notification sent by an organizer or administrator.
- *
- * <p>Role in the application: stores notification metadata for audit/history features and audience-based
- * delivery behavior.
- *
- * <p>Issues: nullability expectations for {@code eventId}, {@code senderUid} and {@code recipientUid} are only
- * implicit, they should instead be documented consistently across the app.
+ * Represents a notification record in the Helios application.
+ * Stores information about a notification sent to a user or a group of users.
  */
 public class NotificationRecord {
     private String notificationId;
@@ -19,20 +14,22 @@ public class NotificationRecord {
     private String message;
     private long sentAtMillis;
 
-    /** Creates an empty notification record for Firestore deserialization. */
+    /**
+     * Default constructor required for Firestore deserialization.
+     */
     public NotificationRecord() {}
 
     /**
-     * Creates a populated notification record.
+     * Constructs a new NotificationRecord with the specified details.
      *
-     * @param notificationId unique notification identifier
-     * @param eventId optional related event identifier
-     * @param senderUid organizer/admin sender identifier
-     * @param recipientUid optional recipient identifier for individual notifications
-     * @param audience target notification audience
-     * @param title short notification title
-     * @param message notification body text
-     * @param sentAtMillis sent timestamp in epoch milliseconds
+     * @param notificationId Unique identifier for the notification.
+     * @param eventId        Optional UID of the event related to the notification.
+     * @param senderUid      UID of the user who sent the notification.
+     * @param recipientUid   UID of the user who received the notification (if applicable).
+     * @param audience       The target audience for the notification.
+     * @param title          The title of the notification.
+     * @param message        The body content of the notification.
+     * @param sentAtMillis   Time when the notification was sent in epoch milliseconds.
      */
     public NotificationRecord(String notificationId, String eventId, String senderUid, String recipientUid,
                               NotificationAudience audience, String title, String message, long sentAtMillis) {
@@ -46,36 +43,83 @@ public class NotificationRecord {
         this.sentAtMillis = sentAtMillis;
     }
 
-    /** @return unique notification identifier */
+    /**
+     * @return The unique identifier for the notification.
+     */
     public String getNotificationId() { return notificationId; }
-    /** @param notificationId unique notification identifier */
+
+    /**
+     * @param notificationId The unique identifier for the notification.
+     */
     public void setNotificationId(String notificationId) { this.notificationId = notificationId; }
-    /** @return optional related event identifier */
+
+    /**
+     * @return Optional UID of the event related to the notification.
+     */
     public String getEventId() { return eventId; }
-    /** @param eventId optional related event identifier */
+
+    /**
+     * @param eventId Optional UID of the event related to the notification.
+     */
     public void setEventId(String eventId) { this.eventId = eventId; }
-    /** @return organizer/admin sender identifier */
+
+    /**
+     * @return UID of the user who sent the notification.
+     */
     public String getSenderUid() { return senderUid; }
-    /** @param senderUid organizer/admin sender identifier */
+
+    /**
+     * @param senderUid UID of the user who sent the notification.
+     */
     public void setSenderUid(String senderUid) { this.senderUid = senderUid; }
-    /** @return optional recipient identifier for individual notifications */
+
+    /**
+     * @return UID of the user who received the notification (if applicable).
+     */
     public String getRecipientUid() { return recipientUid; }
-    /** @param recipientUid optional recipient identifier for individual notifications */
+
+    /**
+     * @param recipientUid UID of the user who received the notification (if applicable).
+     */
     public void setRecipientUid(String recipientUid) { this.recipientUid = recipientUid; }
-    /** @return target notification audience */
+
+    /**
+     * @return The target audience for the notification.
+     */
     public NotificationAudience getAudience() { return audience; }
-    /** @param audience target notification audience */
+
+    /**
+     * @param audience The target audience for the notification.
+     */
     public void setAudience(NotificationAudience audience) { this.audience = audience; }
-    /** @return short notification title */
+
+    /**
+     * @return The title of the notification.
+     */
     public String getTitle() { return title; }
-    /** @param title short notification title */
+
+    /**
+     * @param title The title of the notification.
+     */
     public void setTitle(String title) { this.title = title; }
-    /** @return notification body text */
+
+    /**
+     * @return The body content of the notification.
+     */
     public String getMessage() { return message; }
-    /** @param message notification body text */
+
+    /**
+     * @param message The body content of the notification.
+     */
     public void setMessage(String message) { this.message = message; }
-    /** @return sent timestamp in epoch milliseconds */
+
+    /**
+     * @return Time when the notification was sent in epoch milliseconds.
+     */
     public long getSentAtMillis() { return sentAtMillis; }
-    /** @param sentAtMillis sent timestamp in epoch milliseconds */
+
+    /**
+     * @param sentAtMillis Time when the notification was sent in epoch milliseconds.
+     */
     public void setSentAtMillis(long sentAtMillis) { this.sentAtMillis = sentAtMillis; }
 }

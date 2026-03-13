@@ -25,15 +25,34 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+/**
+ * A bottom sheet dialog that displays the details of a specific event.
+ * Allows users to view event information and join or leave the event's waiting list.
+ */
 public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
+    /** Argument key for the event ID. */
     public static final String ARG_EVENT_ID = "arg_event_id";
+    /** Argument key to specify if the join/leave button should be hidden. */
     public static final String ARG_HIDE_JOIN_BUTTON = "arg_hide_join_button";
 
+    /**
+     * Creates a new instance of EventDetailsBottomSheet for a given event ID.
+     *
+     * @param eventId The unique identifier of the event to display.
+     * @return A new EventDetailsBottomSheet instance.
+     */
     public static EventDetailsBottomSheet newInstance(@NonNull String eventId) {
         return newInstance(eventId, false);
     }
 
+    /**
+     * Creates a new instance of EventDetailsBottomSheet with an option to hide the join button.
+     *
+     * @param eventId        The unique identifier of the event.
+     * @param hideJoinButton True to hide the join/leave button, false otherwise.
+     * @return A new EventDetailsBottomSheet instance.
+     */
     public static EventDetailsBottomSheet newInstance(@NonNull String eventId, boolean hideJoinButton) {
         EventDetailsBottomSheet sheet = new EventDetailsBottomSheet();
         Bundle args = new Bundle();
@@ -64,6 +83,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private Event loadedEvent;
     private boolean isCurrentlyOnWaitingList = false;
 
+    /**
+     * Default constructor for EventDetailsBottomSheet.
+     */
     public EventDetailsBottomSheet() {
         super(R.layout.sheet_event_details);
     }
@@ -130,6 +152,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         loadEvent();
     }
 
+    /**
+     * Loads event data from the {@link EventService}.
+     */
     private void loadEvent() {
         setLoading(true);
 
@@ -159,6 +184,11 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         });
     }
 
+    /**
+     * Binds the loaded event data to the UI views.
+     *
+     * @param event The event object to display.
+     */
     private void bindEvent(@NonNull Event event) {
         if (tvName != null) {
             tvName.setText(nonEmptyOr(event.getTitle(), "Untitled Event"));
@@ -215,6 +245,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
+    /**
+     * Refreshes the user's current status on the event's waiting list.
+     */
     private void refreshWaitingListState() {
         entrantEventService.getCurrentUserWaitingListEntry(requireContext(), eventId, entry -> {
             if (!isAdded()) return;
@@ -235,6 +268,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         });
     }
 
+    /**
+     * Refreshes the displayed capacity count for the event's waiting list.
+     */
     private void refreshCapacityCount() {
         if (loadedEvent == null || tvCapacity == null) return;
 
@@ -246,6 +282,10 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
             tvCapacity.setText("Waiting list capacity: ? / " + loadedEvent.getCapacity());
         });
     }
+
+    /**
+     * Shows a confirmation dialog before joining the waiting list.
+     */
     private void showJoinWaitingListDialog() {
         androidx.appcompat.app.AlertDialog.Builder builder =
                 new androidx.appcompat.app.AlertDialog.Builder(requireContext());
@@ -256,6 +296,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                 .show();
     }
 
+    /**
+     * Confirms the action of joining the waiting list and updates the status in Firestore.
+     */
     private void joinWaitingListConfirmed() {
         if (btnWaitingList != null) btnWaitingList.setEnabled(false);
 
@@ -274,6 +317,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                 });
     }
 
+    /**
+     * Leaves the waiting list and updates the status in Firestore.
+     */
     private void leaveWaitingList() {
         if (btnWaitingList != null) btnWaitingList.setEnabled(false);
 
@@ -291,6 +337,10 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                     toast("Leave failed: " + error.getMessage());
                 });
     }
+
+    /**
+     * Handles the waiting list button click event.
+     */
     private void onWaitingListButtonPressed() {
         if (isCurrentlyOnWaitingList) {
             leaveWaitingList();
@@ -299,6 +349,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
+    /**
+     * Updates the text and enabled state of the waiting list action button.
+     */
     private void updateWaitingListButton() {
         if (btnWaitingList == null || hideJoinButton) return;
 
@@ -310,6 +363,11 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
+    /**
+     * Toggles the loading state of the UI.
+     *
+     * @param loading True if loading, false otherwise.
+     */
     private void setLoading(boolean loading) {
         if (tvName != null && loading) {
             tvName.setText("Loading...");
