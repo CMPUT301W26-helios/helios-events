@@ -255,13 +255,14 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <TextView
+            <EditText
                 android:id="@+id/et_draw_count"
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_search_bar"
                 android:gravity="center"
+                android:inputType="number"
                 android:text="0"
                 android:textColor="#1A1C1E"
                 android:textSize="16sp" />

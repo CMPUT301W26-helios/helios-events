@@ -35,6 +35,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 public class OrganizerViewEntrantsFragment extends Fragment {
@@ -53,7 +55,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
     private TextView tvDrawIndicator, tvListHeader, tvInfoStats;
     private View llFilters, layoutDrawControls, layoutDeclinedActions, layoutInvitedActions;
     private EditText etSearch;
-    private TextView tvDrawCount;
+    private EditText etDrawCount;
     private MaterialButton btnRemoveEntrant;
     private ChipGroup cgStatus;
 
@@ -88,7 +90,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         layoutDeclinedActions = view.findViewById(R.id.layout_declined_actions);
         layoutInvitedActions = view.findViewById(R.id.layout_invited_actions);
         etSearch = view.findViewById(R.id.et_search);
-        tvDrawCount = view.findViewById(R.id.et_draw_count);
+        etDrawCount = view.findViewById(R.id.et_draw_count);
         btnRemoveEntrant = view.findViewById(R.id.btn_remove_entrant);
         cgStatus = view.findViewById(R.id.cg_status);
         updateRemoveEntrantButtonState();
@@ -202,7 +204,10 @@ public class OrganizerViewEntrantsFragment extends Fragment {
                     model.name = profile.getName();
                     adapter.notifyDataSetChanged();
                 }
-            }, e -> {});
+            }, e -> {
+                model.name = "Unknown Entrant";
+                adapter.notifyDataSetChanged();
+            });
         }
         adapter.notifyDataSetChanged();
     }
@@ -213,49 +218,165 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             return;
         }
 
-        int count = event.getCapacity();
-        if (count <= 0) {
-            toast("Event capacity must be greater than 0");
+        int targetCount = parseRequestedDrawCount();
+        if (targetCount < 0) {
             return;
         }
 
-        long currentlySelected = allEntries.stream()
-                .filter(e -> e.getStatus() == WaitingListStatus.INVITED
-                        || e.getStatus() == WaitingListStatus.ACCEPTED)
-                .count();
-        int remainingSlots = count - (int) currentlySelected;
-        if (remainingSlots <= 0) {
-            toast("Selected entrants already reached event capacity");
+        boolean drawAlreadyHappened = event.isDrawHappened();
+        List<WaitingListEntry> selectedEntrants = allEntries.stream()
+                .filter(this::isSelectedStatus)
+                .collect(Collectors.toList());
+        int currentSelected = selectedEntrants.size();
+
+        if (!drawAlreadyHappened) {
+            runInitialDraw(targetCount);
             return;
         }
 
+        if (targetCount == currentSelected) {
+            toast("Selected entrants already match requested total");
+            return;
+        }
+
+        if (targetCount > currentSelected) {
+            increaseDrawCount(targetCount - currentSelected);
+        } else {
+            decreaseDrawCount(currentSelected - targetCount, selectedEntrants);
+        }
+    }
+
+    private void runInitialDraw(int targetCount) {
         List<WaitingListEntry> candidates = allEntries.stream()
                 .filter(e -> e.getStatus() == WaitingListStatus.WAITING)
                 .collect(Collectors.toList());
 
-        if (candidates.isEmpty()) {
+        if (candidates.isEmpty() && targetCount > 0) {
             toast("No entrants in waiting list");
             return;
         }
 
         Collections.shuffle(candidates);
-        int toSelect = Math.min(remainingSlots, candidates.size());
-
+        int toSelect = Math.min(targetCount, candidates.size());
         for (int i = 0; i < candidates.size(); i++) {
             WaitingListEntry entry = candidates.get(i);
-            if (i < toSelect) {
-                entry.setStatus(WaitingListStatus.INVITED);
-            } else {
-                entry.setStatus(WaitingListStatus.NOT_SELECTED);
-            }
-            waitingListService.updateEntry(eventId, entry, unused -\u003e {}, e -\u003e {});
+            entry.setStatus(i < toSelect ? WaitingListStatus.INVITED : WaitingListStatus.NOT_SELECTED);
         }
 
+        updateEntries(candidates, () -> completeDrawEventUpdate(toSelect));
+    }
+
+    private void increaseDrawCount(int additionalNeeded) {
+        List<WaitingListEntry> waitlisted = allEntries.stream()
+                .filter(this::isWaitlistStatus)
+                .collect(Collectors.toList());
+
+        if (waitlisted.isEmpty()) {
+            toast("No waitlisted entrants available");
+            return;
+        }
+
+        Collections.shuffle(waitlisted);
+        int toInvite = Math.min(additionalNeeded, waitlisted.size());
+        List<WaitingListEntry> updates = new ArrayList<>();
+        for (int i = 0; i < toInvite; i++) {
+            WaitingListEntry entry = waitlisted.get(i);
+            entry.setStatus(WaitingListStatus.INVITED);
+            updates.add(entry);
+        }
+
+        updateEntries(updates, () -> {
+            if (toInvite < additionalNeeded) {
+                toast("Only " + toInvite + " additional entrants were available");
+            } else {
+                toast("Draw updated. Added " + toInvite + " entrants");
+            }
+            refreshEntries();
+        });
+    }
+
+    private void decreaseDrawCount(int removeCount, @NonNull List<WaitingListEntry> selectedEntrants) {
+        if (removeCount <= 0 || selectedEntrants.isEmpty()) {
+            toast("No entrants available to move to waitlist");
+            return;
+        }
+
+        Collections.shuffle(selectedEntrants);
+        int toUninvite = Math.min(removeCount, selectedEntrants.size());
+        List<WaitingListEntry> updates = new ArrayList<>();
+        for (int i = 0; i < toUninvite; i++) {
+            WaitingListEntry entry = selectedEntrants.get(i);
+            entry.setStatus(WaitingListStatus.NOT_SELECTED);
+            updates.add(entry);
+        }
+
+        updateEntries(updates, () -> {
+            toast("Draw updated. Moved " + toUninvite + " entrants to waitlist");
+            refreshEntries();
+        });
+    }
+
+    private void completeDrawEventUpdate(int selectedCount) {
         event.setDrawHappened(true);
         eventService.saveEvent(event, unused -> {
-            toast("Draw completed!");
+            toast("Draw completed! Selected " + selectedCount + " entrants");
             refreshEntries();
         }, e -> toast("Failed to update event status"));
+    }
+
+    private int parseRequestedDrawCount() {
+        String raw = etDrawCount.getText() == null ? "" : etDrawCount.getText().toString().trim();
+        if (raw.isEmpty()) {
+            toast("Enter the total number of selected entrants");
+            return -1;
+        }
+
+        try {
+            int value = Integer.parseInt(raw);
+            if (value < 0) {
+                toast("Total selected entrants must be 0 or greater");
+                return -1;
+            }
+            return value;
+        } catch (NumberFormatException e) {
+            toast("Enter a valid number");
+            return -1;
+        }
+    }
+
+    private boolean isSelectedStatus(@NonNull WaitingListEntry entry) {
+        return entry.getStatus() == WaitingListStatus.INVITED
+                || entry.getStatus() == WaitingListStatus.ACCEPTED;
+    }
+
+    private boolean isWaitlistStatus(@NonNull WaitingListEntry entry) {
+        return entry.getStatus() == WaitingListStatus.WAITING
+                || entry.getStatus() == WaitingListStatus.NOT_SELECTED;
+    }
+
+    private void updateEntries(@NonNull List<WaitingListEntry> entriesToUpdate, @NonNull Runnable onComplete) {
+        if (entriesToUpdate.isEmpty()) {
+            onComplete.run();
+            return;
+        }
+
+        AtomicInteger pending = new AtomicInteger(entriesToUpdate.size());
+        AtomicBoolean hadFailure = new AtomicBoolean(false);
+
+        for (WaitingListEntry entry : entriesToUpdate) {
+            waitingListService.updateEntry(eventId, entry, unused -> {
+                if (pending.decrementAndGet() == 0) {
+                    if (hadFailure.get()) toast("Some entrant updates failed");
+                    onComplete.run();
+                }
+            }, e -> {
+                hadFailure.set(true);
+                if (pending.decrementAndGet() == 0) {
+                    toast("Some entrant updates failed");
+                    onComplete.run();
+                }
+            });
+        }
     }
 
     private void toggleRemoveEntrantMode() {
@@ -288,7 +409,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
                 .filter(e -> e.getStatus() == WaitingListStatus.INVITED
                         || e.getStatus() == WaitingListStatus.ACCEPTED)
                 .count();
-        tvDrawCount.setText(String.valueOf(selectedCount));
+        etDrawCount.setText(String.valueOf(selectedCount));
     }
 
     private void deleteSelectedDeclined() {
@@ -298,7 +419,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             return;
         }
         for (String uid : selectedUids) {
-            waitingListService.removeEntry(eventId, uid, unused -\u003e {}, e -\u003e {});
+            waitingListService.removeEntry(eventId, uid, unused -> {}, e -> toast("Failed to delete entrant"));
         }
         toast("Deleted selected entrants");
         refreshEntries();
@@ -326,7 +447,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         for (int i = 0; i < toRedraw; i++) {
             WaitingListEntry entry = waitlisted.get(i);
             entry.setStatus(WaitingListStatus.INVITED);
-            waitingListService.updateEntry(eventId, entry, unused -\u003e {}, e -\u003e {});
+            waitingListService.updateEntry(eventId, entry, unused -> {}, e -> toast("Failed to redraw replacement"));
         }
         
         toast("Redraw completed for " + toRedraw + " entrants");
