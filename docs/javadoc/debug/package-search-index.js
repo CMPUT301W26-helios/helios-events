@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.example.helios.auth"},{"l":"com.example.helios.data"},{"l":"com.example.helios.model"},{"l":"com.example.helios.service"},{"l":"com.example.helios.ui"},{"l":"com.example.helios.ui.event"},{"l":"com.example.helios.ui.nav"}];updateSearchResults();
