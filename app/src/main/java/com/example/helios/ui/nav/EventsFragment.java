@@ -225,7 +225,25 @@ public class EventsFragment extends Fragment {
             if (startDateFilter != null && event.getStartTimeMillis() < startDateFilter) matchesDate = false;
             if (endDateFilter != null && event.getStartTimeMillis() > endDateFilter) matchesDate = false;
 
-            boolean matchesInterests = selectedInterests.isEmpty();
+            boolean matchesInterests;
+            if (selectedInterests.isEmpty()) {
+                matchesInterests = true;
+            } else {
+                matchesInterests = false;
+                java.util.List<String> eventInterests = event.getInterests();
+                if (eventInterests != null && !eventInterests.isEmpty()) {
+                    for (String selected : selectedInterests) {
+                        String selectedLower = selected.toLowerCase(Locale.getDefault());
+                        for (String tag : eventInterests) {
+                            if (tag != null && tag.toLowerCase(Locale.getDefault()).equals(selectedLower)) {
+                                matchesInterests = true;
+                                break;
+                            }
+                        }
+                        if (matchesInterests) break;
+                    }
+                }
+            }
             
             if (matchesSearch && matchesDate && matchesInterests) {
                 filteredEvents.add(event);
