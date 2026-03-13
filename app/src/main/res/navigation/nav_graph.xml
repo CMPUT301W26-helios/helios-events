@@ -25,6 +25,11 @@
         android:label="Manage Event" />
 
     <fragment
+        android:id="@+id/organizerViewEntrantsFragment"
+        android:name="com.example.helios.ui.nav.OrganizerViewEntrantsFragment"
+        android:label="Event Entrants" />
+
+    <fragment
         android:id="@+id/createEventFragment"
         android:name="com.example.helios.ui.nav.SetupEventFragment"
         android:label="Create Event" />

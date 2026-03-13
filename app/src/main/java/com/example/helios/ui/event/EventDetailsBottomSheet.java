@@ -1,5 +1,6 @@
 package com.example.helios.ui.event;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,11 +28,17 @@ import java.util.Locale;
 public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
     public static final String ARG_EVENT_ID = "arg_event_id";
+    public static final String ARG_HIDE_JOIN_BUTTON = "arg_hide_join_button";
 
     public static EventDetailsBottomSheet newInstance(@NonNull String eventId) {
+        return newInstance(eventId, false);
+    }
+
+    public static EventDetailsBottomSheet newInstance(@NonNull String eventId, boolean hideJoinButton) {
         EventDetailsBottomSheet sheet = new EventDetailsBottomSheet();
         Bundle args = new Bundle();
         args.putString(ARG_EVENT_ID, eventId);
+        args.putBoolean(ARG_HIDE_JOIN_BUTTON, hideJoinButton);
         sheet.setArguments(args);
         return sheet;
     }
@@ -53,6 +60,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private MaterialButton btnWaitingList;
 
     private String eventId;
+    private boolean hideJoinButton = false;
     private Event loadedEvent;
     private boolean isCurrentlyOnWaitingList = false;
 
@@ -98,7 +106,12 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
             close.setOnClickListener(v -> dismiss());
         }
 
-        eventId = getEventIdArg();
+        Bundle args = getArguments();
+        if (args != null) {
+            eventId = args.getString(ARG_EVENT_ID);
+            hideJoinButton = args.getBoolean(ARG_HIDE_JOIN_BUTTON, false);
+        }
+
         if (eventId == null) {
             toast("Missing event id.");
             dismiss();
@@ -106,8 +119,12 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         }
 
         if (btnWaitingList != null) {
-            btnWaitingList.setEnabled(false);
-            btnWaitingList.setOnClickListener(v -> onWaitingListButtonPressed());
+            if (hideJoinButton) {
+                btnWaitingList.setVisibility(View.GONE);
+            } else {
+                btnWaitingList.setEnabled(false);
+                btnWaitingList.setOnClickListener(v -> onWaitingListButtonPressed());
+            }
         }
 
         loadEvent();
@@ -127,7 +144,12 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
             loadedEvent = event;
             bindEvent(event);
-            refreshWaitingListState();
+            
+            if (!hideJoinButton) {
+                refreshWaitingListState();
+            } else {
+                setLoading(false);
+            }
             refreshCapacityCount();
 
         }, error -> {
@@ -176,12 +198,20 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
             tvDescription.setText(nonEmptyOr(event.getDescription(), ""));
         }
 
-        // Poster image:
-        // Current Event model only has posterImageId, not a direct URL.
-        // For now, show placeholder if none. Later wire to ImageService/Storage.
         if (ivPoster != null) {
-            ivPoster.setImageResource(R.drawable.elder_dance_poster_sample);
-            // TODO later: load real poster using ImageService if posterImageId is present.
+            String posterImageId = event.getPosterImageId();
+            if (posterImageId != null && !posterImageId.trim().isEmpty()) {
+                try {
+                    ivPoster.setImageURI(Uri.parse(posterImageId));
+                    if (ivPoster.getDrawable() == null) {
+                        ivPoster.setImageResource(R.drawable.elder_dance_poster_sample);
+                    }
+                } catch (Exception ignored) {
+                    ivPoster.setImageResource(R.drawable.elder_dance_poster_sample);
+                }
+            } else {
+                ivPoster.setImageResource(R.drawable.elder_dance_poster_sample);
+            }
         }
     }
 
@@ -270,7 +300,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void updateWaitingListButton() {
-        if (btnWaitingList == null) return;
+        if (btnWaitingList == null || hideJoinButton) return;
 
         btnWaitingList.setEnabled(true);
         if (isCurrentlyOnWaitingList) {
@@ -284,7 +314,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         if (tvName != null && loading) {
             tvName.setText("Loading...");
         }
-        if (btnWaitingList != null) {
+        if (btnWaitingList != null && !hideJoinButton) {
             btnWaitingList.setEnabled(!loading);
         }
     }

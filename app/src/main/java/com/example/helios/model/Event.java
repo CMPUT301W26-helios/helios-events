@@ -28,6 +28,8 @@ public class Event {
     private String posterImageId;  // optional (nullable)
     private String qrCodeValue;    // optional (nullable) - could be eventId embedded
 
+    private boolean drawHappened; // Track if the lottery draw has occurred
+
     // Construction:
     public Event() {}
 
@@ -41,7 +43,7 @@ public class Event {
         this.locationName = locationName;
         this.address = address;
 
-        this.startTimeMillis = startTimeMillis; // Use millis because this time representation is significantly more accurate than date.
+        this.startTimeMillis = startTimeMillis;
         this.endTimeMillis = endTimeMillis;
         this.registrationOpensMillis = registrationOpensMillis;
         this.registrationClosesMillis = registrationClosesMillis;
@@ -54,6 +56,7 @@ public class Event {
         this.organizerUid = organizerUid;
         this.posterImageId = posterImageId;
         this.qrCodeValue = qrCodeValue;
+        this.drawHappened = false;
     }
     // Getters and Setters:
     public String getEventId() { return eventId; }
@@ -106,4 +109,7 @@ public class Event {
 
     public String getQrCodeValue() { return qrCodeValue; }
     public void setQrCodeValue(String qrCodeValue) { this.qrCodeValue = qrCodeValue; }
+
+    public boolean isDrawHappened() { return drawHappened; }
+    public void setDrawHappened(boolean drawHappened) { this.drawHappened = drawHappened; }
 }
