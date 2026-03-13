@@ -10,8 +10,13 @@ import com.example.helios.model.WaitingListStatus;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
-
 /**
+ * Service for entrant-side event participation actions such as joining, leaving,
+ * and querying the current user's waiting-list status.
+ *
+ * Role: application service coordinating profile identity with waiting-list persistence.
+ * Issues: dependency construction is hard-wired and core lottery rules are still coupled to persistence callbacks.
+ * Alt Description:
  * Service class that provides business logic for entrants interacting with events.
  * It handles operations such as joining/leaving a waiting list and checking status.
  */

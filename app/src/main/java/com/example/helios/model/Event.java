@@ -1,10 +1,20 @@
 package com.example.helios.model;
 
 import java.util.List;
-
 /**
+ * Represents an event that entrants may join through the lottery-based waiting list flow.
+ *
+ * <p>Role in the application: this is the main domain model for entrant browsing, organizer event
+ * management, QR generation, and lottery/draw state.
+ *
+ * <p>Potential issues: the model does not enforce invariants such as the following:
+ * positive capacity, valid date ordering, sample size limits, etc...
+ * Those rules currently need to be enforced elsewhere.
+ *
+ * Alt Description:
  * Represents an event in the Helios application.
  * Contains details about the event, its location, timing, registration, and lottery settings.
+ * TODO! Update and consolidate these descriptions!
  */
 public class Event {
     private String eventId;
@@ -64,11 +74,13 @@ public class Event {
      * @param posterImageId            ID of the poster image (optional).
      * @param qrCodeValue              Value encoded in the QR code (optional).
      * @param interests                List of interests associated with the event.
+     * @param drawHappened             Boolean denoting whether a draw has already occurred for this event
+     * TODO: update drawHappened to instead store positive integer number of draws instead, for phased invites/inviting entrants after some canceled
      */
     public Event(String eventId, String title, String description, String locationName, String address,
                  long startTimeMillis, long endTimeMillis, long registrationOpensMillis, long registrationClosesMillis,
                  int capacity, int sampleSize, Integer waitlistLimit, boolean geolocationRequired,
-                 String lotteryGuidelines, String organizerUid, String posterImageId, String qrCodeValue,List<String> interests) {
+                 String lotteryGuidelines, String organizerUid, String posterImageId, String qrCodeValue,List<String> interests, boolean drawHappened) {
         this.eventId = eventId;
         this.title = title;
         this.description = description;

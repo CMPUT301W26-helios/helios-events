@@ -1,3 +1,8 @@
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.external.javadoc.JavadocMemberLevel
+import org.gradle.external.javadoc.StandardJavadocDocletOptions
+
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
@@ -31,6 +36,7 @@ android {
             enableUnitTestCoverage = true
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -46,41 +52,94 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.transport.api)
     implementation(libs.contentpager)
-    
-    // CameraX
+
     implementation(libs.camera.core)
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
-    
-    // ML Kit Barcode Scanning
+
     implementation(libs.barcode.scanning)
 
-    // ZXing core for QR code generation
     implementation("com.google.zxing:core:3.5.3")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
     implementation(platform("com.google.firebase:firebase-bom:34.9.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.android.material:material")
-    val nav_version = "2.9.7"
 
-    // Views/Fragments integration
-    implementation("androidx.navigation:navigation-fragment:$nav_version")
-    implementation("androidx.navigation:navigation-ui:$nav_version")
+    val navVersion = "2.9.7"
+    implementation("androidx.navigation:navigation-fragment:$navVersion")
+    implementation("androidx.navigation:navigation-ui:$navVersion")
+    implementation("androidx.navigation:navigation-dynamic-features-fragment:$navVersion")
+    androidTestImplementation("androidx.navigation:navigation-testing:$navVersion")
 
-    // Feature module support for Fragments
-    implementation("androidx.navigation:navigation-dynamic-features-fragment:$nav_version")
-
-    // Testing Navigation
-    androidTestImplementation("androidx.navigation:navigation-testing:$nav_version")
-
-    // JSON serialization library, works with the Kotlin serialization plugin
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-
     testImplementation("org.mockito:mockito-core:5.14.0")
+}
+
+afterEvaluate {
+    fun registerAndroidJavadocTask(variantName: String) {
+        val variantCap = variantName.replaceFirstChar { it.uppercase() }
+        val compileTaskProvider =
+            tasks.named("compile${variantCap}JavaWithJavac", JavaCompile::class.java)
+
+        tasks.register("javadoc$variantCap", Javadoc::class.java) {
+            group = "documentation"
+            description = "Generates Javadoc for the $variantName variant."
+
+            dependsOn(compileTaskProvider)
+
+            val javaCompile = compileTaskProvider.get()
+
+            setSource(
+                javaCompile.source.matching {
+                    include("**/*.java")
+                    exclude(
+                        "**/R.java",
+                        "**/R2.java",
+                        "**/BuildConfig.java",
+                        "**/Manifest.java",
+                        "**/*Binding.java",
+                        "**/*Directions.java",
+                        "**/*Args.java"
+                    )
+                }
+            )
+
+            setClasspath(
+                files(
+                    android.bootClasspath,
+                    javaCompile.classpath,
+                    javaCompile.destinationDirectory
+                )
+            )
+
+            setDestinationDir(
+                layout.buildDirectory.dir("docs/javadoc/$variantName").get().asFile
+            )
+
+            isFailOnError = true
+
+            val docOptions = options as StandardJavadocDocletOptions
+            docOptions.encoding = "UTF-8"
+            docOptions.charSet = "UTF-8"
+            docOptions.memberLevel = JavadocMemberLevel.PUBLIC
+            docOptions.source("11")
+            docOptions.addStringOption("Xdoclint:none", "-quiet")
+        }
+    }
+
+    registerAndroidJavadocTask("debug")
+    registerAndroidJavadocTask("release")
+
+    tasks.register("javadocAll") {
+        group = "documentation"
+        description = "Generates Javadoc for all configured Android variants."
+        dependsOn("javadocDebug", "javadocRelease")
+    }
 }

@@ -1,6 +1,13 @@
 package com.example.helios.model;
-
 /**
+ * Represents one entrant's state within a single event waiting list.
+ *
+ * <p>Role in the application: stores lottery workflow state for waiting, invited, accepted,
+ * declined, cancelled, and not-selected entrants.
+ *
+ * <p>Issues: allowed state transitions are not enforced in this model and are currently
+ * handled elsewhere in services or UI code.
+ * Alt Description:
  * Represents an entry in the waiting list for a specific event.
  * Tracks the entrant's UID, their status, and when they joined the list.
  */

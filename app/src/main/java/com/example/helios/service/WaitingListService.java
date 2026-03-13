@@ -8,8 +8,13 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.List;
-
 /**
+ * Service for organizer-side waiting-list retrieval, update, and removal actions.
+ *
+ * Role: control/service layer for waiting-list management.
+ * Issues: validation is minimal and most operations delegate directly to the repository.
+ * 
+ * Alt Description:
  * Service class that provides business logic for managing event waiting lists.
  * It interacts with the {@link FirebaseRepository} to perform operations on waiting list entries.
  */

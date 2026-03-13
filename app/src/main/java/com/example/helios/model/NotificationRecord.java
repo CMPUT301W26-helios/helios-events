@@ -6,16 +6,12 @@ package com.example.helios.model;
  */
 public class NotificationRecord {
     private String notificationId;
-
-    private String eventId; // nullable?
-    private String senderUid; // organizer/admin
-    private String recipientUid; // nullable if group audience
-
+    private String eventId;
+    private String senderUid;
+    private String recipientUid;
     private NotificationAudience audience;
-
     private String title;
     private String message;
-
     private long sentAtMillis;
 
     /**

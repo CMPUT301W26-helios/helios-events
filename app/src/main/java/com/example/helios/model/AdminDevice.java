@@ -1,6 +1,15 @@
 package com.example.helios.model;
 
 /**
+ * Represents a device installation that has been explicitly granted or denied administrator access.
+ *
+ * <p>Role in the application: this model supports device-based administrator enablement checks
+ * during profile bootstrap.
+ *
+ * <p>Outstanding issues: administrator privilege is tied to an installation identifier, so clearing
+ * app data or moving devices changes the installation identity.
+ * 
+ * Alt Description: (TODO! update and combine descriptions properly)
  * Represents a device with administrative privileges in the Helios application.
  * Stores information about the device's installation ID and its status.
  */

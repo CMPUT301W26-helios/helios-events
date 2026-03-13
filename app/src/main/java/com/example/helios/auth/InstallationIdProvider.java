@@ -6,8 +6,12 @@ import android.content.SharedPreferences;
 import java.util.UUID;
 
 /**
+ * Utility class that persists a locally generated installation identifier in SharedPreferences.
  * Provides a unique, persistent installation ID for the application.
  * This ID is generated once and stored in SharedPreferences.
+ *
+ * Role: device identity helper used to associate the current installation with a profile or admin device record.
+ * Issues: installation IDs are device-local only and are not protected against app data clearing.
  */
 public final class InstallationIdProvider {
     private static final String PREFS = "app_prefs";

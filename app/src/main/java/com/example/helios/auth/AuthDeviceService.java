@@ -14,6 +14,12 @@ import com.google.firebase.auth.FirebaseUser;
 /**
  * Service class handling device authentication using Firebase Auth.
  * Primarily handles anonymous sign-in to associate a user with a specific device.
+ * (Alt description: Service wrapper around Firebase anonymous authentication for device-based sign-in.)
+ *
+ * Role: infrastructure/auth service used by higher-level profile and entrant flows.
+ *
+ * Issues: directly constructs FirebaseAuth, which makes isolated unit testing harder;
+ * formatting/import cleanup is still needed in this file.
  */
 public class AuthDeviceService {
     private final FirebaseAuth auth;

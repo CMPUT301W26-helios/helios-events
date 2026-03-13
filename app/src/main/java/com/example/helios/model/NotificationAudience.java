@@ -1,15 +1,18 @@
 package com.example.helios.model;
 
 /**
- * Enumeration representing the target audience for a notification.
+ * Describes the intended audience for a notification record.
+ *
+ * <p>Role in the application: categorizes whether a notification is addressed to a single entrant or to
+ * a group such as waiting, selected, or cancelled entrants.
  */
 public enum NotificationAudience {
-    /** Notification intended for a single individual. */
+    /** Notification addressed to a single specific recipient. */
     INDIVIDUAL,
-    /** Notification intended for everyone on the waiting list. */
+    /** Notification addressed to entrants currently on the waiting list. */
     WAITING,
-    /** Notification intended for those who have been selected (invited or accepted). */
-    SELECTED,   // invited/accepted
-    /** Notification intended for those whose participation was cancelled. */
+    /** Notification addressed to invited or accepted entrants. */
+    SELECTED,
+    /** Notification addressed to cancelled or declined entrants. */
     CANCELLED
 }

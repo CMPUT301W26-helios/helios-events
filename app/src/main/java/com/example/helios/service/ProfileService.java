@@ -13,8 +13,14 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
-
 /**
+ * Service responsible for profile bootstrap, profile completion, role synchronization,
+ * and notification preference updates for the current device user.
+ *
+ * Role: application service coordinating authentication, installation identity, and profile persistence.
+ * Issues: directly constructs dependencies and mixes bootstrap orchestration with profile CRUD logic.
+ *
+ * Alt Description:
  * Service class that provides business logic for managing user profiles.
  * It handles profile bootstrapping, completion, and retrieval.
  */
