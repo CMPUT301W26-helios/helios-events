@@ -15,6 +15,12 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.List;
 
 public class ProfileService {
+
+    @FunctionalInterface
+    interface InstallationIdSource {
+        String getInstallationId(@NonNull Context context);
+    }
+
     public static class BootstrapResult {
         private final UserProfile profile;
         private final boolean isNewUser;
@@ -35,18 +41,25 @@ public class ProfileService {
 
     private final AuthDeviceService authDeviceService;
     private final FirebaseRepository repository;
+    private final InstallationIdSource installationIdSource;
 
     public ProfileService() {
-        this(new AuthDeviceService(), new FirebaseRepository());
+        this(
+                new AuthDeviceService(),
+                new FirebaseRepository(),
+                InstallationIdProvider::getInstallationId
+        );
     }
 
     // Package-private test seam
     ProfileService(
             @NonNull AuthDeviceService authDeviceService,
-            @NonNull FirebaseRepository repository
+            @NonNull FirebaseRepository repository,
+            @NonNull InstallationIdSource installationIdSource
     ) {
         this.authDeviceService = authDeviceService;
         this.repository = repository;
+        this.installationIdSource = installationIdSource;
     }
 
     public void bootstrapCurrentUser(
@@ -56,7 +69,7 @@ public class ProfileService {
     ) {
         authDeviceService.ensureSignedIn(firebaseUser -> {
             String uid = firebaseUser.getUid();
-            String installationId = InstallationIdProvider.getInstallationId(context);
+            String installationId = installationIdSource.getInstallationId(context);
 
             repository.isAdminInstallation(installationId, isAdmin -> {
                 String desiredRole = isAdmin ? "admin" : "user";
