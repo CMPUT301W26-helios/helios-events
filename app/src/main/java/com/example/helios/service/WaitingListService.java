@@ -10,10 +10,16 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.util.List;
 
 public class WaitingListService {
+
     private final FirebaseRepository repository;
 
     public WaitingListService() {
-        this.repository = new FirebaseRepository();
+        this(new FirebaseRepository());
+    }
+
+    // Package-private test seam
+    WaitingListService(@NonNull FirebaseRepository repository) {
+        this.repository = repository;
     }
 
     public void getEntriesForEvent(
@@ -30,11 +36,13 @@ public class WaitingListService {
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        if (entry.getEntrantUid() == null || entry.getEntrantUid().trim().isEmpty()) {
+        String entrantUid = entry.getEntrantUid();
+        if (entrantUid == null || entrantUid.trim().isEmpty()) {
             onFailure.onFailure(new IllegalArgumentException("entrantUid must not be empty."));
             return;
         }
-        repository.updateWaitingListEntry(eventId, entry.getEntrantUid(), entry, onSuccess, onFailure);
+
+        repository.updateWaitingListEntry(eventId, entrantUid, entry, onSuccess, onFailure);
     }
 
     public void removeEntry(

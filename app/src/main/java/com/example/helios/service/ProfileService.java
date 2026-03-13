@@ -15,6 +15,12 @@ import com.google.firebase.auth.FirebaseUser;
 import java.util.List;
 
 public class ProfileService {
+
+    @FunctionalInterface
+    interface InstallationIdSource {
+        String getInstallationId(@NonNull Context context);
+    }
+
     public static class BootstrapResult {
         private final UserProfile profile;
         private final boolean isNewUser;
@@ -35,10 +41,25 @@ public class ProfileService {
 
     private final AuthDeviceService authDeviceService;
     private final FirebaseRepository repository;
+    private final InstallationIdSource installationIdSource;
 
     public ProfileService() {
-        this.authDeviceService = new AuthDeviceService();
-        this.repository = new FirebaseRepository();
+        this(
+                new AuthDeviceService(),
+                new FirebaseRepository(),
+                InstallationIdProvider::getInstallationId
+        );
+    }
+
+    // Package-private test seam
+    ProfileService(
+            @NonNull AuthDeviceService authDeviceService,
+            @NonNull FirebaseRepository repository,
+            @NonNull InstallationIdSource installationIdSource
+    ) {
+        this.authDeviceService = authDeviceService;
+        this.repository = repository;
+        this.installationIdSource = installationIdSource;
     }
 
     public void bootstrapCurrentUser(
@@ -48,7 +69,7 @@ public class ProfileService {
     ) {
         authDeviceService.ensureSignedIn(firebaseUser -> {
             String uid = firebaseUser.getUid();
-            String installationId = InstallationIdProvider.getInstallationId(context);
+            String installationId = installationIdSource.getInstallationId(context);
 
             repository.isAdminInstallation(installationId, isAdmin -> {
                 String desiredRole = isAdmin ? "admin" : "user";
@@ -73,9 +94,11 @@ public class ProfileService {
                     }
 
                     if (needsUpdate) {
-                        repository.updateUser(existingProfile,
+                        repository.updateUser(
+                                existingProfile,
                                 unused -> onSuccess.onSuccess(new BootstrapResult(existingProfile, false)),
-                                onFailure);
+                                onFailure
+                        );
                     } else {
                         onSuccess.onSuccess(new BootstrapResult(existingProfile, false));
                     }
@@ -105,9 +128,11 @@ public class ProfileService {
             profile.setEmail(email);
             profile.setPhone(phone);
 
-            repository.updateUser(profile,
+            repository.updateUser(
+                    profile,
                     unused -> onSuccess.onSuccess(profile),
-                    onFailure);
+                    onFailure
+            );
         }, onFailure);
     }
 
@@ -148,10 +173,13 @@ public class ProfileService {
                 installationId
         );
 
-        repository.saveUser(newProfile,
+        repository.saveUser(
+                newProfile,
                 unused -> onSuccess.onSuccess(new BootstrapResult(newProfile, true)),
-                onFailure);
+                onFailure
+        );
     }
+
     public void deleteCurrentProfile(
             @NonNull Context context,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -179,9 +207,7 @@ public class ProfileService {
     }
 
     public void setNotificationsMuted(
-
-
-    @NonNull Context context,
+            @NonNull Context context,
             boolean muted,
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
