@@ -15,6 +15,14 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Repository responsible for Firestore reads and writes for users, events, waiting-list entries,
+ * and admin-device checks.
+ *
+ * Role: repository/data-access layer used by service classes.
+ * Outstanding issues: validation rules are intentionally minimal, several methods are direct pass-throughs,
+ * and the class directly constructs FirebaseFirestore which limits testability.
+ */
 public class FirebaseRepository {
     private final FirebaseFirestore db;
 
@@ -380,7 +388,8 @@ public class FirebaseRepository {
                 "demo_organizer",
                 null,
                 null,
-                null
+                null,
+                false
         );
 
         db.collection("events").document("demo_event_1").set(demo)
