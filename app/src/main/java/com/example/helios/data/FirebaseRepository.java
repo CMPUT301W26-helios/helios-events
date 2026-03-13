@@ -379,6 +379,7 @@ public class FirebaseRepository {
                 "Random draw after registration closes. Declines trigger replacement draws.",
                 "demo_organizer",
                 null,
+                null,
                 null
         );
 

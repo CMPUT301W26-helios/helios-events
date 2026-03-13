@@ -55,6 +55,8 @@ public class OrganizerQrFragment extends Fragment {
     private long registrationClosesMillis;
     @Nullable
     private String posterUri;
+    @Nullable
+    private String tagsRaw;
 
     public OrganizerQrFragment() {
         super(R.layout.fragment_organizer_qr);
@@ -83,6 +85,7 @@ public class OrganizerQrFragment extends Fragment {
             mode = Mode.CREATE;
             title = args.getString("arg_event_title", "");
             description = args.getString("arg_event_description", "");
+            tagsRaw = args.getString("arg_event_tags", null);
             maxEntrants = args.getInt("arg_event_max_entrants", 0);
             geoRequired = args.getBoolean("arg_geolocation_required", false);
             registrationOpensMillis = args.getLong("arg_registration_opens_millis", 0L);
@@ -97,6 +100,7 @@ public class OrganizerQrFragment extends Fragment {
             registrationOpensMillis = 0L;
             registrationClosesMillis = 0L;
             posterUri = null;
+            tagsRaw = null;
         }
     }
 
@@ -252,6 +256,20 @@ public class OrganizerQrFragment extends Fragment {
 
             String qrPayload = buildQrPayload();
 
+            java.util.List<String> interests = null;
+            if (tagsRaw != null && !tagsRaw.trim().isEmpty()) {
+                interests = new java.util.ArrayList<>();
+                for (String part : tagsRaw.split(",")) {
+                    String trimmed = part.trim();
+                    if (!trimmed.isEmpty()) {
+                        interests.add(trimmed);
+                    }
+                }
+                if (interests.isEmpty()) {
+                    interests = null;
+                }
+            }
+
             Event event = new Event(
                     null,
                     title,
@@ -269,7 +287,8 @@ public class OrganizerQrFragment extends Fragment {
                     "Lottery details TBD.",
                     uid,
                     posterUri,
-                    qrPayload
+                    qrPayload,
+                    interests
             );
 
             eventService.saveEvent(

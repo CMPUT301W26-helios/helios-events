@@ -66,8 +66,18 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             holder.tvDate.setText("TBA");
         }
 
-        String guidelines = nonEmptyOr(event.getLotteryGuidelines(), null);
-        holder.tvTags.setText(guidelines != null ? guidelines : "No lottery details");
+        java.util.List<String> interests = event.getInterests();
+        if (interests != null && !interests.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < interests.size(); i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(interests.get(i));
+            }
+            holder.tvTags.setText("Tags: " + sb);
+        } else {
+            String guidelines = nonEmptyOr(event.getLotteryGuidelines(), null);
+            holder.tvTags.setText(guidelines != null ? guidelines : "No lottery details");
+        }
 
         holder.tvMaxEntrants.setText("Max: " + event.getCapacity());
 

@@ -1,5 +1,7 @@
 package com.example.helios.model;
 
+import java.util.List;
+
 public class Event {
     private String eventId;
 
@@ -28,6 +30,8 @@ public class Event {
     private String posterImageId;  // optional (nullable)
     private String qrCodeValue;    // optional (nullable) - could be eventId embedded
 
+    private List<String> interests;
+  
     private boolean drawHappened; // Track if the lottery draw has occurred
 
     // Construction:
@@ -36,7 +40,7 @@ public class Event {
     public Event(String eventId, String title, String description, String locationName, String address,
                  long startTimeMillis, long endTimeMillis, long registrationOpensMillis, long registrationClosesMillis,
                  int capacity, int sampleSize, Integer waitlistLimit, boolean geolocationRequired,
-                 String lotteryGuidelines, String organizerUid, String posterImageId, String qrCodeValue) {
+                 String lotteryGuidelines, String organizerUid, String posterImageId, String qrCodeValue,List<String> interests) {
         this.eventId = eventId;
         this.title = title;
         this.description = description;
@@ -56,6 +60,7 @@ public class Event {
         this.organizerUid = organizerUid;
         this.posterImageId = posterImageId;
         this.qrCodeValue = qrCodeValue;
+        this.interests = interests;
         this.drawHappened = false;
     }
     // Getters and Setters:
@@ -110,6 +115,8 @@ public class Event {
     public String getQrCodeValue() { return qrCodeValue; }
     public void setQrCodeValue(String qrCodeValue) { this.qrCodeValue = qrCodeValue; }
 
+    public List<String> getInterests() { return interests; }
+    public void setInterests(List<String> interests) { this.interests = interests; }
     public boolean isDrawHappened() { return drawHappened; }
     public void setDrawHappened(boolean drawHappened) { this.drawHappened = drawHappened; }
 }

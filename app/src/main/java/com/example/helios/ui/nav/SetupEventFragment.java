@@ -110,6 +110,7 @@ public class SetupEventFragment extends Fragment {
         EditText nameInput = view.findViewById(R.id.edit_event_name);
         EditText maxEntrantsInput = view.findViewById(R.id.edit_max_entrants);
         EditText descriptionInput = view.findViewById(R.id.edit_event_description);
+        EditText tagsInput = view.findViewById(R.id.edit_event_tags);
         TextView startDateView = view.findViewById(R.id.tv_registration_start);
         TextView endDateView = view.findViewById(R.id.tv_registration_end);
         TextView geoOn = view.findViewById(R.id.tv_geo_on);
@@ -173,6 +174,7 @@ public class SetupEventFragment extends Fragment {
             primaryButton.setOnClickListener(v -> {
                 String title = safeText(nameInput);
                 String description = safeText(descriptionInput);
+                String tagsRaw = safeText(tagsInput);
                 String maxEntrantsStr = safeText(maxEntrantsInput);
 
                 if (TextUtils.isEmpty(title)) {
@@ -199,6 +201,7 @@ public class SetupEventFragment extends Fragment {
                 Bundle args = new Bundle();
                 args.putString("arg_event_title", title);
                 args.putString("arg_event_description", description);
+                args.putString("arg_event_tags", tagsRaw);
                 args.putInt("arg_event_max_entrants", maxEntrants);
                 args.putLong("arg_registration_opens_millis", registrationOpensMillis);
                 args.putLong("arg_registration_closes_millis", registrationClosesMillis);
@@ -231,6 +234,14 @@ public class SetupEventFragment extends Fragment {
                 }
                 if (event.getDescription() != null) {
                     descriptionInput.setText(event.getDescription());
+                }
+                if (event.getInterests() != null && !event.getInterests().isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < event.getInterests().size(); i++) {
+                        if (i > 0) sb.append(", ");
+                        sb.append(event.getInterests().get(i));
+                    }
+                    tagsInput.setText(sb.toString());
                 }
                 if (event.getCapacity() > 0) {
                     maxEntrantsInput.setText(String.valueOf(event.getCapacity()));
@@ -278,6 +289,7 @@ public class SetupEventFragment extends Fragment {
 
                 String title = safeText(nameInput);
                 String description = safeText(descriptionInput);
+                String tagsRaw = safeText(tagsInput);
                 String maxEntrantsStr = safeText(maxEntrantsInput);
 
                 if (TextUtils.isEmpty(title)) {
@@ -308,6 +320,22 @@ public class SetupEventFragment extends Fragment {
                 loadedEvent.setRegistrationOpensMillis(registrationOpensMillis);
                 loadedEvent.setRegistrationClosesMillis(registrationClosesMillis);
                 loadedEvent.setGeolocationRequired(geolocationRequired);
+
+                // Update interests from comma-separated tags.
+                java.util.List<String> interests = null;
+                if (!tagsRaw.isEmpty()) {
+                    interests = new java.util.ArrayList<>();
+                    for (String part : tagsRaw.split(",")) {
+                        String trimmed = part.trim();
+                        if (!trimmed.isEmpty()) {
+                            interests.add(trimmed);
+                        }
+                    }
+                    if (interests.isEmpty()) {
+                        interests = null;
+                    }
+                }
+                loadedEvent.setInterests(interests);
 
                 if (selectedPosterUri != null) {
                     loadedEvent.setPosterImageId(selectedPosterUri.toString());
