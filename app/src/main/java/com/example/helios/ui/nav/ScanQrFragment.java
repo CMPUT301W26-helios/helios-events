@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.helios.R;
+import com.example.helios.ui.event.EventDetailsBottomSheet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScanning;
@@ -33,6 +34,7 @@ import com.google.mlkit.vision.common.InputImage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import com.example.helios.ui.event.EventDetailsBottomSheet;
 
 public class ScanQrFragment extends Fragment {
 
@@ -196,8 +198,9 @@ public class ScanQrFragment extends Fragment {
     }
 
     private void handleQrCode(String value) {
-        Toast.makeText(getContext(), "QR Detected: " + value, Toast.LENGTH_LONG).show();
-        // Here you would navigate to the event screen or handle the check-in
+        if (!isAdded()) return;
+        EventDetailsBottomSheet.newInstance(value)
+                .show(getParentFragmentManager(), "event_details");
     }
 
     @Override

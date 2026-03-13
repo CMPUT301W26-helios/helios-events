@@ -27,11 +27,6 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;
 
-/**
- * Organizer flow:
- * - Step 2 of creating an event (show QR and confirm to save).
- * - Viewing an existing event's QR from the Manage Event screen.
- */
 public class OrganizerQrFragment extends Fragment {
 
     private enum Mode {
@@ -44,8 +39,7 @@ public class OrganizerQrFragment extends Fragment {
 
     private Mode mode = Mode.CREATE;
 
-    @Nullable
-    private String eventIdForView;
+    @Nullable private String eventIdForView;
 
     private String title;
     private String description;
@@ -53,10 +47,11 @@ public class OrganizerQrFragment extends Fragment {
     private boolean geoRequired;
     private long registrationOpensMillis;
     private long registrationClosesMillis;
-    @Nullable
-    private String posterUri;
-    @Nullable
-    private String tagsRaw;
+    @Nullable private String posterUri;
+    @Nullable private String tagsRaw;
+
+    // Field so saveEvent() can update the QR image after save
+    private ImageView qrImage;
 
     public OrganizerQrFragment() {
         super(R.layout.fragment_organizer_qr);
@@ -68,11 +63,8 @@ public class OrganizerQrFragment extends Fragment {
         Bundle args = getArguments();
         if (args != null && args.containsKey("arg_event_id")
                 && !TextUtils.isEmpty(args.getString("arg_event_id"))) {
-            // Viewing an already-created event's QR code from ManageEventFragment.
             mode = Mode.VIEW_EXISTING;
             eventIdForView = args.getString("arg_event_id");
-
-            // Defaults for create-mode fields; not used in view mode.
             title = "";
             description = "";
             maxEntrants = 0;
@@ -81,7 +73,6 @@ public class OrganizerQrFragment extends Fragment {
             registrationClosesMillis = 0L;
             posterUri = null;
         } else if (args != null) {
-            // Normal create flow coming from SetupEventFragment.
             mode = Mode.CREATE;
             title = args.getString("arg_event_title", "");
             description = args.getString("arg_event_description", "");
@@ -118,7 +109,7 @@ public class OrganizerQrFragment extends Fragment {
 
         TextView headerTitle = view.findViewById(R.id.tv_qr_title);
         TextView labelView = view.findViewById(R.id.tv_generated_qr_label);
-        ImageView qrImage = view.findViewById(R.id.image_qr_preview);
+        qrImage = view.findViewById(R.id.image_qr_preview);
         View bottomActions = view.findViewById(R.id.layout_qr_bottom_actions);
         View previewEventButton = view.findViewById(R.id.button_preview_event_page);
         View inlineActions = view.findViewById(R.id.layout_qr_inline_actions);
@@ -130,59 +121,41 @@ public class OrganizerQrFragment extends Fragment {
         MaterialButton viewModeBackButton = view.findViewById(R.id.button_qr_back_view);
 
         if (mode == Mode.CREATE) {
-            // Create-flow UI
             if (headerTitle != null) {
                 headerTitle.setText("QR Code\nand Preview");
             }
             labelView.setText("Generated QR for: " + (title.isEmpty() ? "New Event" : title));
 
-            String qrPayload = buildQrPayload();
-            Bitmap qrBitmap = generateQrBitmap(qrPayload, 512);
-            if (qrBitmap != null) {
-                qrImage.setImageBitmap(qrBitmap);
-            }
+            // Show placeholder — real QR is generated after event is saved
+            qrImage.setImageResource(android.R.drawable.ic_menu_gallery);
 
-            if (bottomActions != null) {
-                bottomActions.setVisibility(View.VISIBLE);
-            }
-            if (viewModeBackButton != null) {
-                viewModeBackButton.setVisibility(View.GONE);
-            }
+            if (bottomActions != null) bottomActions.setVisibility(View.VISIBLE);
+            if (viewModeBackButton != null) viewModeBackButton.setVisibility(View.GONE);
 
             cancelButton.setOnClickListener(v ->
-                    NavHostFragment.findNavController(this).navigateUp()
-            );
+                    NavHostFragment.findNavController(this).navigateUp());
 
             confirmButton.setOnClickListener(v -> saveEvent());
+
         } else {
-            // View-existing-flow UI (from ManageEventFragment "View QR Code")
-            if (headerTitle != null) {
-                headerTitle.setText("QR Code");
-            }
+            if (headerTitle != null) headerTitle.setText("QR Code");
             labelView.setText("Generated QR:");
 
-            if (bottomActions != null) {
-                bottomActions.setVisibility(View.GONE);
-            }
-            if (previewEventButton != null) {
-                previewEventButton.setVisibility(View.GONE);
-            }
-            if (inlineActions != null) {
-                inlineActions.setVisibility(View.GONE);
-            }
-            
+            if (bottomActions != null) bottomActions.setVisibility(View.GONE);
+            if (previewEventButton != null) previewEventButton.setVisibility(View.GONE);
+            if (inlineActions != null) inlineActions.setVisibility(View.GONE);
+
             if (viewModeBackButton != null) {
                 viewModeBackButton.setVisibility(View.VISIBLE);
-                viewModeBackButton.setOnClickListener(v -> 
-                    NavHostFragment.findNavController(this).navigateUp()
-                );
+                viewModeBackButton.setOnClickListener(v ->
+                        NavHostFragment.findNavController(this).navigateUp());
             }
 
-            // Card fits width (centered with padding) and wraps height: no stretch.
             if (innerLayout instanceof ConstraintLayout) {
                 ConstraintSet innerSet = new ConstraintSet();
                 innerSet.clone((ConstraintLayout) innerLayout);
-                innerSet.connect(R.id.image_qr_preview, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0);
+                innerSet.connect(R.id.image_qr_preview, ConstraintSet.BOTTOM,
+                        ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0);
                 innerSet.applyTo((ConstraintLayout) innerLayout);
             }
             if (innerLayout != null) {
@@ -204,8 +177,7 @@ public class OrganizerQrFragment extends Fragment {
 
             if (eventIdForView == null || eventIdForView.trim().isEmpty()) {
                 Toast.makeText(requireContext(),
-                        "Missing event id for QR view.",
-                        Toast.LENGTH_SHORT).show();
+                        "Missing event id for QR view.", Toast.LENGTH_SHORT).show();
                 NavHostFragment.findNavController(this).navigateUp();
                 return;
             }
@@ -215,15 +187,11 @@ public class OrganizerQrFragment extends Fragment {
                 String qrValue = event.getQrCodeValue();
                 if (qrValue == null || qrValue.trim().isEmpty()) {
                     Toast.makeText(requireContext(),
-                            "This event has no stored QR value.",
-                            Toast.LENGTH_SHORT).show();
+                            "This event has no stored QR value.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 Bitmap bmp = generateQrBitmap(qrValue, 512);
-                if (bmp != null) {
-                    qrImage.setImageBitmap(bmp);
-                }
+                if (bmp != null) qrImage.setImageBitmap(bmp);
             }, error -> {
                 if (!isAdded()) return;
                 Toast.makeText(requireContext(),
@@ -232,10 +200,7 @@ public class OrganizerQrFragment extends Fragment {
             });
 
             cancelButton.setOnClickListener(v ->
-                    NavHostFragment.findNavController(this).navigateUp()
-            );
-
-            // Confirm button not used in view mode.
+                    NavHostFragment.findNavController(this).navigateUp());
             confirmButton.setVisibility(View.GONE);
         }
     }
@@ -243,86 +208,79 @@ public class OrganizerQrFragment extends Fragment {
     private void saveEvent() {
         if (title == null || title.trim().isEmpty()) {
             Toast.makeText(requireContext(),
-                    "Event name missing. Go back and fill it in.",
-                    Toast.LENGTH_SHORT).show();
+                    "Event name missing. Go back and fill it in.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         profileService.ensureSignedIn(firebaseUser -> {
             String uid = firebaseUser.getUid();
-
             long now = System.currentTimeMillis();
             long oneWeek = 7L * 24 * 60 * 60 * 1000;
-
-            String qrPayload = buildQrPayload();
 
             java.util.List<String> interests = null;
             if (tagsRaw != null && !tagsRaw.trim().isEmpty()) {
                 interests = new java.util.ArrayList<>();
                 for (String part : tagsRaw.split(",")) {
                     String trimmed = part.trim();
-                    if (!trimmed.isEmpty()) {
-                        interests.add(trimmed);
-                    }
+                    if (!trimmed.isEmpty()) interests.add(trimmed);
                 }
-                if (interests.isEmpty()) {
-                    interests = null;
-                }
+                if (interests.isEmpty()) interests = null;
             }
 
             Event event = new Event(
-                    null,
-                    title,
-                    description,
-                    null,
-                    null,
-                    now + oneWeek,          // startTimeMillis (placeholder)
-                    now + oneWeek + 3600000L, // endTimeMillis (placeholder +1h)
+                    null, title, description, null, null,
+                    now + oneWeek,
+                    now + oneWeek + 3600000L,
                     registrationOpensMillis > 0 ? registrationOpensMillis : now,
                     registrationClosesMillis > 0 ? registrationClosesMillis : (now + (3L * 24 * 60 * 60 * 1000)),
                     maxEntrants > 0 ? maxEntrants : 0,
                     maxEntrants > 0 ? maxEntrants : 0,
-                    null,
-                    geoRequired,
-                    "Lottery details TBD.",
-                    uid,
-                    posterUri,
-                    qrPayload,
+                    null, geoRequired, "Lottery details TBD.",
+                    uid, posterUri,
+                    null, // qrCodeValue set after save
                     interests
             );
 
-            eventService.saveEvent(
-                    event,
-                    unused -> {
-                        Toast.makeText(requireContext(),
-                                "Event created: " + event.getTitle(),
-                                Toast.LENGTH_SHORT).show();
-                        NavHostFragment.findNavController(this)
-                                .popBackStack(R.id.organizeFragment, false);
-                    },
-                    error -> Toast.makeText(requireContext(),
-                            "Failed to create event: " + error.getMessage(),
-                            Toast.LENGTH_LONG).show()
-            );
+            eventService.saveEvent(event, unused -> {
+                // eventId is now assigned — set it as the QR value and save again
+                event.setQrCodeValue(event.getEventId());
+                eventService.saveEvent(event, unused2 -> {
+                    if (!isAdded()) return;
+                    // Generate and show the real QR with the eventId
+                    Bitmap bmp = generateQrBitmap(event.getEventId(), 512);
+                    if (bmp != null && qrImage != null) qrImage.setImageBitmap(bmp);
 
-        }, error -> Toast.makeText(requireContext(),
-                "Auth failed: " + error.getMessage(),
-                Toast.LENGTH_LONG).show());
-    }
+                    Toast.makeText(requireContext(),
+                            "Event created: " + event.getTitle(), Toast.LENGTH_SHORT).show();
+                    NavHostFragment.findNavController(this)
+                            .popBackStack(R.id.organizeFragment, false);
+                }, error -> {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(),
+                            "Failed to update QR value: " + error.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
+            }, error -> {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(),
+                        "Failed to create event: " + error.getMessage(),
+                        Toast.LENGTH_LONG).show();
+            });
 
-    private String buildQrPayload() {
-        String safeTitle = title == null ? "" : title.trim();
-        String safeDescription = description == null ? "" : description.trim();
-        return "helios:event:" + safeTitle + "|" + safeDescription;
+        }, error -> {
+            if (!isAdded()) return;
+            Toast.makeText(requireContext(),
+                    "Auth failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+        });
     }
 
     @Nullable
     private Bitmap generateQrBitmap(@NonNull String data, int sizePx) {
+        if (data == null || data.trim().isEmpty()) return null;
         QRCodeWriter writer = new QRCodeWriter();
         try {
             com.google.zxing.common.BitMatrix bitMatrix =
                     writer.encode(data, BarcodeFormat.QR_CODE, sizePx, sizePx);
-
             Bitmap bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888);
             for (int x = 0; x < sizePx; x++) {
                 for (int y = 0; y < sizePx; y++) {
