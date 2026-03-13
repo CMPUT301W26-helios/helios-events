@@ -222,6 +222,23 @@ public class FirebaseRepository {
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
+
+    public void getAllUsers(
+            @NonNull OnSuccessListener<List<UserProfile>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        db.collection("users")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<UserProfile> users = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        UserProfile user = doc.toObject(UserProfile.class);
+                        users.add(user);
+                    }
+                    onSuccess.onSuccess(users);
+                })
+                .addOnFailureListener(onFailure);
+    }
     // WAITING LIST SECTION:
     public void getWaitingListEntry(
             @NonNull String eventId,

@@ -14,6 +14,22 @@
         android:padding="24dp">
 
         <!-- Top Sun Icon -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_admin"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:text="Admin Panel"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            app:backgroundTint="#000000"
+            app:cornerRadius="20dp"
+            app:layout_constraintBottom_toBottomOf="@+id/tv_profile_title"
+            app:layout_constraintStart_toEndOf="@+id/tv_profile_title"
+            app:layout_constraintTop_toTopOf="@+id/tv_profile_title" />
+
         <ImageView
             android:id="@+id/iv_sun_icon"
             android:layout_width="48dp"

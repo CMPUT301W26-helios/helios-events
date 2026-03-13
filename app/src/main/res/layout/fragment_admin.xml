@@ -1,25 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@color/helios_background">
+
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="12dp">
+
+        <ImageView
+            android:id="@+id/helios_brand_logo"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:contentDescription="Helios logo"
+            android:src="@android:drawable/ic_menu_today" />
+
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Admin"
-            android:textStyle="bold"
-            android:textSize="24sp"
-            android:textColor="@color/helios_text_primary" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Placeholder admin screen."
-            android:textColor="@color/helios_text_primary" />
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-black"
+            android:maxLines="1"
+            android:text="Admin Controls"
+            android:textColor="#1A1C1E"
+            android:textSize="32sp" />
+
     </LinearLayout>
-</ScrollView>
+
+    <!-- Tab chips -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/btn_tab_events"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_filter_chip"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="8dp"
+            android:text="Events"
+            android:textColor="@color/helios_text_primary"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/btn_tab_users"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_filter_chip"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="8dp"
+            android:text="Users"
+            android:textColor="@color/helios_text_primary"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <!-- Events RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_events"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:clipToPadding="false"
+        android:visibility="visible" />
+
+    <!-- Users RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_users"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:clipToPadding="false"
+        android:visibility="gone" />
+
+</LinearLayout>
