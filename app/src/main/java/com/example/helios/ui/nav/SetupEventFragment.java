@@ -1,6 +1,7 @@
 package com.example.helios.ui.nav;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -61,14 +62,22 @@ public class SetupEventFragment extends Fragment {
     @Nullable
     private Uri selectedPosterUri = null;
 
-    private final ActivityResultLauncher<String> pickImageLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+    private final ActivityResultLauncher<String[]> pickImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri == null) return;
+                persistReadPermission(uri);
                 selectedPosterUri = uri;
                 View v = getView();
                 if (v == null) return;
                 ImageView iv = v.findViewById(R.id.iv_upload_image);
-                iv.setImageURI(uri);
+                try {
+                    iv.setImageURI(uri);
+                } catch (SecurityException se) {
+                    iv.setImageResource(android.R.drawable.ic_menu_upload);
+                    Toast.makeText(requireContext(),
+                            "Couldn't open that image. Please pick another one.",
+                            Toast.LENGTH_SHORT).show();
+                }
             });
 
     public SetupEventFragment() {
@@ -116,7 +125,7 @@ public class SetupEventFragment extends Fragment {
                 NavHostFragment.findNavController(this).navigateUp()
         );
 
-        uploadImage.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
+        uploadImage.setOnClickListener(v -> pickImageLauncher.launch(new String[]{"image/*"}));
 
         geoOn.setOnClickListener(v -> {
             geolocationRequired = true;
@@ -252,8 +261,17 @@ public class SetupEventFragment extends Fragment {
                 geolocationRequired = event.isGeolocationRequired();
                 updateGeoToggle(geoOn, geoOff, geolocationRequired);
 
-                // We keep existing posterImageId in the Event model.
-                // If the user picks a new image, we override it when saving.
+                if (!TextUtils.isEmpty(event.getPosterImageId())) {
+                    Uri existingPosterUri = Uri.parse(event.getPosterImageId());
+                    persistReadPermission(existingPosterUri);
+                    try {
+                        uploadImage.setImageURI(existingPosterUri);
+                    } catch (SecurityException se) {
+                        // Existing URI may have been saved from a one-time picker permission.
+                        // Keep edit flow working and let organizer choose a new image if needed.
+                        uploadImage.setImageResource(android.R.drawable.ic_menu_upload);
+                    }
+                }
             }, error -> {
                 if (!isAdded()) return;
                 Toast.makeText(requireContext(),
@@ -339,6 +357,18 @@ public class SetupEventFragment extends Fragment {
         }
     }
 
+    private void persistReadPermission(@NonNull Uri uri) {
+        if (getContext() == null) return;
+        try {
+            getContext().getContentResolver().takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+            );
+        } catch (SecurityException | IllegalArgumentException ignored) {
+            // Some providers don't support persistable permissions; best effort is enough.
+        }
+    }
+
     private String safeText(EditText editText) {
         return editText.getText() == null ? "" : editText.getText().toString().trim();
     }
@@ -375,4 +405,3 @@ public class SetupEventFragment extends Fragment {
         }
     }
 }
-

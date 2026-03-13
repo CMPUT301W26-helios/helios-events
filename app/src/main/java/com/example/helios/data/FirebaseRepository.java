@@ -321,6 +321,26 @@ public class FirebaseRepository {
         upsertWaitingListEntry(eventId, entrantUid, entry, onSuccess, onFailure);
     }
 
+    public void deleteWaitingListEntry(
+            @NonNull String eventId,
+            @NonNull String entrantUid,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(eventId) || !isNonEmpty(entrantUid)) {
+            onFailure.onFailure(new IllegalArgumentException("eventId and entrantUid must not be empty."));
+            return;
+        }
+
+        db.collection("events")
+                .document(eventId)
+                .collection("waiting_list")
+                .document(entrantUid)
+                .delete()
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
     // VALIDATION SECTION:
     private boolean isValidUser(@Nullable UserProfile user) {
         if (user == null) return false;

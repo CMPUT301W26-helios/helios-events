@@ -119,6 +119,14 @@ public class ProfileService {
         bootstrapCurrentUser(context, result -> onSuccess.onSuccess(result.getProfile()), onFailure);
     }
 
+    public void getUserProfile(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<UserProfile> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.getUser(uid, onSuccess, onFailure);
+    }
+
     public boolean requiresProfileCompletion(@NonNull UserProfile profile) {
         return !profile.hasRequiredProfileInfo();
     }
