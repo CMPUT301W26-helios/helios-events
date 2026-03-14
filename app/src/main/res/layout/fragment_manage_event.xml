@@ -79,6 +79,28 @@
                 android:textAllCaps="false" />
 
             <Button
+                android:id="@+id/button_entrant_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:minHeight="48dp"
+                android:background="@drawable/bg_helios_button_primary"
+                android:textColor="#FFFFFF"
+                android:text="Entrant List"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/button_manage_notifications"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:minHeight="48dp"
+                android:background="@drawable/bg_helios_button_primary"
+                android:textColor="#FFFFFF"
+                android:text="Manage Notifications"
+                android:textAllCaps="false" />
+
+            <Button
                 android:id="@+id/button_view_qr_code"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -116,4 +138,3 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.core.widget.NestedScrollView>
-

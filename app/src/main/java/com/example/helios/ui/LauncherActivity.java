@@ -13,6 +13,11 @@ import com.example.helios.R;
 import com.example.helios.model.UserProfile;
 import com.example.helios.service.ProfileService;
 
+/**
+ * The entry point activity of the application.
+ * Handles user bootstrapping, displays a welcome message, and routes the user
+ * to either the profile setup or the main activity.
+ */
 public class LauncherActivity extends AppCompatActivity {
     private static final long MIN_LOADING_DELAY_MS = 900;
 
@@ -58,6 +63,9 @@ public class LauncherActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Navigates to the ProfileSetupActivity when a new user needs to complete their profile.
+     */
     private void openProfileSetupRequired() {
         Intent intent = new Intent(this, ProfileSetupActivity.class);
         intent.putExtra(ProfileSetupActivity.EXTRA_MODE, ProfileSetupActivity.MODE_SETUP_REQUIRED);
@@ -66,6 +74,11 @@ public class LauncherActivity extends AppCompatActivity {
         finish();
     }
 
+    /**
+     * Navigates to the MainActivity for an existing user.
+     *
+     * @param profile The user's profile.
+     */
     private void openMain(UserProfile profile) {
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("is_admin", profile.isAdmin());

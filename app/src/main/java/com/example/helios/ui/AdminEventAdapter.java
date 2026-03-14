@@ -17,9 +17,19 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * RecyclerView adapter for displaying a list of events, typically for administrative purposes.
+ */
 public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.ViewHolder> {
 
+    /**
+     * Listener interface for handling event-related click actions.
+     */
     public interface OnEventClickListener {
+        /**
+         * Called when an event's delete button is clicked.
+         * @param event The event associated with the clicked item.
+         */
         void onEventClick(@NonNull Event event);
     }
 
@@ -27,6 +37,12 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
     private final List<Event> events;
     private final OnEventClickListener onClick;
 
+    /**
+     * Constructs an AdminEventAdapter.
+     *
+     * @param events  The list of events to display.
+     * @param onClick The listener for click events.
+     */
     public AdminEventAdapter(@NonNull List<Event> events, @NonNull OnEventClickListener onClick) {
         this.events = events;
         this.onClick = onClick;
@@ -80,6 +96,9 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
         return trimmed.isEmpty() ? fallback : trimmed;
     }
 
+    /**
+     * ViewHolder class for admin event items.
+     */
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle;
         TextView tvDescription;
@@ -89,6 +108,10 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
         TextView tvMaxEntrants;
         Button btnDelete;
 
+        /**
+         * Constructs a ViewHolder.
+         * @param itemView The view for a single list item.
+         */
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tv_event_title);

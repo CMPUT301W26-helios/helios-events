@@ -16,11 +16,13 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
+import com.example.helios.ui.event.EventDetailsBottomSheet;
 import com.google.android.material.button.MaterialButton;
 
 /**
- * Organizer flow: manage a single event (from My Events).
- * Expects an argument "arg_event_id" with the event's id.
+ * Fragment that allows an organizer to manage a single event.
+ * Provides access to various management tools like viewing the event page,
+ * managing the entrant list, viewing the QR code, and editing event details.
  */
 public class ManageEventFragment extends Fragment {
 
@@ -28,6 +30,9 @@ public class ManageEventFragment extends Fragment {
     @Nullable
     private String eventId;
 
+    /**
+     * Default constructor for ManageEventFragment.
+     */
     public ManageEventFragment() {
         super(R.layout.fragment_manage_event);
     }
@@ -55,13 +60,12 @@ public class ManageEventFragment extends Fragment {
 
         TextView nameView = view.findViewById(R.id.tv_manage_event_name);
         Button viewPageButton = view.findViewById(R.id.button_view_event_page);
+        Button entrantListButton = view.findViewById(R.id.button_entrant_list);
         Button viewQrButton = view.findViewById(R.id.button_view_qr_code);
         Button editButton = view.findViewById(R.id.button_edit_event);
         Button mapButton = view.findViewById(R.id.button_show_mapped_location);
 
         if (eventId == null || eventId.isEmpty()) {
-            // If user tapped "Manage" from the organizer bottom nav without selecting an event,
-            // take them back to the organizer list.
             Toast.makeText(requireContext(),
                     "Select an event first.",
                     Toast.LENGTH_SHORT).show();
@@ -80,23 +84,30 @@ public class ManageEventFragment extends Fragment {
             });
         }
 
-        viewPageButton.setOnClickListener(v ->
-                Toast.makeText(requireContext(),
-                        "View Event Page not implemented yet.",
-                        Toast.LENGTH_SHORT).show()
-        );
+        viewPageButton.setOnClickListener(v -> {
+            if (eventId != null) {
+                // Pass 'true' to hide the Join Waiting List button for organizers
+                EventDetailsBottomSheet.newInstance(eventId, true)
+                        .show(getParentFragmentManager(), "event_details");
+            }
+        });
+
+        entrantListButton.setOnClickListener(v -> {
+            if (eventId != null) {
+                Bundle args = new Bundle();
+                args.putString("arg_event_id", eventId);
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.organizerViewEntrantsFragment, args);
+            }
+        });
 
         viewQrButton.setOnClickListener(v -> {
-            if (eventId == null || eventId.isEmpty()) {
-                Toast.makeText(requireContext(),
-                        "Missing event id for QR view.",
-                        Toast.LENGTH_SHORT).show();
-                return;
+            if (eventId != null) {
+                Bundle args = new Bundle();
+                args.putString("arg_event_id", eventId);
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.viewEventQrFragment, args);
             }
-            Bundle args = new Bundle();
-            args.putString("arg_event_id", eventId);
-            NavHostFragment.findNavController(this)
-                    .navigate(R.id.viewEventQrFragment, args);
         });
 
         mapButton.setOnClickListener(v ->
@@ -106,17 +117,12 @@ public class ManageEventFragment extends Fragment {
         );
 
         editButton.setOnClickListener(v -> {
-            if (eventId == null || eventId.isEmpty()) {
-                Toast.makeText(requireContext(),
-                        "Missing event id for edit.",
-                        Toast.LENGTH_SHORT).show();
-                return;
+            if (eventId != null) {
+                Bundle args = new Bundle();
+                args.putString("arg_event_id", eventId);
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.editEventFragment, args);
             }
-            Bundle args = new Bundle();
-            args.putString("arg_event_id", eventId);
-            NavHostFragment.findNavController(this)
-                    .navigate(R.id.editEventFragment, args);
         });
     }
 }
-

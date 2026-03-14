@@ -20,6 +20,12 @@ import com.example.helios.service.ProfileService;
 import com.example.helios.ui.ProfileSetupActivity;
 import com.google.android.material.button.MaterialButton;
 import com.example.helios.ui.LauncherActivity;
+
+/**
+ * Fragment that displays the user's profile information.
+ * Allows users to edit their profile, delete their account, toggle notification settings,
+ * and access the admin panel if they have administrative privileges.
+ */
 public class ProfileFragment extends Fragment {
 
     private final ProfileService profileService = new ProfileService();
@@ -35,6 +41,9 @@ public class ProfileFragment extends Fragment {
 
     private boolean notificationsCurrentlyEnabled = true;
 
+    /**
+     * Default constructor for ProfileFragment.
+     */
     public ProfileFragment() {
         super(R.layout.fragment_profile_screen);
     }
@@ -67,6 +76,9 @@ public class ProfileFragment extends Fragment {
 
     // ── Delete ────────────────────────────────────────────────────────────────
 
+    /**
+     * Shows a confirmation dialog before deleting the user's profile.
+     */
     private void showDeleteConfirmationDialog() {
         Context ctx = getContext();
         if (ctx == null) return;
@@ -79,6 +91,9 @@ public class ProfileFragment extends Fragment {
                 .show();
     }
 
+    /**
+     * Deletes the user's profile and returns them to the launcher activity.
+     */
     private void deleteProfile() {
         Context ctx = getContext();
         if (ctx == null) return;
@@ -100,6 +115,9 @@ public class ProfileFragment extends Fragment {
 
     // ── Mute / Unmute ─────────────────────────────────────────────────────────
 
+    /**
+     * Toggles the notification mute status for the current user.
+     */
     private void toggleMute() {
         Context ctx = getContext();
 
@@ -122,12 +140,17 @@ public class ProfileFragment extends Fragment {
                 });
     }
 
+    /**
+     * Updates the text of the mute button based on the current notification status.
+     */
     private void updateMuteButton() {
         // 🔇 when enabled (can mute), 🔊 when muted (can unmute)
         btnMute.setText(notificationsCurrentlyEnabled ? "🔇" : "🔊");
     }
 
-    // Admin
+    /**
+     * Navigates to the admin panel fragment.
+     */
     private void openAdminPanel() {
         NavController navController = NavHostFragment.findNavController(this);
         navController.navigate(R.id.adminFragment);
@@ -135,6 +158,9 @@ public class ProfileFragment extends Fragment {
 
     // ── Profile loading ───────────────────────────────────────────────────────
 
+    /**
+     * Navigates to the profile editor activity.
+     */
     private void openProfileEditorSafe() {
         Context ctx = getContext();
         if (ctx == null) return;
@@ -145,6 +171,9 @@ public class ProfileFragment extends Fragment {
         startActivity(intent);
     }
 
+    /**
+     * Loads the user's profile information from {@link ProfileService} and updates the UI.
+     */
     private void loadProfileSafe() {
         Context ctx = getContext();
         if (ctx == null || getView() == null) return;
@@ -172,12 +201,20 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+    /**
+     * Displays default placeholder text when no profile information is available.
+     */
     private void bindEmptyProfile() {
         tvName.setText("Name: (not set)");
         tvEmail.setText("Email: (not set)");
         tvPhone.setVisibility(View.GONE);
     }
 
+    /**
+     * Binds the provided user profile data to the UI views.
+     *
+     * @param profile The user profile to display.
+     */
     private void bindProfile(@NonNull UserProfile profile) {
         String name  = normalize(profile.getName());
         String email = normalize(profile.getEmail());
@@ -194,6 +231,12 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    /**
+     * Trims a string and returns null if the resulting string is empty.
+     *
+     * @param s The string to normalize.
+     * @return The trimmed string or null if empty.
+     */
     @Nullable
     private String normalize(@Nullable String s) {
         if (s == null) return null;

@@ -13,21 +13,53 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
-
+/**
+ * Service responsible for profile bootstrap, profile completion, role synchronization,
+ * and notification preference updates for the current device user.
+ *
+ * Role: application service coordinating authentication, installation identity, and profile persistence.
+ * Issues: directly constructs dependencies and mixes bootstrap orchestration with profile CRUD logic.
+ *
+ * Alt Description:
+ * Service class that provides business logic for managing user profiles.
+ * It handles profile bootstrapping, completion, and retrieval.
+ */
 public class ProfileService {
+
+    /**
+     * Result object for the profile bootstrapping process.
+     */
+
+    @FunctionalInterface
+    interface InstallationIdSource {
+        String getInstallationId(@NonNull Context context);
+    }
+
     public static class BootstrapResult {
         private final UserProfile profile;
         private final boolean isNewUser;
 
+        /**
+         * Constructs a new BootstrapResult.
+         *
+         * @param profile   The user profile.
+         * @param isNewUser True if the profile was just created, false if it existed.
+         */
         public BootstrapResult(@NonNull UserProfile profile, boolean isNewUser) {
             this.profile = profile;
             this.isNewUser = isNewUser;
         }
 
+        /**
+         * @return The user profile.
+         */
         public UserProfile getProfile() {
             return profile;
         }
 
+        /**
+         * @return True if the profile was just created, false if it existed.
+         */
         public boolean isNewUser() {
             return isNewUser;
         }
@@ -35,12 +67,39 @@ public class ProfileService {
 
     private final AuthDeviceService authDeviceService;
     private final FirebaseRepository repository;
+    private final InstallationIdSource installationIdSource;
 
+    /**
+     * Initializes the ProfileService with default dependencies.
+     */
     public ProfileService() {
-        this.authDeviceService = new AuthDeviceService();
-        this.repository = new FirebaseRepository();
+        this(
+                new AuthDeviceService(),
+                new FirebaseRepository(),
+                InstallationIdProvider::getInstallationId
+        );
     }
 
+    // Package-private test seam
+    ProfileService(
+            @NonNull AuthDeviceService authDeviceService,
+            @NonNull FirebaseRepository repository,
+            @NonNull InstallationIdSource installationIdSource
+    ) {
+        this.authDeviceService = authDeviceService;
+        this.repository = repository;
+        this.installationIdSource = installationIdSource;
+    }
+
+    /**
+     * Bootstraps the current user's profile. This includes ensuring the user is signed in,
+     * checking for an existing profile, and creating a default one if necessary.
+     * It also syncs the user's role based on their device's admin status.
+     *
+     * @param context   The application context.
+     * @param onSuccess Callback receiving the BootstrapResult.
+     * @param onFailure Callback for failed operation.
+     */
     public void bootstrapCurrentUser(
             @NonNull Context context,
             @NonNull OnSuccessListener<BootstrapResult> onSuccess,
@@ -48,7 +107,7 @@ public class ProfileService {
     ) {
         authDeviceService.ensureSignedIn(firebaseUser -> {
             String uid = firebaseUser.getUid();
-            String installationId = InstallationIdProvider.getInstallationId(context);
+            String installationId = installationIdSource.getInstallationId(context);
 
             repository.isAdminInstallation(installationId, isAdmin -> {
                 String desiredRole = isAdmin ? "admin" : "user";
@@ -73,9 +132,11 @@ public class ProfileService {
                     }
 
                     if (needsUpdate) {
-                        repository.updateUser(existingProfile,
+                        repository.updateUser(
+                                existingProfile,
                                 unused -> onSuccess.onSuccess(new BootstrapResult(existingProfile, false)),
-                                onFailure);
+                                onFailure
+                        );
                     } else {
                         onSuccess.onSuccess(new BootstrapResult(existingProfile, false));
                     }
@@ -84,6 +145,12 @@ public class ProfileService {
         }, onFailure);
     }
 
+    /**
+     * Ensures the user is signed in.
+     *
+     * @param onSuccess Callback receiving the FirebaseUser.
+     * @param onFailure Callback for failed authentication.
+     */
     public void ensureSignedIn(
             @NonNull OnSuccessListener<FirebaseUser> onSuccess,
             @NonNull OnFailureListener onFailure
@@ -91,6 +158,16 @@ public class ProfileService {
         authDeviceService.ensureSignedIn(onSuccess, onFailure);
     }
 
+    /**
+     * Completes the current user's profile with personal details.
+     *
+     * @param context   The application context.
+     * @param name      The user's name.
+     * @param email     The user's email address.
+     * @param phone     The user's phone number.
+     * @param onSuccess Callback receiving the updated UserProfile.
+     * @param onFailure Callback for failed operation.
+     */
     public void completeCurrentProfile(
             @NonNull Context context,
             @NonNull String name,
@@ -105,12 +182,21 @@ public class ProfileService {
             profile.setEmail(email);
             profile.setPhone(phone);
 
-            repository.updateUser(profile,
+            repository.updateUser(
+                    profile,
                     unused -> onSuccess.onSuccess(profile),
-                    onFailure);
+                    onFailure
+            );
         }, onFailure);
     }
 
+    /**
+     * Loads the current user's profile.
+     *
+     * @param context   The application context.
+     * @param onSuccess Callback receiving the UserProfile.
+     * @param onFailure Callback for failed operation.
+     */
     public void loadCurrentProfile(
             @NonNull Context context,
             @NonNull OnSuccessListener<UserProfile> onSuccess,
@@ -119,6 +205,27 @@ public class ProfileService {
         bootstrapCurrentUser(context, result -> onSuccess.onSuccess(result.getProfile()), onFailure);
     }
 
+    /**
+     * Retrieves a user profile by UID.
+     *
+     * @param uid       The unique identifier of the user.
+     * @param onSuccess Callback receiving the UserProfile.
+     * @param onFailure Callback for failed operation.
+     */
+    public void getUserProfile(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<UserProfile> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.getUser(uid, onSuccess, onFailure);
+    }
+
+    /**
+     * Checks if the profile requires completion (i.e., missing name or email).
+     *
+     * @param profile The user profile to check.
+     * @return True if information is missing, false otherwise.
+     */
     public boolean requiresProfileCompletion(@NonNull UserProfile profile) {
         return !profile.hasRequiredProfileInfo();
     }
@@ -140,10 +247,20 @@ public class ProfileService {
                 installationId
         );
 
-        repository.saveUser(newProfile,
+        repository.saveUser(
+                newProfile,
                 unused -> onSuccess.onSuccess(new BootstrapResult(newProfile, true)),
-                onFailure);
+                onFailure
+        );
     }
+
+    /**
+     * Deletes the profile of the current user.
+     *
+     * @param context   The application context.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void deleteCurrentProfile(
             @NonNull Context context,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -155,6 +272,12 @@ public class ProfileService {
         }, onFailure);
     }
 
+    /**
+     * Retrieves all user profiles.
+     *
+     * @param onSuccess Callback receiving the list of user profiles.
+     * @param onFailure Callback for failed operation.
+     */
     public void getAllProfiles(
             @NonNull OnSuccessListener<List<UserProfile>> onSuccess,
             @NonNull OnFailureListener onFailure
@@ -162,6 +285,13 @@ public class ProfileService {
         repository.getAllUsers(onSuccess, onFailure);
     }
 
+    /**
+     * Deletes a user profile by UID.
+     *
+     * @param uid       The unique identifier of the user to delete.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void deleteProfile(
             @NonNull String uid,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -170,10 +300,16 @@ public class ProfileService {
         repository.deleteUser(uid, onSuccess, onFailure);
     }
 
+    /**
+     * Updates the notification mute status for the current user.
+     *
+     * @param context   The application context.
+     * @param muted     True to mute notifications, false to enable.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void setNotificationsMuted(
-
-
-    @NonNull Context context,
+            @NonNull Context context,
             boolean muted,
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
