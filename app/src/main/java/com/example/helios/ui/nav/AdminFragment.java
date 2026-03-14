@@ -132,7 +132,7 @@ public class AdminFragment extends Fragment {
         loadUsers();
     }
 
-    // ── Organizer info (event card) ────────────────────────────────────────────
+    // ORGANIZER INFO
 
     /**
      * Fetches the organizer profile for the given event and displays their details in a dialog.
@@ -160,8 +160,7 @@ public class AdminFragment extends Fragment {
 
                     String message = "Name:   " + name
                             + "\nEmail:  " + email
-                            + "\nRole:   " + role
-                            + "\nUID:    " + organizerUid;
+                            + "\nRole:   " + role;
 
                     new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                             .setTitle("Organizer — " + nonEmptyOr(event.getTitle(), "Untitled Event"))
@@ -177,7 +176,7 @@ public class AdminFragment extends Fragment {
                 });
     }
 
-    // ── User events dialog
+    // USER EVENTS
 
     /**
      * Shows a dialog listing all events created by the given user.
@@ -216,10 +215,10 @@ public class AdminFragment extends Fragment {
             sb.append(i + 1).append(". ")
                     .append(nonEmptyOr(e.getTitle(), "Untitled Event"));
             if (e.getLocationName() != null && !e.getLocationName().trim().isEmpty()) {
-                sb.append("\n     ").append(e.getLocationName());
+                sb.append("\n").append(e.getLocationName());
             }
             if (i < userEvents.size() - 1) {
-                sb.append("\n\n");
+                sb.append("\n");
             }
         }
 
@@ -233,7 +232,8 @@ public class AdminFragment extends Fragment {
     // Tab switching
 
     /**
-     * Switches between the Events tab and the Users tab.
+     * Switches between the Events tab and the Users tab, and refreshes both
+     * data sets so changes on one tab are immediately visible on the other.
      *
      * @param showEvents True to show the events list, false to show the users list.
      */
@@ -241,7 +241,12 @@ public class AdminFragment extends Fragment {
         rvEvents.setVisibility(showEvents ? View.VISIBLE : View.GONE);
         rvUsers.setVisibility(showEvents ? View.GONE : View.VISIBLE);
         btnTabEvents.setAlpha(showEvents ? 0.5f : 1f);
-        btnTabUsers.setAlpha(showEvents ?  1f : .5f);
+        btnTabUsers.setAlpha(showEvents ? 1f : .5f);
+
+        // Refresh data every time the tab is switched so deletions and other
+        // changes made on one tab are immediately reflected on the other.
+        loadEvents();
+        loadUsers();
     }
 
     // Data loading
