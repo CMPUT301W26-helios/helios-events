@@ -310,6 +310,65 @@ public class FirebaseRepository {
     }
 
     /**
+     * Deletes all events whose organizerUid matches the given UID.
+     * Each matching event document is deleted individually. The onSuccess callback
+     * is invoked once after all deletions complete. If any single deletion fails,
+     * onFailure is called immediately and remaining deletions are abandoned.
+     *
+     * @param organizerUid The UID of the organizer whose events should be deleted.
+     * @param onSuccess    Callback invoked when all events have been deleted.
+     * @param onFailure    Callback invoked if the query or any deletion fails.
+     */
+    public void deleteEventsByOrganizer(
+            @NonNull String organizerUid,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(organizerUid)) {
+            onFailure.onFailure(new IllegalArgumentException("organizerUid must not be empty."));
+            return;
+        }
+
+        db.collection("events")
+                .whereEqualTo("organizerUid", organizerUid)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<QueryDocumentSnapshot> docs = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        docs.add(doc);
+                    }
+
+                    if (docs.isEmpty()) {
+                        onSuccess.onSuccess(null);
+                        return;
+                    }
+
+                    // Delete each event document, counting completions.
+                    int[] remaining = {docs.size()};
+                    boolean[] failed = {false};
+
+                    for (QueryDocumentSnapshot doc : docs) {
+                        doc.getReference()
+                                .delete()
+                                .addOnSuccessListener(unused -> {
+                                    if (failed[0]) return;
+                                    remaining[0]--;
+                                    if (remaining[0] == 0) {
+                                        onSuccess.onSuccess(null);
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    if (!failed[0]) {
+                                        failed[0] = true;
+                                        onFailure.onFailure(e);
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    /**
      * Retrieves all user profiles from Firestore.
      *
      * @param onSuccess Callback receiving a list of all user profiles.

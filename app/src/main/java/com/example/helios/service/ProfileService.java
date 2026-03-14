@@ -13,23 +13,19 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.List;
+
 /**
  * Service responsible for profile bootstrap, profile completion, role synchronization,
  * and notification preference updates for the current device user.
  *
  * Role: application service coordinating authentication, installation identity, and profile persistence.
  * Issues: directly constructs dependencies and mixes bootstrap orchestration with profile CRUD logic.
- *
- * Alt Description:
- * Service class that provides business logic for managing user profiles.
- * It handles profile bootstrapping, completion, and retrieval.
  */
 public class ProfileService {
 
     /**
      * Result object for the profile bootstrapping process.
      */
-
     @FunctionalInterface
     interface InstallationIdSource {
         String getInstallationId(@NonNull Context context);
@@ -50,28 +46,18 @@ public class ProfileService {
             this.isNewUser = isNewUser;
         }
 
-        /**
-         * @return The user profile.
-         */
-        public UserProfile getProfile() {
-            return profile;
-        }
+        /** @return The user profile. */
+        public UserProfile getProfile() { return profile; }
 
-        /**
-         * @return True if the profile was just created, false if it existed.
-         */
-        public boolean isNewUser() {
-            return isNewUser;
-        }
+        /** @return True if the profile was just created, false if it existed. */
+        public boolean isNewUser() { return isNewUser; }
     }
 
     private final AuthDeviceService authDeviceService;
     private final FirebaseRepository repository;
     private final InstallationIdSource installationIdSource;
 
-    /**
-     * Initializes the ProfileService with default dependencies.
-     */
+    /** Initializes the ProfileService with default dependencies. */
     public ProfileService() {
         this(
                 new AuthDeviceService(),
@@ -255,7 +241,9 @@ public class ProfileService {
     }
 
     /**
-     * Deletes the profile of the current user.
+     * Deletes the profile of the current user, along with all events they organized.
+     * Events are deleted first; the user document is only removed once all event
+     * deletions complete successfully.
      *
      * @param context   The application context.
      * @param onSuccess Callback for successful operation.
@@ -268,7 +256,7 @@ public class ProfileService {
     ) {
         authDeviceService.ensureSignedIn(firebaseUser -> {
             String uid = firebaseUser.getUid();
-            repository.deleteUser(uid, onSuccess, onFailure);
+            deleteUserAndEvents(uid, onSuccess, onFailure);
         }, onFailure);
     }
 
@@ -286,7 +274,9 @@ public class ProfileService {
     }
 
     /**
-     * Deletes a user profile by UID.
+     * Deletes a user profile by UID, along with all events they organized.
+     * Events are deleted first; the user document is only removed once all event
+     * deletions complete successfully.
      *
      * @param uid       The unique identifier of the user to delete.
      * @param onSuccess Callback for successful operation.
@@ -297,7 +287,27 @@ public class ProfileService {
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        repository.deleteUser(uid, onSuccess, onFailure);
+        deleteUserAndEvents(uid, onSuccess, onFailure);
+    }
+
+    /**
+     * Internal helper that deletes all events organized by the given UID first,
+     * then deletes the user document itself.
+     *
+     * @param uid       The UID of the user to fully remove.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
+    private void deleteUserAndEvents(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.deleteEventsByOrganizer(
+                uid,
+                unused -> repository.deleteUser(uid, onSuccess, onFailure),
+                onFailure
+        );
     }
 
     /**

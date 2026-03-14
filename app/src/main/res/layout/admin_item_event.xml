@@ -15,40 +15,17 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Title row with delete button -->
-        <LinearLayout
+        <!-- Title row -->
+        <TextView
+            android:id="@+id/tv_event_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:id="@+id/tv_event_title"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Event Title"
-                android:textColor="@color/helios_text_primary"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/btn_delete_event"
-                style="@style/Widget.Material3.Button.TonalButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:minHeight="0dp"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="4dp"
-                android:text="Delete"
-                android:textColor="#B3261E"
-                app:backgroundTint="#FFB4AB"
-                android:textSize="12sp" />
-
-        </LinearLayout>
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Event Title"
+            android:textColor="@color/helios_text_primary"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tv_event_description"
@@ -129,6 +106,41 @@
                 android:layout_marginStart="8dp"
                 android:text="Max: 100"
                 android:textColor="@color/helios_text_primary"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+        <!-- Action buttons row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_view_organizer"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="0dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp"
+                android:text="View Organizer"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/btn_delete_event"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:minHeight="0dp"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="4dp"
+                android:text="Delete"
+                android:textColor="#B3261E"
+                app:backgroundTint="#FFB4AB"
                 android:textSize="12sp" />
 
         </LinearLayout>
