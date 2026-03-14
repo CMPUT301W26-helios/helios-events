@@ -13,15 +13,31 @@ import com.example.helios.model.UserProfile;
 import android.widget.Button;
 import java.util.List;
 
+/**
+ * RecyclerView adapter for displaying a list of users, typically for administrative purposes.
+ */
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
 
+    /**
+     * Listener interface for handling user-related click events.
+     */
     public interface OnUserClickListener {
+        /**
+         * Called when a user's delete button is clicked.
+         * @param user The user profile associated with the clicked item.
+         */
         void onUserClick(@NonNull UserProfile user);
     }
 
     private final List<UserProfile> users;
     private final OnUserClickListener onClick;
 
+    /**
+     * Constructs a UserAdapter.
+     *
+     * @param users   The list of user profiles to display.
+     * @param onClick The listener for click events.
+     */
     public UserAdapter(@NonNull List<UserProfile> users, @NonNull OnUserClickListener onClick) {
         this.users = users;
         this.onClick = onClick;
@@ -45,13 +61,21 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         // Delete button click — no need to click the whole row
         holder.btnDelete.setOnClickListener(v -> onClick.onUserClick(user));
     }
+
     @Override
     public int getItemCount() { return users.size(); }
 
+    /**
+     * ViewHolder class for user items.
+     */
     static class UserViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvEmail, tvRole;
         Button btnDelete;
 
+        /**
+         * Constructs a UserViewHolder.
+         * @param itemView The view for a single list item.
+         */
         public UserViewHolder(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tv_user_name);

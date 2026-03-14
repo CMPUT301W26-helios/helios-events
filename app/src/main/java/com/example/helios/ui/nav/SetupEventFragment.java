@@ -1,6 +1,7 @@
 package com.example.helios.ui.nav;
 
 import android.app.DatePickerDialog;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -30,11 +31,8 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Shared fragment for creating a new event or editing an existing one.
- *
- * - If launched with an "arg_event_id", it loads and edits that event.
- * - If launched without "arg_event_id", it behaves like the old CreateEventFragment
- *   and forwards to the QR/preview step.
+ * Fragment for creating or editing an event.
+ * Handles event details such as name, description, capacity, registration dates, and posters.
  */
 public class SetupEventFragment extends Fragment {
 
@@ -61,16 +59,27 @@ public class SetupEventFragment extends Fragment {
     @Nullable
     private Uri selectedPosterUri = null;
 
-    private final ActivityResultLauncher<String> pickImageLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+    private final ActivityResultLauncher<String[]> pickImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
                 if (uri == null) return;
+                persistReadPermission(uri);
                 selectedPosterUri = uri;
                 View v = getView();
                 if (v == null) return;
                 ImageView iv = v.findViewById(R.id.iv_upload_image);
-                iv.setImageURI(uri);
+                try {
+                    iv.setImageURI(uri);
+                } catch (SecurityException se) {
+                    iv.setImageResource(android.R.drawable.ic_menu_upload);
+                    Toast.makeText(requireContext(),
+                            "Couldn't open that image. Please pick another one.",
+                            Toast.LENGTH_SHORT).show();
+                }
             });
 
+    /**
+     * Default constructor for SetupEventFragment.
+     */
     public SetupEventFragment() {
         super(R.layout.fragment_event_setup);
     }
@@ -101,6 +110,7 @@ public class SetupEventFragment extends Fragment {
         EditText nameInput = view.findViewById(R.id.edit_event_name);
         EditText maxEntrantsInput = view.findViewById(R.id.edit_max_entrants);
         EditText descriptionInput = view.findViewById(R.id.edit_event_description);
+        EditText tagsInput = view.findViewById(R.id.edit_event_tags);
         TextView startDateView = view.findViewById(R.id.tv_registration_start);
         TextView endDateView = view.findViewById(R.id.tv_registration_end);
         TextView geoOn = view.findViewById(R.id.tv_geo_on);
@@ -115,7 +125,7 @@ public class SetupEventFragment extends Fragment {
                 NavHostFragment.findNavController(this).navigateUp()
         );
 
-        uploadImage.setOnClickListener(v -> pickImageLauncher.launch("image/*"));
+        uploadImage.setOnClickListener(v -> pickImageLauncher.launch(new String[]{"image/*"}));
 
         geoOn.setOnClickListener(v -> {
             geolocationRequired = true;
@@ -164,6 +174,7 @@ public class SetupEventFragment extends Fragment {
             primaryButton.setOnClickListener(v -> {
                 String title = safeText(nameInput);
                 String description = safeText(descriptionInput);
+                String tagsRaw = safeText(tagsInput);
                 String maxEntrantsStr = safeText(maxEntrantsInput);
 
                 if (TextUtils.isEmpty(title)) {
@@ -190,6 +201,7 @@ public class SetupEventFragment extends Fragment {
                 Bundle args = new Bundle();
                 args.putString("arg_event_title", title);
                 args.putString("arg_event_description", description);
+                args.putString("arg_event_tags", tagsRaw);
                 args.putInt("arg_event_max_entrants", maxEntrants);
                 args.putLong("arg_registration_opens_millis", registrationOpensMillis);
                 args.putLong("arg_registration_closes_millis", registrationClosesMillis);
@@ -223,6 +235,14 @@ public class SetupEventFragment extends Fragment {
                 if (event.getDescription() != null) {
                     descriptionInput.setText(event.getDescription());
                 }
+                if (event.getInterests() != null && !event.getInterests().isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < event.getInterests().size(); i++) {
+                        if (i > 0) sb.append(", ");
+                        sb.append(event.getInterests().get(i));
+                    }
+                    tagsInput.setText(sb.toString());
+                }
                 if (event.getCapacity() > 0) {
                     maxEntrantsInput.setText(String.valueOf(event.getCapacity()));
                 }
@@ -241,8 +261,17 @@ public class SetupEventFragment extends Fragment {
                 geolocationRequired = event.isGeolocationRequired();
                 updateGeoToggle(geoOn, geoOff, geolocationRequired);
 
-                // We keep existing posterImageId in the Event model.
-                // If the user picks a new image, we override it when saving.
+                if (!TextUtils.isEmpty(event.getPosterImageId())) {
+                    Uri existingPosterUri = Uri.parse(event.getPosterImageId());
+                    persistReadPermission(existingPosterUri);
+                    try {
+                        uploadImage.setImageURI(existingPosterUri);
+                    } catch (SecurityException se) {
+                        // Existing URI may have been saved from a one-time picker permission.
+                        // Keep edit flow working and let organizer choose a new image if needed.
+                        uploadImage.setImageResource(android.R.drawable.ic_menu_upload);
+                    }
+                }
             }, error -> {
                 if (!isAdded()) return;
                 Toast.makeText(requireContext(),
@@ -260,6 +289,7 @@ public class SetupEventFragment extends Fragment {
 
                 String title = safeText(nameInput);
                 String description = safeText(descriptionInput);
+                String tagsRaw = safeText(tagsInput);
                 String maxEntrantsStr = safeText(maxEntrantsInput);
 
                 if (TextUtils.isEmpty(title)) {
@@ -291,6 +321,22 @@ public class SetupEventFragment extends Fragment {
                 loadedEvent.setRegistrationClosesMillis(registrationClosesMillis);
                 loadedEvent.setGeolocationRequired(geolocationRequired);
 
+                // Update interests from comma-separated tags.
+                java.util.List<String> interests = null;
+                if (!tagsRaw.isEmpty()) {
+                    interests = new java.util.ArrayList<>();
+                    for (String part : tagsRaw.split(",")) {
+                        String trimmed = part.trim();
+                        if (!trimmed.isEmpty()) {
+                            interests.add(trimmed);
+                        }
+                    }
+                    if (interests.isEmpty()) {
+                        interests = null;
+                    }
+                }
+                loadedEvent.setInterests(interests);
+
                 if (selectedPosterUri != null) {
                     loadedEvent.setPosterImageId(selectedPosterUri.toString());
                 }
@@ -311,14 +357,50 @@ public class SetupEventFragment extends Fragment {
         }
     }
 
+    /**
+     * Attempts to persist read permissions for a given URI.
+     *
+     * @param uri The URI to persist permissions for.
+     */
+    private void persistReadPermission(@NonNull Uri uri) {
+        if (getContext() == null) return;
+        try {
+            getContext().getContentResolver().takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+            );
+        } catch (SecurityException | IllegalArgumentException ignored) {
+            // Some providers don't support persistable permissions; best effort is enough.
+        }
+    }
+
+    /**
+     * Safely retrieves trimmed text from an EditText.
+     *
+     * @param editText The EditText to read from.
+     * @return The trimmed string, or an empty string if the input was null.
+     */
     private String safeText(EditText editText) {
         return editText.getText() == null ? "" : editText.getText().toString().trim();
     }
 
+    /**
+     * Interface for date selection callbacks.
+     */
     private interface DatePickedCallback {
+        /**
+         * Called when a date is picked.
+         * @param millis The picked date in milliseconds.
+         */
         void onPicked(long millis);
     }
 
+    /**
+     * Opens a date picker dialog.
+     *
+     * @param initialMillis The initial date to show in the picker.
+     * @param callback      The callback to invoke when a date is selected.
+     */
     private void openDatePicker(long initialMillis, @NonNull DatePickedCallback callback) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(initialMillis > 0 ? initialMillis : System.currentTimeMillis());
@@ -337,6 +419,13 @@ public class SetupEventFragment extends Fragment {
         ).show();
     }
 
+    /**
+     * Updates the UI state of a geolocation toggle button.
+     *
+     * @param on       The "On" button view.
+     * @param off      The "Off" button view.
+     * @param required True if geolocation is required, false otherwise.
+     */
     private void updateGeoToggle(@NonNull TextView on, @NonNull TextView off, boolean required) {
         if (required) {
             on.setBackgroundResource(R.drawable.bg_toggle_left_active);
@@ -347,4 +436,3 @@ public class SetupEventFragment extends Fragment {
         }
     }
 }
-

@@ -25,6 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Fragment that allows organizers to view and manage their events.
+ * It separates events into current and past categories and provides search functionality.
+ */
 public class OrganizeFragment extends Fragment {
 
     private final EventService eventService = new EventService();
@@ -41,6 +45,9 @@ public class OrganizeFragment extends Fragment {
     private TextView currentEmptyText;
     private TextView pastEmptyText;
 
+    /**
+     * Default constructor for OrganizeFragment.
+     */
     public OrganizeFragment() {
         super(R.layout.fragment_organize);
     }
@@ -109,6 +116,9 @@ public class OrganizeFragment extends Fragment {
         loadOrganizerEvents();
     }
 
+    /**
+     * Loads events created by the current organizer from {@link EventService}.
+     */
     private void loadOrganizerEvents() {
         profileService.ensureSignedIn(firebaseUser -> {
             String uid = firebaseUser.getUid();
@@ -144,6 +154,11 @@ public class OrganizeFragment extends Fragment {
         });
     }
 
+    /**
+     * Filters the organizer's events based on a search query and categorizes them into current and past events.
+     *
+     * @param query The search query string.
+     */
     private void applyOrganizerFilter(@NonNull String query) {
         currentEvents.clear();
         pastEvents.clear();
@@ -174,6 +189,13 @@ public class OrganizeFragment extends Fragment {
         updateEmptyStates();
     }
 
+    /**
+     * Checks if an event matches the search query.
+     *
+     * @param event The event to check.
+     * @param query The normalized search query.
+     * @return True if the event matches the query, false otherwise.
+     */
     private boolean matchesQuery(com.example.helios.model.Event event, @NonNull String query) {
         if (query.isEmpty()) {
             return true;
@@ -190,10 +212,19 @@ public class OrganizeFragment extends Fragment {
                 || address.contains(query);
     }
 
+    /**
+     * Safely converts a string to lowercase.
+     *
+     * @param value The string to convert.
+     * @return The lowercase string, or an empty string if the input was null.
+     */
     private String safeLower(String value) {
         return value == null ? "" : value.toLowerCase(Locale.CANADA);
     }
 
+    /**
+     * Updates the visibility of the "empty" text views based on whether the event lists are empty.
+     */
     private void updateEmptyStates() {
         if (currentEmptyText != null) {
             currentEmptyText.setVisibility(currentEvents.isEmpty() ? View.VISIBLE : View.GONE);
@@ -202,48 +233,4 @@ public class OrganizeFragment extends Fragment {
             pastEmptyText.setVisibility(pastEvents.isEmpty() ? View.VISIBLE : View.GONE);
         }
     }
-
-    /*
-    // Previous debug helper to seed a demo event directly from Organizer.
-    // Kept here for reference; navigation now goes to the Create Event flow instead.
-    private void seedDemoEvent() {
-        // Ensure we have a Firebase uid (anonymous auth provides this)
-        profileService.ensureSignedIn(firebaseUser -> {
-            String uid = firebaseUser.getUid();
-
-            com.example.helios.model.Event demo = new com.example.helios.model.Event(
-                    "demo_event_dance_elders",              // eventId (doc id)
-                    "Dance Class for Elders",               // title
-                    "Hosting a great dance class for elders\nTags: Dance", // description
-                    "Edmonton, AB",                         // locationName
-                    null,                                   // address
-                    1772607600000L,                         // startTimeMillis
-                    1772611200000L,                         // endTimeMillis
-                    1772002800000L,                         // registrationOpensMillis
-                    1772607599000L,                         // registrationClosesMillis
-                    50,                                     // capacity
-                    50,                                     // sampleSize
-                    null,                                   // waitlistLimit
-                    false,                                  // geolocationRequired
-                    "Random lottery draw after registration closes.", // lotteryGuidelines
-                    uid,                                    // organizerUid
-                    null,                                   // posterImageId
-                    null                                    // qrCodeValue
-            );
-
-            eventService.saveEvent(
-                    demo,
-                    unused -> android.widget.Toast.makeText(requireContext(),
-                            "Demo event added: " + demo.getEventId(),
-                            android.widget.Toast.LENGTH_SHORT).show(),
-                    error -> android.widget.Toast.makeText(requireContext(),
-                            "Failed to add demo event: " + error.getMessage(),
-                            android.widget.Toast.LENGTH_LONG).show()
-            );
-
-        }, error -> android.widget.Toast.makeText(requireContext(),
-                "Auth failed: " + error.getMessage(),
-                android.widget.Toast.LENGTH_LONG).show());
-    }
-    */
 }

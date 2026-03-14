@@ -131,6 +131,31 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:text="Interests/Tags (seperate using camma):"
+                android:textColor="@color/helios_text_primary"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/edit_event_tags"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/bg_helios_input"
+                android:hint="Education, Fun, Sports"
+                android:inputType="textCapWords"
+                android:minHeight="48dp"
+                android:paddingStart="12dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="10dp"
+                android:textColor="@color/helios_text_primary"
+                android:textColorHint="@color/helios_text_hint" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text="Set Registration Date:"
                 android:textColor="@color/helios_text_primary"
                 android:textSize="@dimen/helios_label_size"
