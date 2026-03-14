@@ -309,6 +309,14 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    // deleteEventsByOrganizer is from Anthropic, Claude, 2026-03-14
+    // Prompted to implement functionality in FirebaseRepository.java
+    // such that events created by a given organizer (determined by UID)
+    // are deleted.
+    //
+    // This is so that, when an admin removes a user, that user's events (if any exist)
+    // are also removed from the database
+
     /**
      * Deletes all events whose organizerUid matches the given UID.
      * Each matching event document is deleted individually. The onSuccess callback

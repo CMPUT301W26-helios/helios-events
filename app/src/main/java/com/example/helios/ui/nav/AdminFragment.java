@@ -132,6 +132,10 @@ public class AdminFragment extends Fragment {
         loadUsers();
     }
 
+    // showOrganizerInfo and showUserEvents are from Anthropic, Claude, 2026-03-14
+    // Prompted to implement functionality for the "view organizer" / "view events"
+    // buttons in admin_item_event.xml and admin_item_user.xml, respectively
+
     // ORGANIZER INFO
 
     /**
