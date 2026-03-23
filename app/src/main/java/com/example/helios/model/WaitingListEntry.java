@@ -76,4 +76,10 @@ public class WaitingListEntry {
      * @param joinedAtMillis The time the entrant joined the waiting list in epoch milliseconds.
      */
     public void setJoinedAtMillis(long joinedAtMillis) { this.joinedAtMillis = joinedAtMillis; }
+
+    public void setInvitedAtMillis(long l) {
+    }
+
+    public void setRespondedAtMillis(long l) {
+    }
 }

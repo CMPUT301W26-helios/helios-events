@@ -1,11 +1,12 @@
 package com.example.helios.model;
-
 /**
  * Represents a user profile in the Helios application.
  * Stores personal information, role, and notification preferences.
  * <p>Role in the application: primary identity model used for startup bootstrap, role checks,
  * profile completion, and notification preferences.
  */
+
+
 public class UserProfile {
     private String uid;
     private String name;

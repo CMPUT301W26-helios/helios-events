@@ -25,34 +25,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-/**
- * A bottom sheet dialog that displays the details of a specific event.
- * Allows users to view event information and join or leave the event's waiting list.
- */
 public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
-    /** Argument key for the event ID. */
     public static final String ARG_EVENT_ID = "arg_event_id";
-    /** Argument key to specify if the join/leave button should be hidden. */
     public static final String ARG_HIDE_JOIN_BUTTON = "arg_hide_join_button";
 
-    /**
-     * Creates a new instance of EventDetailsBottomSheet for a given event ID.
-     *
-     * @param eventId The unique identifier of the event to display.
-     * @return A new EventDetailsBottomSheet instance.
-     */
+    @Nullable private WaitingListEntry currentEntry = null;
+
     public static EventDetailsBottomSheet newInstance(@NonNull String eventId) {
         return newInstance(eventId, false);
     }
 
-    /**
-     * Creates a new instance of EventDetailsBottomSheet with an option to hide the join button.
-     *
-     * @param eventId        The unique identifier of the event.
-     * @param hideJoinButton True to hide the join/leave button, false otherwise.
-     * @return A new EventDetailsBottomSheet instance.
-     */
     public static EventDetailsBottomSheet newInstance(@NonNull String eventId, boolean hideJoinButton) {
         EventDetailsBottomSheet sheet = new EventDetailsBottomSheet();
         Bundle args = new Bundle();
@@ -65,8 +48,10 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private final EventService eventService = new EventService();
     private final EntrantEventService entrantEventService = new EntrantEventService();
 
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
-    private final SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a", Locale.getDefault());
+    private final SimpleDateFormat dateFormat =
+            new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+    private final SimpleDateFormat timeFormat =
+            new SimpleDateFormat("h:mm a", Locale.getDefault());
 
     private ImageView ivPoster;
     private TextView tvName;
@@ -83,9 +68,6 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private Event loadedEvent;
     private boolean isCurrentlyOnWaitingList = false;
 
-    /**
-     * Default constructor for EventDetailsBottomSheet.
-     */
     public EventDetailsBottomSheet() {
         super(R.layout.sheet_event_details);
     }
@@ -93,9 +75,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-
         if (getDialog() == null) return;
-        View bottomSheet = getDialog().findViewById(com.google.android.material.R.id.design_bottom_sheet);
+        View bottomSheet = getDialog().findViewById(
+                com.google.android.material.R.id.design_bottom_sheet);
         if (bottomSheet == null) return;
 
         ViewGroup.LayoutParams lp = bottomSheet.getLayoutParams();
@@ -124,9 +106,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         btnWaitingList = view.findViewById(R.id.button_primary_action);
 
         View close = view.findViewById(R.id.button_close);
-        if (close != null) {
-            close.setOnClickListener(v -> dismiss());
-        }
+        if (close != null) close.setOnClickListener(v -> dismiss());
 
         Bundle args = getArguments();
         if (args != null) {
@@ -152,15 +132,11 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         loadEvent();
     }
 
-    /**
-     * Loads event data from the {@link EventService}.
-     */
     private void loadEvent() {
         setLoading(true);
 
         eventService.getEventById(eventId, event -> {
             if (!isAdded()) return;
-
             if (event == null) {
                 toast("Event not found.");
                 dismiss();
@@ -169,7 +145,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
             loadedEvent = event;
             bindEvent(event);
-            
+
             if (!hideJoinButton) {
                 refreshWaitingListState();
             } else {
@@ -184,38 +160,23 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         });
     }
 
-    /**
-     * Binds the loaded event data to the UI views.
-     *
-     * @param event The event object to display.
-     */
     private void bindEvent(@NonNull Event event) {
-        if (tvName != null) {
+        if (tvName != null)
             tvName.setText(nonEmptyOr(event.getTitle(), "Untitled Event"));
-        }
 
         if (tvDate != null) {
             long start = event.getStartTimeMillis();
             tvDate.setText(start > 0 ? dateFormat.format(new Date(start)) : "Date TBD");
         }
 
-
         if (tvTimeStart != null) {
             long start = event.getStartTimeMillis();
-            if (start > 0) {
-                tvTimeStart.setText(timeFormat.format(new Date(start)));
-            } else {
-                tvTimeStart.setText("TBD");
-            }
+            tvTimeStart.setText(start > 0 ? timeFormat.format(new Date(start)) : "TBD");
         }
 
         if (tvTimeEnd != null) {
             long end = event.getEndTimeMillis();
-            if (end > 0) {
-                tvTimeEnd.setText(timeFormat.format(new Date(end)));
-            } else {
-                tvTimeEnd.setText("TBD");
-            }
+            tvTimeEnd.setText(end > 0 ? timeFormat.format(new Date(end)) : "TBD");
         }
 
         if (tvLocation != null) {
@@ -224,18 +185,16 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
             tvLocation.setText(loc);
         }
 
-        if (tvDescription != null) {
+        if (tvDescription != null)
             tvDescription.setText(nonEmptyOr(event.getDescription(), ""));
-        }
 
         if (ivPoster != null) {
             String posterImageId = event.getPosterImageId();
             if (posterImageId != null && !posterImageId.trim().isEmpty()) {
                 try {
                     ivPoster.setImageURI(Uri.parse(posterImageId));
-                    if (ivPoster.getDrawable() == null) {
+                    if (ivPoster.getDrawable() == null)
                         ivPoster.setImageResource(R.drawable.elder_dance_poster_sample);
-                    }
                 } catch (Exception ignored) {
                     ivPoster.setImageResource(R.drawable.elder_dance_poster_sample);
                 }
@@ -245,12 +204,10 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
-    /**
-     * Refreshes the user's current status on the event's waiting list.
-     */
     private void refreshWaitingListState() {
         entrantEventService.getCurrentUserWaitingListEntry(requireContext(), eventId, entry -> {
             if (!isAdded()) return;
+            currentEntry = entry;
 
             isCurrentlyOnWaitingList = entry != null
                     && entry.getStatus() != null
@@ -268,40 +225,99 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         });
     }
 
-    /**
-     * Refreshes the displayed capacity count for the event's waiting list.
-     */
+    private void updateWaitingListButton() {
+        if (btnWaitingList == null || hideJoinButton) return;
+
+        if (currentEntry != null && currentEntry.getStatus() == WaitingListStatus.INVITED) {
+            btnWaitingList.setVisibility(View.GONE);
+            showAcceptDeclineButtons();
+            return;
+        }
+
+        btnWaitingList.setVisibility(View.VISIBLE);
+        btnWaitingList.setEnabled(true);
+
+        if (currentEntry != null && currentEntry.getStatus() == WaitingListStatus.ACCEPTED) {
+            btnWaitingList.setText("✅ Invitation Accepted");
+            btnWaitingList.setEnabled(false);
+        } else if (currentEntry != null
+                && currentEntry.getStatus() == WaitingListStatus.NOT_SELECTED) {
+            btnWaitingList.setText("Not selected in lottery");
+            btnWaitingList.setEnabled(false);
+        } else if (currentEntry != null
+                && currentEntry.getStatus() == WaitingListStatus.DECLINED) {
+            btnWaitingList.setText("Invitation Declined");
+            btnWaitingList.setEnabled(false);
+        } else if (isCurrentlyOnWaitingList) {
+            btnWaitingList.setText("Leave Waiting List");
+        } else {
+            btnWaitingList.setText("Join Waiting List");
+        }
+    }
+
+    private void showAcceptDeclineButtons() {
+        if (getView() == null) return;
+        View container = getView().findViewById(R.id.layout_action_buttons);
+        if (container == null) return;
+        container.setVisibility(View.VISIBLE);
+
+        MaterialButton btnAccept = getView().findViewById(R.id.button_accept_invitation);
+        MaterialButton btnDecline = getView().findViewById(R.id.button_decline_invitation);
+
+        if (btnAccept != null) btnAccept.setOnClickListener(v -> acceptInvitation());
+        if (btnDecline != null) btnDecline.setOnClickListener(v -> declineInvitation());
+    }
+
+    private void acceptInvitation() {
+        if (currentEntry == null) return;
+        currentEntry.setStatus(WaitingListStatus.ACCEPTED);
+        currentEntry.setRespondedAtMillis(System.currentTimeMillis());
+        saveEntryResponse("Invitation accepted!");
+    }
+
+    private void declineInvitation() {
+        if (currentEntry == null) return;
+        currentEntry.setStatus(WaitingListStatus.DECLINED);
+        currentEntry.setRespondedAtMillis(System.currentTimeMillis());
+        saveEntryResponse("Invitation declined.");
+    }
+
+    private void saveEntryResponse(String successMsg) {
+        if (currentEntry == null) return;
+        entrantEventService.updateEntry(requireContext(), eventId, currentEntry,
+                unused -> {
+                    if (!isAdded()) return;
+                    updateWaitingListButton();
+                    toast(successMsg);
+                },
+                error -> {
+                    if (!isAdded()) return;
+                    toast("Failed to save response: " + error.getMessage());
+                });
+    }
+
     private void refreshCapacityCount() {
         if (loadedEvent == null || tvCapacity == null) return;
-
         entrantEventService.getFilledSlotsCount(eventId, filled -> {
             if (!isAdded()) return;
-            tvCapacity.setText("Waiting list capacity: " + filled + " / " + loadedEvent.getCapacity());
+            tvCapacity.setText("Waiting list capacity: "
+                    + filled + " / " + loadedEvent.getCapacity());
         }, error -> {
             if (!isAdded()) return;
             tvCapacity.setText("Waiting list capacity: ? / " + loadedEvent.getCapacity());
         });
     }
 
-    /**
-     * Shows a confirmation dialog before joining the waiting list.
-     */
     private void showJoinWaitingListDialog() {
-        androidx.appcompat.app.AlertDialog.Builder builder =
-                new androidx.appcompat.app.AlertDialog.Builder(requireContext());
-
-        builder.setView(R.layout.dialog_waiting_list_confirm)
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setView(R.layout.dialog_waiting_list_confirm)
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .setPositiveButton("Confirm", (dialog, which) -> joinWaitingListConfirmed())
                 .show();
     }
 
-    /**
-     * Confirms the action of joining the waiting list and updates the status in Firestore.
-     */
     private void joinWaitingListConfirmed() {
         if (btnWaitingList != null) btnWaitingList.setEnabled(false);
-
         entrantEventService.joinWaitingList(requireContext(), eventId,
                 unused -> {
                     if (!isAdded()) return;
@@ -317,12 +333,8 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                 });
     }
 
-    /**
-     * Leaves the waiting list and updates the status in Firestore.
-     */
     private void leaveWaitingList() {
         if (btnWaitingList != null) btnWaitingList.setEnabled(false);
-
         entrantEventService.leaveWaitingList(requireContext(), eventId,
                 unused -> {
                     if (!isAdded()) return;
@@ -338,9 +350,6 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                 });
     }
 
-    /**
-     * Handles the waiting list button click event.
-     */
     private void onWaitingListButtonPressed() {
         if (isCurrentlyOnWaitingList) {
             leaveWaitingList();
@@ -349,32 +358,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
-    /**
-     * Updates the text and enabled state of the waiting list action button.
-     */
-    private void updateWaitingListButton() {
-        if (btnWaitingList == null || hideJoinButton) return;
-
-        btnWaitingList.setEnabled(true);
-        if (isCurrentlyOnWaitingList) {
-            btnWaitingList.setText("Leave Waiting List");
-        } else {
-            btnWaitingList.setText("Join Waiting List");
-        }
-    }
-
-    /**
-     * Toggles the loading state of the UI.
-     *
-     * @param loading True if loading, false otherwise.
-     */
     private void setLoading(boolean loading) {
-        if (tvName != null && loading) {
-            tvName.setText("Loading...");
-        }
-        if (btnWaitingList != null && !hideJoinButton) {
-            btnWaitingList.setEnabled(!loading);
-        }
+        if (tvName != null && loading) tvName.setText("Loading...");
+        if (btnWaitingList != null && !hideJoinButton) btnWaitingList.setEnabled(!loading);
     }
 
     private void toast(String msg) {

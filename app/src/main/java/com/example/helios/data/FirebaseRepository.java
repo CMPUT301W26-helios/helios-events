@@ -4,8 +4,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.helios.model.Event;
+import com.example.helios.model.NotificationRecord;
 import com.example.helios.model.UserProfile;
 import com.example.helios.model.WaitingListEntry;
+import com.example.helios.model.NotificationRecord;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -193,18 +195,16 @@ public class FirebaseRepository {
             @NonNull OnFailureListener onFailure
     ) {
         db.collection("events")
-                .orderBy("startTimeMillis") // matches Event.startTimeMillis
+                .whereEqualTo("privateEvent", false)
+                .orderBy("startTimeMillis")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     List<Event> events = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : querySnapshot) {
                         Event event = doc.toObject(Event.class);
-
-                        // Ensure eventId is set from document id if missing
                         if (event.getEventId() == null || event.getEventId().trim().isEmpty()) {
                             event.setEventId(doc.getId());
                         }
-
                         events.add(event);
                     }
                     onSuccess.onSuccess(events);
@@ -476,7 +476,69 @@ public class FirebaseRepository {
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
+// NOTIFICATIONS SECTION:
 
+    public void saveNotification(
+            @NonNull NotificationRecord record,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (record.getNotificationId() == null) {
+            onFailure.onFailure(new IllegalArgumentException("notificationId must not be empty."));
+            return;
+        }
+        db.collection("notifications")
+                .document(record.getNotificationId())
+                .set(record)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    public void getNotificationsForUser(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<List<NotificationRecord>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+        db.collection("notifications")
+                .whereEqualTo("recipientUid", uid)
+                .orderBy("sentAtMillis",
+                        com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<NotificationRecord> records = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        records.add(doc.toObject(NotificationRecord.class));
+                    }
+                    onSuccess.onSuccess(records);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    public void getWaitlistEntriesForUser(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<List<WaitingListEntry>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+        db.collectionGroup("waiting_list")
+                .whereEqualTo("entrantUid", uid)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<WaitingListEntry> entries = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        entries.add(doc.toObject(WaitingListEntry.class));
+                    }
+                    onSuccess.onSuccess(entries);
+                })
+                .addOnFailureListener(onFailure);
+    }
     // VALIDATION SECTION:
     private boolean isValidUser(@Nullable UserProfile user) {
         if (user == null) return false;
@@ -524,7 +586,9 @@ public class FirebaseRepository {
                 null,
                 null,
                 null,
+                false,
                 false
+
         );
 
         db.collection("events").document("demo_event_1").set(demo)

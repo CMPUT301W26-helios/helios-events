@@ -10,29 +10,26 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
+import com.example.helios.service.LotteryService;
+import com.example.helios.service.ProfileService;
 import com.example.helios.ui.event.EventDetailsBottomSheet;
-import com.google.android.material.button.MaterialButton;
 
-/**
- * Fragment that allows an organizer to manage a single event.
- * Provides access to various management tools like viewing the event page,
- * managing the entrant list, viewing the QR code, and editing event details.
- */
 public class ManageEventFragment extends Fragment {
 
     private final EventService eventService = new EventService();
-    @Nullable
-    private String eventId;
+    private final LotteryService lotteryService = new LotteryService();
+    private final ProfileService profileService = new ProfileService();
 
-    /**
-     * Default constructor for ManageEventFragment.
-     */
+    @Nullable private String eventId;
+    @Nullable private Event loadedEvent;
+
     public ManageEventFragment() {
         super(R.layout.fragment_manage_event);
     }
@@ -46,14 +43,6 @@ public class ManageEventFragment extends Fragment {
         }
     }
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
-        return super.onCreateView(inflater, container, savedInstanceState);
-    }
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -61,32 +50,38 @@ public class ManageEventFragment extends Fragment {
         TextView nameView = view.findViewById(R.id.tv_manage_event_name);
         Button viewPageButton = view.findViewById(R.id.button_view_event_page);
         Button entrantListButton = view.findViewById(R.id.button_entrant_list);
+        Button runLotteryButton = view.findViewById(R.id.button_run_lottery);
         Button viewQrButton = view.findViewById(R.id.button_view_qr_code);
         Button editButton = view.findViewById(R.id.button_edit_event);
         Button mapButton = view.findViewById(R.id.button_show_mapped_location);
 
         if (eventId == null || eventId.isEmpty()) {
             Toast.makeText(requireContext(),
-                    "Select an event first.",
-                    Toast.LENGTH_SHORT).show();
+                    "Select an event first.", Toast.LENGTH_SHORT).show();
             NavHostFragment.findNavController(this)
                     .popBackStack(R.id.organizeFragment, false);
             return;
-        } else {
-            eventService.getEventById(eventId, event -> {
-                if (!isAdded() || event == null) return;
-                nameView.setText(event.getTitle() != null ? event.getTitle() : "(no title)");
-            }, error -> {
-                if (!isAdded()) return;
-                Toast.makeText(requireContext(),
-                        "Failed to load event: " + error.getMessage(),
-                        Toast.LENGTH_LONG).show();
-            });
         }
+
+        eventService.getEventById(eventId, event -> {
+            if (!isAdded() || event == null) return;
+            loadedEvent = event;
+            nameView.setText(event.getTitle() != null ? event.getTitle() : "(no title)");
+
+            // Show draw status
+            if (event.isDrawHappened()) {
+                runLotteryButton.setText("Draw Already Run");
+                runLotteryButton.setEnabled(false);
+            }
+        }, error -> {
+            if (!isAdded()) return;
+            Toast.makeText(requireContext(),
+                    "Failed to load event: " + error.getMessage(),
+                    Toast.LENGTH_LONG).show();
+        });
 
         viewPageButton.setOnClickListener(v -> {
             if (eventId != null) {
-                // Pass 'true' to hide the Join Waiting List button for organizers
                 EventDetailsBottomSheet.newInstance(eventId, true)
                         .show(getParentFragmentManager(), "event_details");
             }
@@ -101,6 +96,8 @@ public class ManageEventFragment extends Fragment {
             }
         });
 
+        runLotteryButton.setOnClickListener(v -> showLotteryConfirmDialog());
+
         viewQrButton.setOnClickListener(v -> {
             if (eventId != null) {
                 Bundle args = new Bundle();
@@ -113,8 +110,7 @@ public class ManageEventFragment extends Fragment {
         mapButton.setOnClickListener(v ->
                 Toast.makeText(requireContext(),
                         "Mapped location view not implemented yet.",
-                        Toast.LENGTH_SHORT).show()
-        );
+                        Toast.LENGTH_SHORT).show());
 
         editButton.setOnClickListener(v -> {
             if (eventId != null) {
@@ -124,5 +120,50 @@ public class ManageEventFragment extends Fragment {
                         .navigate(R.id.editEventFragment, args);
             }
         });
+    }
+
+    private void showLotteryConfirmDialog() {
+        if (loadedEvent == null) {
+            Toast.makeText(requireContext(),
+                    "Event not loaded yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Run Lottery Draw")
+                .setMessage("This will randomly select entrants from the waiting list and notify them. This cannot be undone.")
+                .setPositiveButton("Run Draw", (dialog, which) -> runLottery())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void runLottery() {
+        if (loadedEvent == null) return;
+
+        profileService.ensureSignedIn(firebaseUser -> {
+            String uid = firebaseUser.getUid();
+            lotteryService.runDraw(uid, loadedEvent,
+                    unused -> {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(),
+                                "Lottery draw complete!", Toast.LENGTH_SHORT).show();
+                        View v = getView();
+                        if (v != null) {
+                            Button btn = v.findViewById(R.id.button_run_lottery);
+                            if (btn != null) {
+                                btn.setText("Draw Already Run");
+                                btn.setEnabled(false);
+                            }
+                        }
+                    },
+                    error -> {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(),
+                                "Lottery failed: " + error.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    });
+        }, error -> Toast.makeText(requireContext(),
+                "Auth failed: " + error.getMessage(),
+                Toast.LENGTH_LONG).show());
     }
 }
