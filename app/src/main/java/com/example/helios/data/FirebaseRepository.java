@@ -7,7 +7,6 @@ import com.example.helios.model.Event;
 import com.example.helios.model.NotificationRecord;
 import com.example.helios.model.UserProfile;
 import com.example.helios.model.WaitingListEntry;
-import com.example.helios.model.NotificationRecord;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -194,8 +193,9 @@ public class FirebaseRepository {
             @NonNull OnSuccessListener<List<Event>> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
+        // Querying all events. Filtering for 'privateEvent' should be handled by the UI
+        // depending on the context (e.g., browsing vs. managing).
         db.collection("events")
-                .whereEqualTo("privateEvent", false)
                 .orderBy("startTimeMillis")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
