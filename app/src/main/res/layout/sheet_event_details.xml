@@ -197,6 +197,32 @@
             android:minHeight="48dp"
             android:text="Join Waiting List"
             android:textStyle="bold" />
+        <LinearLayout
+            android:id="@+id/layout_action_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_accept_invitation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Accept Invitation"
+                android:textAllCaps="false"
+                app:backgroundTint="#2E7D32" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_decline_invitation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Decline Invitation"
+                android:textAllCaps="false"
+                app:backgroundTint="#B3261E" />
+
+        </LinearLayout>
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

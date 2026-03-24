@@ -30,34 +30,25 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-/**
- * Fragment for creating or editing an event.
- * Handles event details such as name, description, capacity, registration dates, and posters.
- */
 public class SetupEventFragment extends Fragment {
 
-    private enum Mode {
-        CREATE,
-        EDIT
-    }
+    private enum Mode { CREATE, EDIT }
 
     private final SimpleDateFormat dateFormat =
             new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
 
     private final EventService eventService = new EventService();
+    private boolean isPrivateEvent = false;
 
-    @Nullable
-    private String eventId;
-    @Nullable
-    private Event loadedEvent;
+    @Nullable private String eventId;
+    @Nullable private Event loadedEvent;
     private Mode mode = Mode.CREATE;
 
     private long registrationOpensMillis = 0L;
     private long registrationClosesMillis = 0L;
     private boolean geolocationRequired = true;
 
-    @Nullable
-    private Uri selectedPosterUri = null;
+    @Nullable private Uri selectedPosterUri = null;
 
     private final ActivityResultLauncher<String[]> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
@@ -77,9 +68,6 @@ public class SetupEventFragment extends Fragment {
                 }
             });
 
-    /**
-     * Default constructor for SetupEventFragment.
-     */
     public SetupEventFragment() {
         super(R.layout.fragment_event_setup);
     }
@@ -115,48 +103,54 @@ public class SetupEventFragment extends Fragment {
         TextView endDateView = view.findViewById(R.id.tv_registration_end);
         TextView geoOn = view.findViewById(R.id.tv_geo_on);
         TextView geoOff = view.findViewById(R.id.tv_geo_off);
+        TextView privateOn = view.findViewById(R.id.tv_private_on);
+        TextView privateOff = view.findViewById(R.id.tv_private_off);
         ImageView uploadImage = view.findViewById(R.id.iv_upload_image);
 
         MaterialButton cancelButton = view.findViewById(R.id.button_cancel_back);
         MaterialButton primaryButton = view.findViewById(R.id.button_next_qr);
 
-        // Common controls
         cancelButton.setOnClickListener(v ->
-                NavHostFragment.findNavController(this).navigateUp()
-        );
+                NavHostFragment.findNavController(this).navigateUp());
 
-        uploadImage.setOnClickListener(v -> pickImageLauncher.launch(new String[]{"image/*"}));
+        uploadImage.setOnClickListener(v ->
+                pickImageLauncher.launch(new String[]{"image/*"}));
 
         geoOn.setOnClickListener(v -> {
             geolocationRequired = true;
             updateGeoToggle(geoOn, geoOff, true);
         });
-
         geoOff.setOnClickListener(v -> {
             geolocationRequired = false;
             updateGeoToggle(geoOn, geoOff, false);
         });
 
+        privateOn.setOnClickListener(v -> {
+            isPrivateEvent = true;
+            updatePrivateToggle(privateOn, privateOff, true);
+        });
+        privateOff.setOnClickListener(v -> {
+            isPrivateEvent = false;
+            updatePrivateToggle(privateOn, privateOff, false);
+        });
+        updatePrivateToggle(privateOn, privateOff, isPrivateEvent);
+
         startDateView.setOnClickListener(v ->
                 openDatePicker(registrationOpensMillis, picked -> {
                     registrationOpensMillis = picked;
                     startDateView.setText(dateFormat.format(new Date(picked)));
-                })
-        );
+                }));
 
         endDateView.setOnClickListener(v ->
                 openDatePicker(registrationClosesMillis, picked -> {
                     registrationClosesMillis = picked;
                     endDateView.setText(dateFormat.format(new Date(picked)));
-                })
-        );
+                }));
 
         if (mode == Mode.CREATE) {
-            // Initial UI text
             titleView.setText("Create Event");
             primaryButton.setText("Next - QR Code");
 
-            // Defaults to match placeholders
             if (registrationOpensMillis == 0L || registrationClosesMillis == 0L) {
                 Calendar c = Calendar.getInstance();
                 c.set(2025, Calendar.MARCH, 1, 0, 0, 0);
@@ -168,7 +162,6 @@ public class SetupEventFragment extends Fragment {
             }
             startDateView.setText(dateFormat.format(new Date(registrationOpensMillis)));
             endDateView.setText(dateFormat.format(new Date(registrationClosesMillis)));
-
             updateGeoToggle(geoOn, geoOff, geolocationRequired);
 
             primaryButton.setOnClickListener(v -> {
@@ -182,7 +175,6 @@ public class SetupEventFragment extends Fragment {
                             "Event name is required.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 if (registrationClosesMillis < registrationOpensMillis) {
                     Toast.makeText(requireContext(),
                             "Registration end date must be after start date.",
@@ -194,8 +186,7 @@ public class SetupEventFragment extends Fragment {
                 if (!TextUtils.isEmpty(maxEntrantsStr)) {
                     try {
                         maxEntrants = Integer.parseInt(maxEntrantsStr);
-                    } catch (NumberFormatException ignored) {
-                    }
+                    } catch (NumberFormatException ignored) {}
                 }
 
                 Bundle args = new Bundle();
@@ -206,6 +197,7 @@ public class SetupEventFragment extends Fragment {
                 args.putLong("arg_registration_opens_millis", registrationOpensMillis);
                 args.putLong("arg_registration_closes_millis", registrationClosesMillis);
                 args.putBoolean("arg_geolocation_required", geolocationRequired);
+                args.putBoolean("arg_private_event", isPrivateEvent);
                 if (selectedPosterUri != null) {
                     args.putString("arg_poster_uri", selectedPosterUri.toString());
                 }
@@ -213,8 +205,8 @@ public class SetupEventFragment extends Fragment {
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.createEventQrFragment, args);
             });
+
         } else {
-            // EDIT mode
             titleView.setText("Edit Event");
             primaryButton.setText("Save");
 
@@ -229,12 +221,8 @@ public class SetupEventFragment extends Fragment {
                 if (!isAdded() || event == null) return;
                 loadedEvent = event;
 
-                if (event.getTitle() != null) {
-                    nameInput.setText(event.getTitle());
-                }
-                if (event.getDescription() != null) {
-                    descriptionInput.setText(event.getDescription());
-                }
+                if (event.getTitle() != null) nameInput.setText(event.getTitle());
+                if (event.getDescription() != null) descriptionInput.setText(event.getDescription());
                 if (event.getInterests() != null && !event.getInterests().isEmpty()) {
                     StringBuilder sb = new StringBuilder();
                     for (int i = 0; i < event.getInterests().size(); i++) {
@@ -246,7 +234,6 @@ public class SetupEventFragment extends Fragment {
                 if (event.getCapacity() > 0) {
                     maxEntrantsInput.setText(String.valueOf(event.getCapacity()));
                 }
-
                 if (event.getRegistrationOpensMillis() > 0) {
                     registrationOpensMillis = event.getRegistrationOpensMillis();
                     startDateView.setText(dateFormat.format(
@@ -261,14 +248,15 @@ public class SetupEventFragment extends Fragment {
                 geolocationRequired = event.isGeolocationRequired();
                 updateGeoToggle(geoOn, geoOff, geolocationRequired);
 
+                isPrivateEvent = event.isPrivateEvent();
+                updatePrivateToggle(privateOn, privateOff, isPrivateEvent);
+
                 if (!TextUtils.isEmpty(event.getPosterImageId())) {
                     Uri existingPosterUri = Uri.parse(event.getPosterImageId());
                     persistReadPermission(existingPosterUri);
                     try {
                         uploadImage.setImageURI(existingPosterUri);
                     } catch (SecurityException se) {
-                        // Existing URI may have been saved from a one-time picker permission.
-                        // Keep edit flow working and let organizer choose a new image if needed.
                         uploadImage.setImageResource(android.R.drawable.ic_menu_upload);
                     }
                 }
@@ -282,8 +270,7 @@ public class SetupEventFragment extends Fragment {
             primaryButton.setOnClickListener(v -> {
                 if (loadedEvent == null) {
                     Toast.makeText(requireContext(),
-                            "Event not loaded yet.",
-                            Toast.LENGTH_SHORT).show();
+                            "Event not loaded yet.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -297,7 +284,6 @@ public class SetupEventFragment extends Fragment {
                             "Event name is required.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 if (registrationClosesMillis < registrationOpensMillis) {
                     Toast.makeText(requireContext(),
                             "Registration end date must be after start date.",
@@ -309,8 +295,7 @@ public class SetupEventFragment extends Fragment {
                 if (!TextUtils.isEmpty(maxEntrantsStr)) {
                     try {
                         maxEntrants = Integer.parseInt(maxEntrantsStr);
-                    } catch (NumberFormatException ignored) {
-                    }
+                    } catch (NumberFormatException ignored) {}
                 }
 
                 loadedEvent.setTitle(title);
@@ -320,20 +305,16 @@ public class SetupEventFragment extends Fragment {
                 loadedEvent.setRegistrationOpensMillis(registrationOpensMillis);
                 loadedEvent.setRegistrationClosesMillis(registrationClosesMillis);
                 loadedEvent.setGeolocationRequired(geolocationRequired);
+                loadedEvent.setPrivateEvent(isPrivateEvent);
 
-                // Update interests from comma-separated tags.
                 java.util.List<String> interests = null;
                 if (!tagsRaw.isEmpty()) {
                     interests = new java.util.ArrayList<>();
                     for (String part : tagsRaw.split(",")) {
                         String trimmed = part.trim();
-                        if (!trimmed.isEmpty()) {
-                            interests.add(trimmed);
-                        }
+                        if (!trimmed.isEmpty()) interests.add(trimmed);
                     }
-                    if (interests.isEmpty()) {
-                        interests = null;
-                    }
+                    if (interests.isEmpty()) interests = null;
                 }
                 loadedEvent.setInterests(interests);
 
@@ -357,54 +338,25 @@ public class SetupEventFragment extends Fragment {
         }
     }
 
-    /**
-     * Attempts to persist read permissions for a given URI.
-     *
-     * @param uri The URI to persist permissions for.
-     */
     private void persistReadPermission(@NonNull Uri uri) {
         if (getContext() == null) return;
         try {
             getContext().getContentResolver().takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-            );
-        } catch (SecurityException | IllegalArgumentException ignored) {
-            // Some providers don't support persistable permissions; best effort is enough.
-        }
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (SecurityException | IllegalArgumentException ignored) {}
     }
 
-    /**
-     * Safely retrieves trimmed text from an EditText.
-     *
-     * @param editText The EditText to read from.
-     * @return The trimmed string, or an empty string if the input was null.
-     */
     private String safeText(EditText editText) {
         return editText.getText() == null ? "" : editText.getText().toString().trim();
     }
 
-    /**
-     * Interface for date selection callbacks.
-     */
     private interface DatePickedCallback {
-        /**
-         * Called when a date is picked.
-         * @param millis The picked date in milliseconds.
-         */
         void onPicked(long millis);
     }
 
-    /**
-     * Opens a date picker dialog.
-     *
-     * @param initialMillis The initial date to show in the picker.
-     * @param callback      The callback to invoke when a date is selected.
-     */
     private void openDatePicker(long initialMillis, @NonNull DatePickedCallback callback) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(initialMillis > 0 ? initialMillis : System.currentTimeMillis());
-
         new DatePickerDialog(
                 requireContext(),
                 (picker, year, month, dayOfMonth) -> {
@@ -419,15 +371,18 @@ public class SetupEventFragment extends Fragment {
         ).show();
     }
 
-    /**
-     * Updates the UI state of a geolocation toggle button.
-     *
-     * @param on       The "On" button view.
-     * @param off      The "Off" button view.
-     * @param required True if geolocation is required, false otherwise.
-     */
     private void updateGeoToggle(@NonNull TextView on, @NonNull TextView off, boolean required) {
         if (required) {
+            on.setBackgroundResource(R.drawable.bg_toggle_left_active);
+            off.setBackgroundResource(R.drawable.bg_toggle_right_inactive);
+        } else {
+            on.setBackgroundResource(R.drawable.bg_toggle_left_inactive);
+            off.setBackgroundResource(R.drawable.bg_toggle_right_active);
+        }
+    }
+
+    private void updatePrivateToggle(@NonNull TextView on, @NonNull TextView off, boolean isPrivate) {
+        if (isPrivate) {
             on.setBackgroundResource(R.drawable.bg_toggle_left_active);
             off.setBackgroundResource(R.drawable.bg_toggle_right_inactive);
         } else {

@@ -47,6 +47,7 @@ public class Event {
     private List<String> interests;
   
     private boolean drawHappened; // Track if the lottery draw has occurred
+    private boolean privateEvent;
 
     /**
      * Default constructor required for Firestore deserialization.
@@ -80,7 +81,7 @@ public class Event {
     public Event(String eventId, String title, String description, String locationName, String address,
                  long startTimeMillis, long endTimeMillis, long registrationOpensMillis, long registrationClosesMillis,
                  int capacity, int sampleSize, Integer waitlistLimit, boolean geolocationRequired,
-                 String lotteryGuidelines, String organizerUid, String posterImageId, String qrCodeValue,List<String> interests, boolean drawHappened) {
+                 String lotteryGuidelines, String organizerUid, String posterImageId, String qrCodeValue,List<String> interests, boolean drawHappened, boolean privateEvent) {
         this.eventId = eventId;
         this.title = title;
         this.description = description;
@@ -102,6 +103,7 @@ public class Event {
         this.qrCodeValue = qrCodeValue;
         this.interests = interests;
         this.drawHappened = false;
+        this.privateEvent = privateEvent;
     }
 
     /**
@@ -293,4 +295,6 @@ public class Event {
      * @param drawHappened Whether the lottery draw has occurred.
      */
     public void setDrawHappened(boolean drawHappened) { this.drawHappened = drawHappened; }
+    public boolean isPrivateEvent() { return privateEvent; }
+    public void setPrivateEvent(boolean privateEvent) { this.privateEvent = privateEvent; }
 }
