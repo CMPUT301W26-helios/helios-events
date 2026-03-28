@@ -1,6 +1,7 @@
 package com.example.helios.ui.nav;
 
 import android.app.DatePickerDialog;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -37,6 +39,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Fragment that displays a searchable and filterable list of all events.
@@ -216,13 +220,15 @@ public class EventsFragment extends Fragment {
      */
     private void showFilterDialog() {
         View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_filter_events, null);
+        ChipGroup cgInterests = dialogView.findViewById(R.id.cg_interests);
+        populateInterestFilterChips(cgInterests);
+
         AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setView(dialogView)
                 .setPositiveButton("Apply", (d, which) -> {
-                    ChipGroup cg = dialogView.findViewById(R.id.cg_interests);
                     selectedInterests.clear();
-                    for (int id : cg.getCheckedChipIds()) {
-                        selectedInterests.add(((Chip) cg.findViewById(id)).getText().toString());
+                    for (int id : cgInterests.getCheckedChipIds()) {
+                        selectedInterests.add(((Chip) cgInterests.findViewById(id)).getText().toString());
                     }
                     applyFilters();
                 })
@@ -246,6 +252,86 @@ public class EventsFragment extends Fragment {
         }));
 
         dialog.show();
+    }
+
+    /**
+     * Populates the interest filter chips using tags from all loaded events.
+     */
+    private void populateInterestFilterChips(@NonNull ChipGroup chipGroup) {
+        chipGroup.removeAllViews();
+        chipGroup.setSingleSelection(false);
+        chipGroup.setSelectionRequired(false);
+
+        int checkedBg = ContextCompat.getColor(requireContext(), R.color.helios_button_primary);
+        int uncheckedBg = ContextCompat.getColor(requireContext(), R.color.helios_button_secondary);
+        int checkedText = ContextCompat.getColor(requireContext(), R.color.helios_text_primary);
+        int uncheckedText = ContextCompat.getColor(requireContext(), R.color.helios_text_hint);
+        int checkedStroke = ContextCompat.getColor(requireContext(), R.color.helios_accent);
+        int uncheckedStroke = ContextCompat.getColor(requireContext(), R.color.helios_button_secondary_border);
+
+        ColorStateList backgroundColors = new ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                new int[]{checkedBg, uncheckedBg}
+        );
+        ColorStateList textColors = new ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                new int[]{checkedText, uncheckedText}
+        );
+        ColorStateList strokeColors = new ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                new int[]{checkedStroke, uncheckedStroke}
+        );
+        float strokeWidthPx = getResources().getDisplayMetrics().density;
+
+        for (String interest : collectAvailableInterests()) {
+            Chip chip = new Chip(requireContext());
+            chip.setId(View.generateViewId());
+            chip.setText(interest);
+            chip.setCheckable(true);
+            chip.setClickable(true);
+            chip.setFocusable(true);
+            chip.setCheckedIconVisible(false);
+            chip.setChipBackgroundColor(backgroundColors);
+            chip.setTextColor(textColors);
+            chip.setChipStrokeColor(strokeColors);
+            chip.setChipStrokeWidth(strokeWidthPx);
+            chip.setChecked(isInterestSelected(interest));
+            chipGroup.addView(chip);
+        }
+    }
+
+    /**
+     * Collects unique, non-empty interests from all events and sorts them alphabetically.
+     */
+    @NonNull
+    private List<String> collectAvailableInterests() {
+        Map<String, String> uniqueByNormalized = new TreeMap<>();
+
+        for (Event event : allEvents) {
+            List<String> eventInterests = event.getInterests();
+            if (eventInterests == null) continue;
+
+            for (String rawInterest : eventInterests) {
+                if (rawInterest == null) continue;
+
+                String trimmed = rawInterest.trim();
+                if (trimmed.isEmpty()) continue;
+
+                String normalized = trimmed.toLowerCase(Locale.getDefault());
+                uniqueByNormalized.putIfAbsent(normalized, trimmed);
+            }
+        }
+
+        return new ArrayList<>(uniqueByNormalized.values());
+    }
+
+    private boolean isInterestSelected(@NonNull String interest) {
+        for (String selected : selectedInterests) {
+            if (selected != null && selected.equalsIgnoreCase(interest)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -285,9 +371,10 @@ public class EventsFragment extends Fragment {
                 java.util.List<String> eventInterests = event.getInterests();
                 if (eventInterests != null && !eventInterests.isEmpty()) {
                     for (String selected : selectedInterests) {
-                        String selectedLower = selected.toLowerCase(Locale.getDefault());
+                        String selectedLower = selected.trim().toLowerCase(Locale.getDefault());
                         for (String tag : eventInterests) {
-                            if (tag != null && tag.toLowerCase(Locale.getDefault()).equals(selectedLower)) {
+                            if (tag != null
+                                    && tag.trim().toLowerCase(Locale.getDefault()).equals(selectedLower)) {
                                 matchesInterests = true;
                                 break;
                             }
