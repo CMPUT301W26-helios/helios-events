@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +32,7 @@ import com.google.android.material.chip.ChipGroup;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -150,6 +152,29 @@ public class EventsFragment extends Fragment {
      * Sets up the search bar with a debounced filter action.
      */
     private void setupSearch() {
+        // Strip newline characters so the search field always stays single-line.
+        InputFilter noNewLineFilter = (source, start, end, dest, dstart, dend) -> {
+            if (source == null) return null;
+
+            StringBuilder cleaned = null;
+            for (int i = start; i < end; i++) {
+                char c = source.charAt(i);
+                if (c == '\n' || c == '\r') {
+                    if (cleaned == null) {
+                        cleaned = new StringBuilder(end - start);
+                        cleaned.append(source, start, i);
+                    }
+                } else if (cleaned != null) {
+                    cleaned.append(c);
+                }
+            }
+            return cleaned == null ? null : cleaned.toString();
+        };
+        InputFilter[] existingFilters = etSearch.getFilters();
+        InputFilter[] combinedFilters = Arrays.copyOf(existingFilters, existingFilters.length + 1);
+        combinedFilters[existingFilters.length] = noNewLineFilter;
+        etSearch.setFilters(combinedFilters);
+
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
