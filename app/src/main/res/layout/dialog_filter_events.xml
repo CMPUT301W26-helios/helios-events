@@ -49,6 +49,14 @@
             android:text="End Date" />
     </LinearLayout>
 
+    <Button
+        android:id="@+id/btn_reset_date_filter_dialog"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Reset Date Range" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

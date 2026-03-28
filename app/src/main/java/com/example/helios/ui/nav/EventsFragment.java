@@ -237,19 +237,43 @@ public class EventsFragment extends Fragment {
 
         Button btnStart = dialogView.findViewById(R.id.btn_start_date);
         Button btnEnd = dialogView.findViewById(R.id.btn_end_date);
+        Button btnResetDateRange = dialogView.findViewById(R.id.btn_reset_date_filter_dialog);
+        CharSequence defaultStartDateText = btnStart.getText();
+        CharSequence defaultEndDateText = btnEnd.getText();
 
         if (startDateFilter != null) btnStart.setText(dateFormat.format(new Date(startDateFilter)));
         if (endDateFilter != null) btnEnd.setText(dateFormat.format(new Date(endDateFilter)));
 
-        btnStart.setOnClickListener(v -> showDatePicker(date -> {
+        btnStart.setOnClickListener(v -> showDatePicker(
+                startDateFilter != null ? startDateFilter : endDateFilter,
+                null,
+                endDateFilter,
+                date -> {
             startDateFilter = date;
             btnStart.setText(dateFormat.format(new Date(date)));
+
+            // Keep range valid: end date cannot be before start date.
+            if (endDateFilter != null && endDateFilter < startDateFilter) {
+                endDateFilter = startDateFilter;
+                btnEnd.setText(dateFormat.format(new Date(endDateFilter)));
+            }
         }));
 
-        btnEnd.setOnClickListener(v -> showDatePicker(date -> {
+        btnEnd.setOnClickListener(v -> showDatePicker(
+                endDateFilter != null ? endDateFilter : startDateFilter,
+                startDateFilter,
+                null,
+                date -> {
             endDateFilter = date;
             btnEnd.setText(dateFormat.format(new Date(date)));
         }));
+
+        btnResetDateRange.setOnClickListener(v -> {
+            startDateFilter = null;
+            endDateFilter = null;
+            btnStart.setText(defaultStartDateText);
+            btnEnd.setText(defaultEndDateText);
+        });
 
         dialog.show();
     }
@@ -337,14 +361,51 @@ public class EventsFragment extends Fragment {
     /**
      * Displays a date picker dialog.
      *
+     * @param initialDateMillis Date to show initially (nullable).
+     * @param minDateMillis Minimum selectable date (nullable).
+     * @param maxDateMillis Maximum selectable date (nullable).
      * @param listener Callback receiving the selected date in milliseconds.
      */
-    private void showDatePicker(OnDateSelectedListener listener) {
+    private void showDatePicker(@Nullable Long initialDateMillis,
+                                @Nullable Long minDateMillis,
+                                @Nullable Long maxDateMillis,
+                                OnDateSelectedListener listener) {
         Calendar cal = Calendar.getInstance();
-        new DatePickerDialog(requireContext(), (view, year, month, day) -> {
+        if (initialDateMillis != null) {
+            cal.setTimeInMillis(initialDateMillis);
+        } else if (minDateMillis != null) {
+            cal.setTimeInMillis(minDateMillis);
+        } else if (maxDateMillis != null && cal.getTimeInMillis() > maxDateMillis) {
+            cal.setTimeInMillis(maxDateMillis);
+        }
+
+        DatePickerDialog picker = new DatePickerDialog(requireContext(), (view, year, month, day) -> {
             cal.set(year, month, day, 0, 0, 0);
+            cal.set(Calendar.MILLISECOND, 0);
             listener.onDateSelected(cal.getTimeInMillis());
-        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show();
+        }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH));
+
+        if (minDateMillis != null) {
+            Calendar minCal = Calendar.getInstance();
+            minCal.setTimeInMillis(minDateMillis);
+            minCal.set(Calendar.HOUR_OF_DAY, 0);
+            minCal.set(Calendar.MINUTE, 0);
+            minCal.set(Calendar.SECOND, 0);
+            minCal.set(Calendar.MILLISECOND, 0);
+            picker.getDatePicker().setMinDate(minCal.getTimeInMillis());
+        }
+
+        if (maxDateMillis != null) {
+            Calendar maxCal = Calendar.getInstance();
+            maxCal.setTimeInMillis(maxDateMillis);
+            maxCal.set(Calendar.HOUR_OF_DAY, 23);
+            maxCal.set(Calendar.MINUTE, 59);
+            maxCal.set(Calendar.SECOND, 59);
+            maxCal.set(Calendar.MILLISECOND, 999);
+            picker.getDatePicker().setMaxDate(maxCal.getTimeInMillis());
+        }
+
+        picker.show();
     }
 
     /**
