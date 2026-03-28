@@ -10,10 +10,10 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_back"
         style="@style/Widget.Material3.Button.IconButton"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
         app:icon="@android:drawable/ic_menu_revert"
         app:iconTint="#B3261E"
         app:layout_constraintStart_toStartOf="parent"
@@ -21,10 +21,10 @@
 
     <ImageView
         android:id="@+id/iv_sun_icon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
         android:src="@android:drawable/ic_menu_day"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -32,13 +32,21 @@
 
     <TextView
         android:id="@+id/tv_title"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="24dp"
+        android:autoSizeMaxTextSize="36sp"
+        android:autoSizeMinTextSize="24sp"
+        android:autoSizeStepGranularity="2sp"
+        android:autoSizeTextType="uniform"
+        android:ellipsize="end"
         android:fontFamily="sans-serif-black"
+        android:maxLines="1"
         android:text="Event Entrants"
         android:textColor="#1A1C1E"
-        android:textSize="42sp"
+        android:textSize="32sp"
+        android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -48,11 +56,11 @@
         android:id="@+id/cl_content_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="64dp"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="8dp"
         android:background="@drawable/bg_container"
-        android:padding="20dp"
+        android:padding="12dp"
         app:layout_constraintBottom_toTopOf="@id/layout_draw_controls"
         app:layout_constraintTop_toBottomOf="@id/tv_title">
 
@@ -60,11 +68,13 @@
         <EditText
             android:id="@+id/et_search"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="42dp"
             android:background="@drawable/bg_search_bar"
             android:drawableEnd="@android:drawable/ic_menu_search"
+            android:drawablePadding="8dp"
             android:hint="Search for Entrants"
-            android:paddingHorizontal="20dp"
+            android:paddingHorizontal="12dp"
+            android:textSize="14sp"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
@@ -83,9 +93,9 @@
             android:id="@+id/tv_list_header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:text="Waiting List"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -96,23 +106,25 @@
             android:id="@+id/ll_filters"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:gravity="center_vertical"
             android:orientation="horizontal"
             android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/tv_list_header">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
                 android:src="@android:drawable/ic_menu_manage"
                 app:tint="#44474E" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/cg_status"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                app:chipSpacingHorizontal="4dp"
+                app:singleLine="true"
                 app:singleSelection="true"
                 app:selectionRequired="true">
 
@@ -121,21 +133,39 @@
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Invited" />
+                    android:text="Invited"
+                    android:textSize="13sp"
+                    app:checkedIconVisible="false"
+                    app:chipEndPadding="8dp"
+                    app:chipMinHeight="32dp"
+                    app:chipStartPadding="8dp"
+                    app:ensureMinTouchTargetSize="false" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_waitlisted"
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Waitlisted" />
+                    android:text="Waitlisted"
+                    android:textSize="13sp"
+                    app:checkedIconVisible="false"
+                    app:chipEndPadding="8dp"
+                    app:chipMinHeight="32dp"
+                    app:chipStartPadding="8dp"
+                    app:ensureMinTouchTargetSize="false" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_declined"
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Declined" />
+                    android:text="Declined"
+                    android:textSize="13sp"
+                    app:checkedIconVisible="false"
+                    app:chipEndPadding="8dp"
+                    app:chipMinHeight="32dp"
+                    app:chipStartPadding="8dp"
+                    app:ensureMinTouchTargetSize="false" />
             </com.google.android.material.chip.ChipGroup>
         </LinearLayout>
 
@@ -143,9 +173,9 @@
             android:id="@+id/tv_info_stats"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:textColor="#44474E"
-            android:textSize="14sp"
+            android:textSize="13sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/ll_filters"
             tools:text="2/15 people confirmed" />
@@ -154,77 +184,95 @@
             android:id="@+id/rv_entrants"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="8dp"
-            app:layout_constraintBottom_toTopOf="@id/layout_declined_actions"
+            android:layout_marginTop="6dp"
+            app:layout_constraintBottom_toTopOf="@id/layout_actions_container"
             app:layout_constraintTop_toBottomOf="@id/tv_info_stats" />
 
-        <!-- Actions for Declined/Cancelled -->
         <LinearLayout
-            android:id="@+id/layout_declined_actions"
+            android:id="@+id/layout_actions_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:orientation="horizontal"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@id/layout_invited_actions">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_delete_declined"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:backgroundTint="#6750A4"
-                android:text="Delete Checked"
-                android:textAllCaps="false"
-                android:textSize="12sp"
-                app:cornerRadius="20dp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_redraw_replacement"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:backgroundTint="#6750A4"
-                android:text="Redraw Replacement"
-                android:textAllCaps="false"
-                android:textSize="12sp"
-                app:cornerRadius="20dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/layout_invited_actions"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:visibility="gone"
+            android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_remove_entrant"
-                android:layout_width="0dp"
+            <!-- Actions for Declined/Cancelled -->
+            <LinearLayout
+                android:id="@+id/layout_declined_actions"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="4dp"
-                android:backgroundTint="#C74D4D"
-                android:text="Remove Entrant"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:visibility="gone"
-                app:cornerRadius="20dp" />
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_export"
-                android:layout_width="0dp"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_delete_declined"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:backgroundTint="#6750A4"
+                    android:text="Delete Checked"
+                    android:textAllCaps="false"
+                    android:textSize="12sp"
+                    app:cornerRadius="20dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_redraw_replacement"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:backgroundTint="#6750A4"
+                    android:text="Redraw Replacement"
+                    android:textAllCaps="false"
+                    android:textSize="12sp"
+                    app:cornerRadius="20dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_invited_actions"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="4dp"
-                android:backgroundTint="#6750A4"
-                android:text="Export Final List"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                app:cornerRadius="20dp" />
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal"
+                android:visibility="gone">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_remove_entrant"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:backgroundTint="#C74D4D"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="36dp"
+                    android:paddingVertical="0dp"
+                    android:text="Remove Entrant"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    android:visibility="gone"
+                    app:cornerRadius="16dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_export"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:backgroundTint="#6750A4"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="36dp"
+                    android:paddingVertical="0dp"
+                    android:text="Export Final List"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:textSize="12sp"
+                    app:cornerRadius="16dp" />
+            </LinearLayout>
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -234,10 +282,10 @@
         android:id="@+id/layout_draw_controls"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="108dp"
+        android:layout_marginBottom="4dp"
         android:orientation="vertical"
-        android:paddingHorizontal="32dp"
-        android:paddingBottom="24dp"
+        android:paddingHorizontal="12dp"
+        android:paddingBottom="4dp"
         app:layout_constraintBottom_toBottomOf="parent"
         tools:layout_editor_absoluteX="0dp">
 
@@ -246,32 +294,32 @@
             android:layout_height="wrap_content"
             android:text="Total Number of people selected for event:"
             android:textColor="#44474E"
-            android:textSize="14sp" />
+            android:textSize="12sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <EditText
                 android:id="@+id/et_draw_count"
                 android:layout_width="0dp"
-                android:layout_height="48dp"
+                android:layout_height="40dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_search_bar"
                 android:gravity="center"
                 android:inputType="number"
                 android:text="0"
                 android:textColor="#1A1C1E"
-                android:textSize="16sp" />
+                android:textSize="14sp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_draw"
                 android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:layout_marginStart="12dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
                 android:backgroundTint="#1C1B1F"
                 android:text="Draw"
                 android:textAllCaps="false"
