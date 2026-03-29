@@ -8,6 +8,7 @@ import com.example.helios.model.EventComment;
 import com.example.helios.model.NotificationRecord;
 import com.example.helios.model.UserProfile;
 import com.example.helios.model.WaitingListEntry;
+import com.example.helios.model.ImageAsset;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -17,6 +18,7 @@ import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.WriteBatch;
+
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -896,6 +898,41 @@ public class FirebaseRepository {
                 })
                 .addOnFailureListener(onFailure);
     }
+
+    // IMAGE ASSETS SECTION
+
+    /**
+     * Retrieves all image asset metadata documents from the "images" collection.
+     *
+     * @param onSuccess Callback receiving the list of all ImageAssets.
+     * @param onFailure Callback for failed operation.
+     */
+    public void getEventsWithPosters(
+            @NonNull OnSuccessListener<List<Event>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        getAllEvents(events -> {
+            List<Event> withPosters = new ArrayList<>();
+            for (Event e : events) {
+                if (e.getPosterImageId() != null && !e.getPosterImageId().trim().isEmpty()) {
+                    withPosters.add(e);
+                }
+            }
+            onSuccess.onSuccess(withPosters);
+        }, onFailure);
+    }
+
+    public void removeEventPoster(
+            @NonNull String eventId,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        db.collection("events").document(eventId)
+                .update("posterImageId", null)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
     // VALIDATION SECTION:
     private boolean isValidUser(@Nullable UserProfile user) {
         if (user == null) return false;

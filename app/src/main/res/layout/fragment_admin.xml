@@ -76,7 +76,7 @@
             android:textSize="14sp" />
 
         <TextView
-            android:id="@+id/btn_tab_users"
+            android:id="@+id/btn_tab_images"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_filter_chip"
@@ -85,7 +85,7 @@
             android:paddingEnd="16dp"
             android:layout_marginEnd="8dp"
             android:paddingBottom="8dp"
-            android:text="Notifications"
+            android:text="Images"
             android:textColor="@color/helios_text_primary"
             android:textSize="14sp" />
 
@@ -97,7 +97,8 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_events"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:paddingStart="0dp"
         android:paddingEnd="0dp"
         android:clipToPadding="false"
@@ -107,10 +108,31 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_users"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:paddingStart="0dp"
         android:paddingEnd="0dp"
         android:clipToPadding="false"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_images"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp"
+        android:clipToPadding="false"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tv_no_images"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No images uploaded yet."
+        android:textAlignment="center"
+        android:textColor="@color/helios_text_primary"
+        android:padding="24dp"
         android:visibility="gone" />
 
 </LinearLayout>
