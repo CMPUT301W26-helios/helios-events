@@ -172,17 +172,24 @@ public class AdminFragment extends Fragment {
         rvEvents.setVisibility(tab == Tab.EVENTS ? View.VISIBLE : View.GONE);
         rvUsers.setVisibility(tab == Tab.USERS  ? View.VISIBLE : View.GONE);
         rvImages.setVisibility(tab == Tab.IMAGES ? View.VISIBLE : View.GONE);
+
         if (tvNoImages != null) {
-            tvNoImages.setVisibility(View.GONE); // updated after load
+            if (tab == Tab.IMAGES && displayedImages.isEmpty()) {
+                tvNoImages.setVisibility(View.VISIBLE);
+            } else {
+                tvNoImages.setVisibility(View.GONE);
+            }
         }
 
         if (btnTabEvents != null) btnTabEvents.setAlpha(tab == Tab.EVENTS ? 0.5f : 1f);
         if (btnTabUsers  != null) btnTabUsers.setAlpha(tab  == Tab.USERS  ? 0.5f : 1f);
         if (btnTabImages != null) btnTabImages.setAlpha(tab == Tab.IMAGES ? 0.5f : 1f);
 
-        loadEvents();
-        loadUsers();
-        loadImages();
+        switch (tab) {
+            case EVENTS: loadEvents(); break;
+            case USERS:  loadUsers();  break;
+            case IMAGES: loadImages(); break;
+        }
     }
 
     //Data loading

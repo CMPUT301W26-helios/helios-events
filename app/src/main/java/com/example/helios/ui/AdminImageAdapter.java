@@ -75,11 +75,6 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Vi
         String title = event.getTitle();
         holder.tvLabel.setText(title != null && !title.trim().isEmpty() ? title : "Untitled Event");
 
-        // Event start date
-        long startMillis = event.getStartTimeMillis();
-        holder.tvDate.setText(startMillis > 0
-                ? dateFormat.format(new Date(startMillis))
-                : "Date unknown");
 
         holder.btnDelete.setOnClickListener(v -> onDelete.onImageDelete(event));
     }
@@ -92,14 +87,12 @@ public class AdminImageAdapter extends RecyclerView.Adapter<AdminImageAdapter.Vi
     static class ViewHolder extends RecyclerView.ViewHolder {
         final ImageView ivPreview;
         final TextView tvLabel;
-        final TextView tvDate;
         final Button btnDelete;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             ivPreview = itemView.findViewById(R.id.iv_image_preview);
             tvLabel   = itemView.findViewById(R.id.tv_image_label);
-            tvDate    = itemView.findViewById(R.id.tv_image_date);
             btnDelete = itemView.findViewById(R.id.btn_delete_image);
         }
     }
