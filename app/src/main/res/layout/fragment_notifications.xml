@@ -1,34 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@color/helios_background">
 
-    <LinearLayout
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="8dp"
+        android:fontFamily="sans-serif-black"
+        android:text="Notifications"
+        android:textSize="42sp"
+        android:textColor="@color/helios_text_primary" />
+
+    <TextView
+        android:id="@+id/tv_no_notifications"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="No notifications yet."
+        android:textColor="#999999"
+        android:textSize="15sp"
+        android:visibility="gone" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Notifications"
-            android:textStyle="bold"
-            android:textSize="24sp"
-            android:textColor="@color/helios_text_primary" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_notifications"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="8dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="Placeholder screen. Notifications will appear here."
-            android:textColor="@color/helios_text_primary" />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="NOTE: Use NotificationAudience + NotificationRecord from model to implement, we can still change behaviours but this makes it easy to implement admin auditing later."
-            android:textColor="@color/helios_text_primary" />
-    </LinearLayout>
-</ScrollView>
+</LinearLayout>

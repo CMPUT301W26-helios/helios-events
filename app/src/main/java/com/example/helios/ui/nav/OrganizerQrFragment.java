@@ -54,6 +54,8 @@ public class OrganizerQrFragment extends Fragment {
     private long registrationClosesMillis;
     @Nullable private String posterUri;
     @Nullable private String tagsRaw;
+    private boolean isPrivateEvent = false;
+
 
     // Field so saveEvent() can update the QR image after save
     private ImageView qrImage;
@@ -90,6 +92,7 @@ public class OrganizerQrFragment extends Fragment {
             registrationOpensMillis = args.getLong("arg_registration_opens_millis", 0L);
             registrationClosesMillis = args.getLong("arg_registration_closes_millis", 0L);
             posterUri = args.getString("arg_poster_uri", null);
+            isPrivateEvent = args.getBoolean("arg_private_event", false);
         } else {
             mode = Mode.CREATE;
             title = "";
@@ -251,12 +254,14 @@ public class OrganizerQrFragment extends Fragment {
                     uid, posterUri,
                     null, // qrCodeValue set after save
                     interests,
+                    false,
                     false
             );
 
             eventService.saveEvent(event, unused -> {
                 // eventId is now assigned — set it as the QR value and save again
                 event.setQrCodeValue(event.getEventId());
+                event.setPrivateEvent(isPrivateEvent);
                 eventService.saveEvent(event, unused2 -> {
                     if (!isAdded()) return;
                     // Generate and show the real QR with the eventId

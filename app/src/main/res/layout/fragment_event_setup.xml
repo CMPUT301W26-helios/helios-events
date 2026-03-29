@@ -235,7 +235,44 @@
                     android:text="Off"
                     android:textColor="@color/helios_text_primary" />
             </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Private Event (hidden from listings):"
+                android:textColor="@color/helios_text_primary"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_filter_chip"
+                android:orientation="horizontal"
+                android:padding="4dp">
+
+                <TextView
+                    android:id="@+id/tv_private_on"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_toggle_left_inactive"
+                    android:gravity="center"
+                    android:text="Private"
+                    android:textColor="@color/helios_text_primary" />
+
+                <TextView
+                    android:id="@+id/tv_private_off"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_toggle_right_active"
+                    android:gravity="center"
+                    android:text="Public"
+                    android:textColor="@color/helios_text_primary" />
+
+            </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

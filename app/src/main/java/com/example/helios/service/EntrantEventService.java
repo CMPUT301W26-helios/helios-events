@@ -57,6 +57,16 @@ public class EntrantEventService {
                 onFailure
         );
     }
+    public void updateEntry(
+            @NonNull Context context,
+            @NonNull String eventId,
+            @NonNull WaitingListEntry entry,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.upsertWaitingListEntry(
+                eventId, entry.getEntrantUid(), entry, onSuccess, onFailure);
+    }
 
     /**
      * Sets the current user's status to CANCELLED for a specific event's waiting list.
