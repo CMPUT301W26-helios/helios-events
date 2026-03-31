@@ -15,8 +15,10 @@ import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.model.UserProfile;
 import com.example.helios.service.EventService;
+import com.example.helios.service.ImageService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.ui.AdminEventAdapter;
+import com.example.helios.ui.AdminImageAdapter;
 import com.example.helios.ui.UserAdapter;
 
 import java.util.ArrayList;
@@ -25,8 +27,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Fragment for administrative tasks, such as managing all events and users.
- * Provides a tabbed interface to switch between event and user management.
+ * Fragment for administrative tasks: managing all events, users, and uploaded images.
+ * Provides a tabbed interface to switch between Events, Users, and Images.
  */
 public class AdminFragment extends Fragment {
 
@@ -50,9 +52,18 @@ public class AdminFragment extends Fragment {
      */
     private final Set<String> organizerUids = new HashSet<>();
 
+    // Images
+    private RecyclerView rvImages;
+    private AdminImageAdapter imageAdapter;
+    private final ImageService imageService = new ImageService();
+    private final List<Event> allImages = new ArrayList<>();
+    private final List<Event> displayedImages = new ArrayList<>();
+    private TextView tvNoImages;
+
     // Tabs
     private TextView btnTabEvents;
     private TextView btnTabUsers;
+    private TextView btnTabImages;
 
     /**
      * Default constructor for AdminFragment.
@@ -67,12 +78,12 @@ public class AdminFragment extends Fragment {
 
         btnTabEvents = view.findViewById(R.id.btn_tab_events);
         btnTabUsers  = view.findViewById(R.id.btn_tab_users);
+        btnTabImages = view.findViewById(R.id.btn_tab_images);
 
         // Events RV
         rvEvents = view.findViewById(R.id.rv_events);
         eventAdapter = new AdminEventAdapter(
                 displayedEvents,
-                // Delete button
                 event -> {
                     String eventId = event.getEventId();
                     if (eventId == null || eventId.trim().isEmpty()) {
@@ -86,18 +97,16 @@ public class AdminFragment extends Fragment {
                             .setNegativeButton("Cancel", null)
                             .show();
                 },
-                // View Organizer button
                 event -> showOrganizerInfo(event)
         );
         rvEvents.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvEvents.setAdapter(eventAdapter);
 
-        // Users RV : adapter is created once; organizerUids is populated after events load.
+        // Users RV
         rvUsers = view.findViewById(R.id.rv_users);
         userAdapter = new UserAdapter(
                 displayedUsers,
                 organizerUids,
-                // Delete button
                 user -> {
                     String currentUid = new com.example.helios.auth.AuthDeviceService().getCurrentUid();
                     if (user.getUid() != null && user.getUid().equals(currentUid)) {
@@ -111,18 +120,38 @@ public class AdminFragment extends Fragment {
                             .setNegativeButton("Cancel", null)
                             .show();
                 },
-                // View Events button
                 user -> showUserEvents(user)
         );
         rvUsers.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvUsers.setAdapter(userAdapter);
 
-        btnTabEvents.setOnClickListener(v -> showTab(true));
-        btnTabUsers.setOnClickListener(v -> showTab(false));
+        // Images RV
+        rvImages   = view.findViewById(R.id.rv_images);
+        tvNoImages = view.findViewById(R.id.tv_no_images);
 
-        showTab(true);
+        imageAdapter = new AdminImageAdapter(displayedImages, event -> {
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Delete Image")
+                    .setMessage("Permanently remove the poster from \""
+                            + nonEmptyOr(event.getTitle(), "this event") + "\"? This cannot be undone.")
+                    .setPositiveButton("Delete", (dialog, which) -> deleteImage(event))
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
+        rvImages.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvImages.setAdapter(imageAdapter);
+
+        // tab wiring
+        btnTabEvents.setOnClickListener(v -> showTab(Tab.EVENTS));
+        btnTabUsers.setOnClickListener(v -> showTab(Tab.USERS));
+        if (btnTabImages != null) {
+            btnTabImages.setOnClickListener(v -> showTab(Tab.IMAGES));
+        }
+
+        showTab(Tab.EVENTS);
         loadEvents();
         loadUsers();
+        loadImages();
     }
 
     @Override
@@ -130,135 +159,42 @@ public class AdminFragment extends Fragment {
         super.onResume();
         loadEvents();
         loadUsers();
-    }
-
-    // showOrganizerInfo and showUserEvents are from Anthropic, Claude, 2026-03-14
-    // Prompted to implement functionality for the "view organizer" / "view events"
-    // buttons in admin_item_event.xml and admin_item_user.xml, respectively
-
-    // ORGANIZER INFO
-
-    /**
-     * Fetches the organizer profile for the given event and displays their details in a dialog.
-     *
-     * @param event The event whose organizer should be displayed.
-     */
-    private void showOrganizerInfo(@NonNull Event event) {
-        String organizerUid = event.getOrganizerUid();
-        if (organizerUid == null || organizerUid.trim().isEmpty()) {
-            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle("Organizer Info")
-                    .setMessage("This event has no organizer on record.")
-                    .setPositiveButton("OK", null)
-                    .show();
-            return;
-        }
-
-        profileService.getUserProfile(organizerUid,
-                profile -> {
-                    if (!isAdded()) return;
-
-                    String name  = profile != null && profile.getName()  != null ? profile.getName()  : "(not set)";
-                    String email = profile != null && profile.getEmail() != null ? profile.getEmail() : "(not set)";
-                    String role  = profile != null && profile.getRole()  != null ? profile.getRole()  : "user";
-
-                    String message = "Name:   " + name
-                            + "\nEmail:  " + email
-                            + "\nRole:   " + role;
-
-                    new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                            .setTitle("Organizer — " + nonEmptyOr(event.getTitle(), "Untitled Event"))
-                            .setMessage(message)
-                            .setPositiveButton("OK", null)
-                            .show();
-                },
-                error -> {
-                    if (!isAdded()) return;
-                    Toast.makeText(requireContext(),
-                            "Failed to load organizer: " + error.getMessage(),
-                            Toast.LENGTH_LONG).show();
-                });
-    }
-
-    // USER EVENTS
-
-    /**
-     * Shows a dialog listing all events created by the given user.
-     * If the user has no events, an appropriate message is shown instead.
-     *
-     * @param user The user whose events should be displayed.
-     */
-    private void showUserEvents(@NonNull UserProfile user) {
-        String uid = user.getUid();
-        if (uid == null || uid.trim().isEmpty()) {
-            Toast.makeText(requireContext(), "User is missing a UID.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        List<Event> userEvents = new ArrayList<>();
-        for (Event event : allEvents) {
-            if (uid.equals(event.getOrganizerUid())) {
-                userEvents.add(event);
-            }
-        }
-
-        String displayName = user.getName() != null ? user.getName() : "(no name)";
-
-        if (userEvents.isEmpty()) {
-            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle("Events by " + displayName)
-                    .setMessage("This user has not created any events.")
-                    .setPositiveButton("OK", null)
-                    .show();
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < userEvents.size(); i++) {
-            Event e = userEvents.get(i);
-            sb.append(i + 1).append(". ")
-                    .append(nonEmptyOr(e.getTitle(), "Untitled Event"));
-            if (e.getLocationName() != null && !e.getLocationName().trim().isEmpty()) {
-                sb.append("\n").append(e.getLocationName());
-            }
-            if (i < userEvents.size() - 1) {
-                sb.append("\n");
-            }
-        }
-
-        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                .setTitle("Events by " + displayName + " (" + userEvents.size() + ")")
-                .setMessage(sb.toString())
-                .setPositiveButton("OK", null)
-                .show();
+        loadImages();
     }
 
     // Tab switching
+    private enum Tab { EVENTS, USERS, IMAGES }
 
     /**
-     * Switches between the Events tab and the Users tab, and refreshes both
-     * data sets so changes on one tab are immediately visible on the other.
-     *
-     * @param showEvents True to show the events list, false to show the users list.
+     * Switches to the specified tab and refreshes all data sets.
      */
-    private void showTab(boolean showEvents) {
-        rvEvents.setVisibility(showEvents ? View.VISIBLE : View.GONE);
-        rvUsers.setVisibility(showEvents ? View.GONE : View.VISIBLE);
-        btnTabEvents.setAlpha(showEvents ? 0.5f : 1f);
-        btnTabUsers.setAlpha(showEvents ? 1f : .5f);
+    private void showTab(@NonNull Tab tab) {
+        rvEvents.setVisibility(tab == Tab.EVENTS ? View.VISIBLE : View.GONE);
+        rvUsers.setVisibility(tab == Tab.USERS  ? View.VISIBLE : View.GONE);
+        rvImages.setVisibility(tab == Tab.IMAGES ? View.VISIBLE : View.GONE);
 
-        // Refresh data every time the tab is switched so deletions and other
-        // changes made on one tab are immediately reflected on the other.
-        loadEvents();
-        loadUsers();
+        if (tvNoImages != null) {
+            if (tab == Tab.IMAGES && displayedImages.isEmpty()) {
+                tvNoImages.setVisibility(View.VISIBLE);
+            } else {
+                tvNoImages.setVisibility(View.GONE);
+            }
+        }
+
+        if (btnTabEvents != null) btnTabEvents.setAlpha(tab == Tab.EVENTS ? 0.5f : 1f);
+        if (btnTabUsers  != null) btnTabUsers.setAlpha(tab  == Tab.USERS  ? 0.5f : 1f);
+        if (btnTabImages != null) btnTabImages.setAlpha(tab == Tab.IMAGES ? 0.5f : 1f);
+
+        switch (tab) {
+            case EVENTS: loadEvents(); break;
+            case USERS:  loadUsers();  break;
+            case IMAGES: loadImages(); break;
+        }
     }
 
-    // Data loading
-
+    //Data loading
     /**
-     * Loads all events from the {@link EventService}.
-     * Also rebuilds the organizerUids set and refreshes the user adapter so role
-     * labels stay in sync whenever events are reloaded.
+     * Loads all events. Also rebuilds organizerUids and refreshes user cards.
      */
     private void loadEvents() {
         eventService.getAllEvents(events -> {
@@ -270,7 +206,6 @@ public class AdminFragment extends Fragment {
             displayedEvents.addAll(allEvents);
             eventAdapter.notifyDataSetChanged();
 
-            // Rebuild the organizer set and refresh user cards.
             organizerUids.clear();
             for (Event e : allEvents) {
                 if (e.getOrganizerUid() != null && !e.getOrganizerUid().trim().isEmpty()) {
@@ -287,9 +222,7 @@ public class AdminFragment extends Fragment {
         });
     }
 
-    /**
-     * Loads all user profiles from the {@link ProfileService}.
-     */
+    /** Loads all user profiles. */
     private void loadUsers() {
         profileService.getAllProfiles(users -> {
             if (!isAdded()) return;
@@ -306,12 +239,28 @@ public class AdminFragment extends Fragment {
         });
     }
 
-    /**
-     * Deletes a specific event.
-     *
-     * @param event The event object to delete.
-     */
-    private void deleteEvent(Event event) {
+    /** Loads all events that have an uploaded poster image. */
+    private void loadImages() {
+        imageService.getAllImages(events -> {
+            if (!isAdded()) return;
+            allImages.clear();
+            allImages.addAll(events);
+            displayedImages.clear();
+            displayedImages.addAll(allImages);
+            imageAdapter.notifyDataSetChanged();
+            if (tvNoImages != null) {
+                tvNoImages.setVisibility(displayedImages.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+        }, error -> {
+            if (!isAdded()) return;
+            Toast.makeText(requireContext(),
+                    "Failed to load images: " + error.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    //Deletion
+    private void deleteEvent(@NonNull Event event) {
         eventService.deleteEvent(event.getEventId(),
                 unused -> {
                     if (!isAdded()) return;
@@ -319,7 +268,6 @@ public class AdminFragment extends Fragment {
                     displayedEvents.remove(event);
                     eventAdapter.notifyDataSetChanged();
 
-                    // Keep organizerUids accurate after deletion.
                     organizerUids.clear();
                     for (Event e : allEvents) {
                         if (e.getOrganizerUid() != null && !e.getOrganizerUid().trim().isEmpty()) {
@@ -338,19 +286,13 @@ public class AdminFragment extends Fragment {
                 });
     }
 
-    /**
-     * Deletes a specific user profile (and their events, via ProfileService).
-     *
-     * @param user The user profile object to delete.
-     */
-    private void deleteUser(UserProfile user) {
+    private void deleteUser(@NonNull UserProfile user) {
         profileService.deleteProfile(user.getUid(),
                 unused -> {
                     if (!isAdded()) return;
                     allUsers.remove(user);
                     displayedUsers.remove(user);
 
-                    // Remove their events from local lists too.
                     String uid = user.getUid();
                     allEvents.removeIf(e -> uid.equals(e.getOrganizerUid()));
                     displayedEvents.removeIf(e -> uid.equals(e.getOrganizerUid()));
@@ -369,6 +311,103 @@ public class AdminFragment extends Fragment {
                 });
     }
 
+    /**
+     * Removes the poster URI from an event and updates the local list.
+     */
+    private void deleteImage(@NonNull Event event) {
+        imageService.deleteImage(event,
+                unused -> {
+                    if (!isAdded()) return;
+                    allImages.remove(event);
+                    displayedImages.remove(event);
+                    imageAdapter.notifyDataSetChanged();
+                    if (tvNoImages != null) {
+                        tvNoImages.setVisibility(displayedImages.isEmpty() ? View.VISIBLE : View.GONE);
+                    }
+                    Toast.makeText(requireContext(), "Image deleted.", Toast.LENGTH_SHORT).show();
+                },
+                error -> {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(),
+                            "Delete failed: " + error.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
+    }
+
+    // dialogs
+    private void showOrganizerInfo(@NonNull Event event) {
+        String organizerUid = event.getOrganizerUid();
+        if (organizerUid == null || organizerUid.trim().isEmpty()) {
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Organizer Info")
+                    .setMessage("This event has no organizer on record.")
+                    .setPositiveButton("OK", null)
+                    .show();
+            return;
+        }
+
+        profileService.getUserProfile(organizerUid,
+                profile -> {
+                    if (!isAdded()) return;
+                    String name  = profile != null && profile.getName()  != null ? profile.getName()  : "(not set)";
+                    String email = profile != null && profile.getEmail() != null ? profile.getEmail() : "(not set)";
+                    String role  = profile != null && profile.getRole()  != null ? profile.getRole()  : "user";
+
+                    new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                            .setTitle("Organizer — " + nonEmptyOr(event.getTitle(), "Untitled Event"))
+                            .setMessage("Name:   " + name + "\nEmail:  " + email + "\nRole:   " + role)
+                            .setPositiveButton("OK", null)
+                            .show();
+                },
+                error -> {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(),
+                            "Failed to load organizer: " + error.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
+    }
+
+    private void showUserEvents(@NonNull UserProfile user) {
+        String uid = user.getUid();
+        if (uid == null || uid.trim().isEmpty()) {
+            Toast.makeText(requireContext(), "User is missing a UID.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        List<Event> userEvents = new ArrayList<>();
+        for (Event event : allEvents) {
+            if (uid.equals(event.getOrganizerUid())) userEvents.add(event);
+        }
+
+        String displayName = user.getName() != null ? user.getName() : "(no name)";
+
+        if (userEvents.isEmpty()) {
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("Events by " + displayName)
+                    .setMessage("This user has not created any events.")
+                    .setPositiveButton("OK", null)
+                    .show();
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < userEvents.size(); i++) {
+            Event e = userEvents.get(i);
+            sb.append(i + 1).append(". ").append(nonEmptyOr(e.getTitle(), "Untitled Event"));
+            if (e.getLocationName() != null && !e.getLocationName().trim().isEmpty()) {
+                sb.append("\n").append(e.getLocationName());
+            }
+            if (i < userEvents.size() - 1) sb.append("\n");
+        }
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Events by " + displayName + " (" + userEvents.size() + ")")
+                .setMessage(sb.toString())
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    // helpers
     private String nonEmptyOr(String value, String fallback) {
         if (value == null) return fallback;
         String trimmed = value.trim();

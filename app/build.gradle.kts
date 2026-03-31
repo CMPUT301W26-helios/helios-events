@@ -57,7 +57,7 @@ dependencies {
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
-
+    implementation("com.google.firebase:firebase-storage:20.3.0")
     implementation(libs.barcode.scanning)
 
     implementation("com.google.zxing:core:3.5.3")
