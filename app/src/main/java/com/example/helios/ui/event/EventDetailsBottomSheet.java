@@ -19,6 +19,7 @@ import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.model.EventComment;
 import com.example.helios.model.UserProfile;
+import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
 import com.example.helios.service.CommentService;
 import com.example.helios.service.EntrantEventService;
