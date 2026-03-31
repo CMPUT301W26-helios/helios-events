@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/helios_background">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Notify Entrants"
+        android:textColor="@color/helios_text_primary"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/et_notification_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_helios_form_card"
+        android:hint="Notification title"
+        android:padding="12dp"
+        android:textColor="@color/helios_text_primary"
+        android:textColorHint="@color/helios_text_hint" />
+
+    <EditText
+        android:id="@+id/et_notification_body"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_helios_form_card"
+        android:gravity="top"
+        android:hint="Message"
+        android:inputType="textMultiLine|textCapSentences"
+        android:minLines="4"
+        android:padding="12dp"
+        android:textColor="@color/helios_text_primary"
+        android:textColorHint="@color/helios_text_hint" />
+
+    <RadioGroup
+        android:id="@+id/rg_notification_audience"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp">
+
+        <RadioButton
+            android:id="@+id/rb_audience_waiting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Waiting List Entrants"
+            android:textColor="@color/helios_text_primary" />
+
+        <RadioButton
+            android:id="@+id/rb_audience_selected"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Selected Entrants"
+            android:textColor="@color/helios_text_primary" />
+
+        <RadioButton
+            android:id="@+id/rb_audience_cancelled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancelled Entrants"
+            android:textColor="@color/helios_text_primary" />
+    </RadioGroup>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_send_notification"
+        style="@style/Widget.Helios.Button.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Send Notification" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_cancel_notification"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        android:textColor="@color/helios_text_primary" />
+
+</LinearLayout>

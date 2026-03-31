@@ -1,0 +1,147 @@
+package com.example.helios.ui.nav;
+
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.View;
+import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
+
+import com.example.helios.R;
+import com.example.helios.model.Event;
+import com.example.helios.model.NotificationAudience;
+import com.example.helios.service.EventService;
+import com.example.helios.service.ProfileService;
+import com.example.helios.service.SendEntrantNotificationsUseCase;
+import com.google.android.material.button.MaterialButton;
+
+public class NotifyEntrantsFragment extends Fragment {
+    private final EventService eventService = new EventService();
+    private final ProfileService profileService = new ProfileService();
+    private final SendEntrantNotificationsUseCase sendEntrantNotificationsUseCase = new SendEntrantNotificationsUseCase();
+
+    @Nullable
+    private String eventId;
+    @Nullable
+    private Event loadedEvent;
+
+    public NotifyEntrantsFragment() {
+        super(R.layout.fragment_notify_entrants);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Bundle args = getArguments();
+        if (args != null) {
+            eventId = args.getString("arg_event_id");
+        }
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        if (eventId == null || eventId.trim().isEmpty()) {
+            toast("Missing event id.");
+            NavHostFragment.findNavController(this).navigateUp();
+            return;
+        }
+
+        EditText titleInput = view.findViewById(R.id.et_notification_title);
+        EditText bodyInput = view.findViewById(R.id.et_notification_body);
+        RadioButton rbWaiting = view.findViewById(R.id.rb_audience_waiting);
+        RadioButton rbSelected = view.findViewById(R.id.rb_audience_selected);
+        RadioButton rbCancelled = view.findViewById(R.id.rb_audience_cancelled);
+        MaterialButton sendButton = view.findViewById(R.id.btn_send_notification);
+        MaterialButton cancelButton = view.findViewById(R.id.btn_cancel_notification);
+
+        cancelButton.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
+        sendButton.setOnClickListener(v -> {
+            String title = titleInput.getText() == null ? "" : titleInput.getText().toString().trim();
+            String body = bodyInput.getText() == null ? "" : bodyInput.getText().toString().trim();
+            if (TextUtils.isEmpty(title) || TextUtils.isEmpty(body)) {
+                toast("Title and message are required.");
+                return;
+            }
+
+            NotificationAudience audience;
+            if (rbWaiting.isChecked()) {
+                audience = NotificationAudience.WAITING;
+            } else if (rbSelected.isChecked()) {
+                audience = NotificationAudience.SELECTED;
+            } else if (rbCancelled.isChecked()) {
+                audience = NotificationAudience.CANCELLED;
+            } else {
+                toast("Choose an audience.");
+                return;
+            }
+
+            sendButton.setEnabled(false);
+            sendNotifications(audience, title, body, sendButton);
+        });
+
+        loadEventAndAuthorize();
+    }
+
+    private void loadEventAndAuthorize() {
+        profileService.ensureSignedIn(firebaseUser -> eventService.getEventById(eventId, event -> {
+            if (!isAdded()) return;
+            if (event == null) {
+                toast("Event not found.");
+                NavHostFragment.findNavController(this).navigateUp();
+                return;
+            }
+            loadedEvent = event;
+            if (!firebaseUser.getUid().equals(event.getOrganizerUid())) {
+                toast("Only the organizer can send entrant notifications.");
+                NavHostFragment.findNavController(this).navigateUp();
+            }
+        }, e -> toast("Failed to load event: " + e.getMessage())), e -> toast("Auth failed: " + e.getMessage()));
+    }
+
+    private void sendNotifications(
+            @NonNull NotificationAudience audience,
+            @NonNull String title,
+            @NonNull String message,
+            @NonNull MaterialButton sendButton
+    ) {
+        if (loadedEvent == null) {
+            sendButton.setEnabled(true);
+            toast("Event not loaded.");
+            return;
+        }
+
+        profileService.ensureSignedIn(firebaseUser -> sendEntrantNotificationsUseCase.execute(
+                firebaseUser.getUid(),
+                eventId,
+                audience,
+                title,
+                message,
+                result -> {
+                    if (!isAdded()) return;
+                    sendButton.setEnabled(true);
+                    toast("Sent " + result.getRecipientCount() + " notifications.");
+                },
+                e -> {
+                    if (!isAdded()) return;
+                    sendButton.setEnabled(true);
+                    toast("Send failed: " + e.getMessage());
+                }
+        ), e -> {
+            if (!isAdded()) return;
+            sendButton.setEnabled(true);
+            toast("Auth failed: " + e.getMessage());
+        });
+    }
+
+    private void toast(@NonNull String msg) {
+        if (!isAdded()) return;
+        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+    }
+}

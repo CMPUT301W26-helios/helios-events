@@ -4,6 +4,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -19,6 +20,7 @@ import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.model.EventComment;
 import com.example.helios.model.UserProfile;
+import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
 import com.example.helios.service.CommentService;
 import com.example.helios.service.EntrantEventService;
@@ -82,6 +84,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private RecyclerView rvComments;
     private EditText etCommentBody;
     private MaterialButton btnPostComment;
+    private CheckBox cbPinComment;
     private TextView tvReplyingTo;
 
     private String eventId;
@@ -140,6 +143,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         rvComments = view.findViewById(R.id.rv_event_comments);
         etCommentBody = view.findViewById(R.id.input_comment_body);
         btnPostComment = view.findViewById(R.id.button_post_comment);
+        cbPinComment = view.findViewById(R.id.cb_pin_comment);
         tvReplyingTo = view.findViewById(R.id.text_replying_to);
 
         View close = view.findViewById(R.id.button_close);
@@ -192,6 +196,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
             loadedEvent = event;
             bindEvent(event);
+            if (commentsAdapter != null) {
+                commentsAdapter.setOrganizerUid(event.getOrganizerUid());
+            }
 
             if (!hideJoinButton) {
                 refreshWaitingListState();
@@ -368,26 +375,50 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
         String commentText = etCommentBody.getText() == null ? null : etCommentBody.getText().toString();
         String parentId = replyingToComment != null ? replyingToComment.getCommentId() : null;
+        boolean pin = cbPinComment != null
+                && cbPinComment.getVisibility() == View.VISIBLE
+                && cbPinComment.isChecked()
+                && parentId == null;
 
         btnPostComment.setEnabled(false);
 
-        commentService.postComment(
-                requireContext(),
-                eventId,
-                commentText,
-                parentId,
-                createdComment -> {
-                    if (!isAdded()) return;
-                    etCommentBody.setText("");
-                    clearReplyTarget();
-                    btnPostComment.setEnabled(true);
-                },
-                error -> {
-                    if (!isAdded()) return;
-                    btnPostComment.setEnabled(true);
-                    toast("Post failed: " + error.getMessage());
-                }
-        );
+        if (pin) {
+            commentService.postPinnedOrganizerComment(
+                    requireContext(),
+                    eventId,
+                    commentText,
+                    created -> {
+                        if (!isAdded()) return;
+                        if (cbPinComment != null) cbPinComment.setChecked(false);
+                        etCommentBody.setText("");
+                        clearReplyTarget();
+                        btnPostComment.setEnabled(true);
+                    },
+                    error -> {
+                        if (!isAdded()) return;
+                        btnPostComment.setEnabled(true);
+                        toast("Post failed: " + error.getMessage());
+                    }
+            );
+        } else {
+            commentService.postComment(
+                    requireContext(),
+                    eventId,
+                    commentText,
+                    parentId,
+                    createdComment -> {
+                        if (!isAdded()) return;
+                        etCommentBody.setText("");
+                        clearReplyTarget();
+                        btnPostComment.setEnabled(true);
+                    },
+                    error -> {
+                        if (!isAdded()) return;
+                        btnPostComment.setEnabled(true);
+                        toast("Post failed: " + error.getMessage());
+                    }
+            );
+        }
     }
 
     private void onReplyPressed(@NonNull EventComment comment) {
@@ -397,6 +428,10 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         }
 
         replyingToComment = comment;
+        if (cbPinComment != null) {
+            cbPinComment.setVisibility(View.GONE);
+            cbPinComment.setChecked(false);
+        }
         if (tvReplyingTo != null) {
             String label = nonEmptyOr(comment.getAuthorNameSnapshot(), "Anonymous");
             tvReplyingTo.setText("Replying to " + label + " - Tap to cancel");
@@ -421,6 +456,14 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
         if (etCommentBody != null) {
             etCommentBody.setHint("Add a comment...");
+        }
+
+        if (cbPinComment != null) {
+            boolean canPin = loadedEvent != null
+                    && currentUserUid != null
+                    && currentUserUid.equals(loadedEvent.getOrganizerUid());
+            cbPinComment.setVisibility(canPin ? View.VISIBLE : View.GONE);
+            cbPinComment.setEnabled(canPin);
         }
     }
 

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/helios_background">
+
+    <TextView
+        android:id="@+id/tv_user_picker_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Invite Entrants"
+        android:textColor="@color/helios_text_primary"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_user_picker_subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Search by name, email, or phone."
+        android:textColor="@color/helios_text_hint"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/et_user_picker_search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_helios_form_card"
+        android:hint="Search entrants..."
+        android:padding="12dp"
+        android:textColor="@color/helios_text_primary"
+        android:textColorHint="@color/helios_text_hint" />
+
+    <TextView
+        android:id="@+id/tv_user_picker_empty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:text="No matching users found."
+        android:textColor="@color/helios_text_hint"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_user_picker_users"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_user_picker_done"
+        style="@style/Widget.Helios.Button.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Done" />
+
+</LinearLayout>

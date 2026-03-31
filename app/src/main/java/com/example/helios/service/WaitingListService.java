@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.example.helios.data.FirebaseRepository;
 import com.example.helios.model.WaitingListEntry;
+import com.example.helios.model.WaitingListStatus;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
@@ -87,5 +88,32 @@ public class WaitingListService {
             @NonNull OnFailureListener onFailure
     ) {
         repository.deleteWaitingListEntry(eventId, entrantUid, onSuccess, onFailure);
+    }
+
+    public void inviteEntrantToWaitingList(
+            @NonNull String eventId,
+            @NonNull String entrantUid,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.getWaitingListEntry(eventId, entrantUid, existing -> {
+            if (existing != null
+                    && existing.getStatus() != null
+                    && existing.getStatus() != WaitingListStatus.CANCELLED
+                    && existing.getStatus() != WaitingListStatus.NOT_SELECTED
+                    && existing.getStatus() != WaitingListStatus.DECLINED) {
+                onFailure.onFailure(new IllegalStateException("User is already on this waiting list."));
+                return;
+            }
+
+            WaitingListEntry entry = existing != null ? existing : new WaitingListEntry();
+            entry.setEventId(eventId);
+            entry.setEntrantUid(entrantUid);
+            entry.setStatus(WaitingListStatus.WAITING);
+            if (entry.getJoinedAtMillis() <= 0) {
+                entry.setJoinedAtMillis(System.currentTimeMillis());
+            }
+            repository.upsertWaitingListEntry(eventId, entrantUid, entry, onSuccess, onFailure);
+        }, onFailure);
     }
 }

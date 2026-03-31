@@ -195,6 +195,13 @@ public class OrganizerQrFragment extends Fragment {
 
             eventService.getEventById(eventIdForView, event -> {
                 if (!isAdded() || event == null) return;
+                if (event.isPrivateEvent()) {
+                    Toast.makeText(requireContext(),
+                            "Private events do not generate promotional QR codes.",
+                            Toast.LENGTH_SHORT).show();
+                    NavHostFragment.findNavController(this).navigateUp();
+                    return;
+                }
                 String qrValue = event.getQrCodeValue();
                 if (qrValue == null || qrValue.trim().isEmpty()) {
                     Toast.makeText(requireContext(),
@@ -255,7 +262,7 @@ public class OrganizerQrFragment extends Fragment {
                     null, // qrCodeValue set after save
                     interests,
                     false,
-                    false
+                    isPrivateEvent
             );
 
             eventService.saveEvent(event, unused -> {

@@ -9,6 +9,8 @@ package com.example.helios.model;
 public enum NotificationAudience {
     /** Notification addressed to a single specific recipient. */
     WAITING,
+    /** Notification addressed to entrants selected/invited for the event. */
+    SELECTED,
     AUDIENCE,
     /** The entrant has been selected and invited to the event. */
     INVITED,

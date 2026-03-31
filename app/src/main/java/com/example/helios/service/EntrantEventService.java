@@ -5,6 +5,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.example.helios.data.FirebaseRepository;
+import com.example.helios.model.Event;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -146,23 +147,34 @@ public class EntrantEventService {
         String uid = firebaseUser.getUid();
         long now = System.currentTimeMillis();
 
-        repository.getWaitingListEntry(eventId, uid, existing -> {
-            if (existing != null
-                    && existing.getStatus() != null
-                    && existing.getStatus() != WaitingListStatus.CANCELLED
-                    && existing.getStatus() != WaitingListStatus.NOT_SELECTED
-                    && existing.getStatus() != WaitingListStatus.DECLINED) {
-                onSuccess.onSuccess(null);
+        repository.getEventById(eventId, event -> {
+            if (event == null) {
+                onFailure.onFailure(new IllegalArgumentException("Event not found."));
+                return;
+            }
+            if (uid.equals(event.getOrganizerUid()) || event.isCoOrganizer(uid)) {
+                onFailure.onFailure(new SecurityException("Organizers/co-organizers cannot join the entrant pool for this event."));
                 return;
             }
 
-            WaitingListEntry entry = new WaitingListEntry();
-            entry.setEventId(eventId);
-            entry.setEntrantUid(uid);
-            entry.setStatus(WaitingListStatus.WAITING);
-            entry.setJoinedAtMillis(now);
+            repository.getWaitingListEntry(eventId, uid, existing -> {
+                if (existing != null
+                        && existing.getStatus() != null
+                        && existing.getStatus() != WaitingListStatus.CANCELLED
+                        && existing.getStatus() != WaitingListStatus.NOT_SELECTED
+                        && existing.getStatus() != WaitingListStatus.DECLINED) {
+                    onSuccess.onSuccess(null);
+                    return;
+                }
 
-            repository.upsertWaitingListEntry(eventId, uid, entry, onSuccess, onFailure);
+                WaitingListEntry entry = new WaitingListEntry();
+                entry.setEventId(eventId);
+                entry.setEntrantUid(uid);
+                entry.setStatus(WaitingListStatus.WAITING);
+                entry.setJoinedAtMillis(now);
+
+                repository.upsertWaitingListEntry(eventId, uid, entry, onSuccess, onFailure);
+            }, onFailure);
         }, onFailure);
     }
 

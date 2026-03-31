@@ -6,6 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.helios.data.FirebaseRepository;
+import com.example.helios.model.Event;
 import com.example.helios.model.EventComment;
 import com.example.helios.model.UserProfile;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -22,6 +23,7 @@ public class CommentService {
 
     private final FirebaseRepository repository = new FirebaseRepository();
     private final ProfileService profileService = new ProfileService();
+    private final EventService eventService = new EventService();
 
     @NonNull
     public ListenerRegistration subscribeTopLevelComments(
@@ -68,7 +70,7 @@ public class CommentService {
 
             String parentId = normalize(parentCommentId);
             if (parentId == null) {
-                createComment(eventId, uid, authorName, cleanedBody, null, onSuccess, onFailure);
+                createComment(eventId, uid, authorName, cleanedBody, null, false, onSuccess, onFailure);
                 return;
             }
 
@@ -85,7 +87,58 @@ public class CommentService {
                     onFailure.onFailure(new IllegalArgumentException("Cannot reply to deleted comment."));
                     return;
                 }
-                createComment(eventId, uid, authorName, cleanedBody, parentId, onSuccess, onFailure);
+                createComment(eventId, uid, authorName, cleanedBody, parentId, false, onSuccess, onFailure);
+            }, onFailure);
+        }, onFailure);
+    }
+
+    public void postPinnedOrganizerComment(
+            @NonNull Context context,
+            @NonNull String eventId,
+            @Nullable String body,
+            @NonNull OnSuccessListener<EventComment> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(eventId)) {
+            onFailure.onFailure(new IllegalArgumentException("eventId must not be empty."));
+            return;
+        }
+
+        String cleanedBody = cleanBody(body);
+        if (cleanedBody == null) {
+            onFailure.onFailure(new IllegalArgumentException("Comment text must be between 1 and 500 characters."));
+            return;
+        }
+
+        profileService.bootstrapCurrentUser(context, result -> {
+            UserProfile profile = result.getProfile();
+            String uid = profile.getUid();
+            String authorName = nonEmptyOr(profile.getDisplayNameOrFallback(), "Organizer");
+
+            eventService.getEventById(eventId, event -> {
+                if (event == null) {
+                    onFailure.onFailure(new IllegalArgumentException("Event not found."));
+                    return;
+                }
+                if (!uid.equals(event.getOrganizerUid())) {
+                    onFailure.onFailure(new SecurityException("Only the organizer can pin a comment."));
+                    return;
+                }
+
+                repository.getTopLevelCommentsOnce(eventId, comments -> {
+                    long now = System.currentTimeMillis();
+                    for (EventComment c : comments) {
+                        if (c == null) continue;
+                        if (!c.isTopLevel()) continue;
+                        if (!c.isPinned()) continue;
+                        if (!uid.equals(c.getAuthorUid())) continue;
+                        c.setPinned(false);
+                        c.setUpdatedAtMillis(now);
+                        repository.updateComment(eventId, c, unused -> {}, e -> {});
+                    }
+
+                    createComment(eventId, uid, authorName, cleanedBody, null, true, onSuccess, onFailure);
+                }, onFailure);
             }, onFailure);
         }, onFailure);
     }
@@ -130,17 +183,20 @@ public class CommentService {
             UserProfile profile = result.getProfile();
             String uid = profile.getUid();
 
-            boolean canDelete = uid.equals(comment.getAuthorUid()) || profile.isAdmin();
-            if (!canDelete) {
-                onFailure.onFailure(new SecurityException("You do not have permission to delete this comment."));
-                return;
-            }
+            eventService.getEventById(eventId, event -> {
+                boolean isOrganizer = event != null && uid.equals(event.getOrganizerUid());
+                boolean canDelete = uid.equals(comment.getAuthorUid()) || profile.isAdmin() || isOrganizer;
+                if (!canDelete) {
+                    onFailure.onFailure(new SecurityException("You do not have permission to delete this comment."));
+                    return;
+                }
 
-            if (comment.isTopLevel()) {
-                repository.deleteCommentWithReplies(eventId, commentId, onSuccess, onFailure);
-            } else {
-                repository.deleteSingleCommentWithLikes(eventId, commentId, onSuccess, onFailure);
-            }
+                if (comment.isTopLevel()) {
+                    repository.deleteCommentWithReplies(eventId, commentId, onSuccess, onFailure);
+                } else {
+                    repository.deleteSingleCommentWithLikes(eventId, commentId, onSuccess, onFailure);
+                }
+            }, onFailure);
         }, onFailure);
     }
 
@@ -184,6 +240,7 @@ public class CommentService {
             @NonNull String authorName,
             @NonNull String body,
             @Nullable String parentCommentId,
+            boolean pinned,
             @NonNull OnSuccessListener<EventComment> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
@@ -198,6 +255,7 @@ public class CommentService {
         comment.setUpdatedAtMillis(now);
         comment.setLikeCount(0);
         comment.setDeleted(false);
+        comment.setPinned(pinned);
 
         repository.addComment(eventId, comment, onSuccess, onFailure);
     }

@@ -40,6 +40,8 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
     @Nullable
     private String currentUserUid;
     private boolean currentUserAdmin = false;
+    @Nullable
+    private String organizerUid;
 
     public EventCommentsAdapter(@NonNull CommentActionListener actionListener) {
         this.actionListener = actionListener;
@@ -51,9 +53,22 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
         notifyDataSetChanged();
     }
 
+    public void setOrganizerUid(@Nullable String organizerUid) {
+        this.organizerUid = organizerUid;
+        notifyDataSetChanged();
+    }
+
     public void setTopLevelComments(@NonNull List<EventComment> comments) {
         topLevelComments.clear();
         topLevelComments.addAll(comments);
+        topLevelComments.sort((a, b) -> {
+            boolean ap = a != null && a.isPinned();
+            boolean bp = b != null && b.isPinned();
+            if (ap != bp) return ap ? -1 : 1;
+            long at = a != null ? a.getCreatedAtMillis() : 0L;
+            long bt = b != null ? b.getCreatedAtMillis() : 0L;
+            return Long.compare(bt, at);
+        });
         notifyDataSetChanged();
     }
 
@@ -115,7 +130,15 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
         if (comment == null) return false;
         if (currentUserAdmin) return true;
         if (!isNonEmpty(currentUserUid)) return false;
-        return currentUserUid.equals(comment.getAuthorUid());
+        if (currentUserUid.equals(comment.getAuthorUid())) return true;
+        return organizerUid != null && organizerUid.equals(currentUserUid);
+    }
+
+    private boolean isOrganizerAuthor(@Nullable EventComment comment) {
+        return comment != null
+                && organizerUid != null
+                && isNonEmpty(comment.getAuthorUid())
+                && organizerUid.equals(comment.getAuthorUid());
     }
 
     private boolean isLiked(@Nullable EventComment comment) {
@@ -144,6 +167,7 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
 
     class CommentViewHolder extends RecyclerView.ViewHolder {
         private final TextView tvAuthor;
+        private final TextView tvRole;
         private final TextView tvTime;
         private final TextView tvBody;
         private final TextView tvDelete;
@@ -157,6 +181,7 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
         CommentViewHolder(@NonNull View itemView, @NonNull RecyclerView.RecycledViewPool recycledViewPool) {
             super(itemView);
             tvAuthor = itemView.findViewById(R.id.text_comment_author);
+            tvRole = itemView.findViewById(R.id.text_comment_role);
             tvTime = itemView.findViewById(R.id.text_comment_time);
             tvBody = itemView.findViewById(R.id.text_comment_body);
             tvDelete = itemView.findViewById(R.id.button_comment_delete);
@@ -175,6 +200,13 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
 
         void bind(@NonNull EventComment comment) {
             tvAuthor.setText(nonEmptyOr(comment.getAuthorNameSnapshot(), "Anonymous"));
+            if (tvRole != null && isOrganizerAuthor(comment) && comment.isTopLevel()) {
+                tvRole.setVisibility(View.VISIBLE);
+                tvRole.setText("Organizer");
+            } else if (tvRole != null) {
+                tvRole.setVisibility(View.GONE);
+                tvRole.setText("");
+            }
             tvTime.setText(relativeTime(comment.getCreatedAtMillis()));
             tvBody.setText(nonEmptyOr(comment.getBody(), ""));
             tvLikeCount.setText(String.valueOf(Math.max(0, comment.getLikeCount())));
@@ -229,6 +261,7 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
 
         class ReplyViewHolder extends RecyclerView.ViewHolder {
             private final TextView tvAuthor;
+            private final TextView tvRole;
             private final TextView tvTime;
             private final TextView tvBody;
             private final TextView tvDelete;
@@ -239,6 +272,7 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
             ReplyViewHolder(@NonNull View itemView) {
                 super(itemView);
                 tvAuthor = itemView.findViewById(R.id.text_comment_reply_author);
+                tvRole = itemView.findViewById(R.id.text_comment_reply_role);
                 tvTime = itemView.findViewById(R.id.text_comment_reply_time);
                 tvBody = itemView.findViewById(R.id.text_comment_reply_body);
                 tvDelete = itemView.findViewById(R.id.button_comment_reply_delete);
@@ -249,6 +283,13 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
 
             void bind(@NonNull EventComment reply) {
                 tvAuthor.setText(nonEmptyOr(reply.getAuthorNameSnapshot(), "Anonymous"));
+                if (tvRole != null && isOrganizerAuthor(reply)) {
+                    tvRole.setVisibility(View.VISIBLE);
+                    tvRole.setText("Organizer");
+                } else if (tvRole != null) {
+                    tvRole.setVisibility(View.GONE);
+                    tvRole.setText("");
+                }
                 tvTime.setText(relativeTime(reply.getCreatedAtMillis()));
                 tvBody.setText(nonEmptyOr(reply.getBody(), ""));
                 tvLikeCount.setText(String.valueOf(Math.max(0, reply.getLikeCount())));

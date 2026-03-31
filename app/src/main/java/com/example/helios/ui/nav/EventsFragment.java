@@ -244,6 +244,10 @@ public class EventsFragment extends Fragment {
         String query = etSearch.getText().toString().toLowerCase().trim();
 
         for (Event event : allEvents) {
+            if (event.isPrivateEvent()) {
+                continue;
+            }
+
             boolean matchesSearch = query.isEmpty() || 
                     (event.getTitle() != null && event.getTitle().toLowerCase().contains(query)) ||
                     (event.getDescription() != null && event.getDescription().toLowerCase().contains(query));
