@@ -117,12 +117,17 @@ public class NotifyEntrantsFragment extends Fragment {
             return;
         }
 
+        String eventTitle = loadedEvent.getTitle() == null || loadedEvent.getTitle().trim().isEmpty()
+                ? "Unknown Event"
+                : loadedEvent.getTitle().trim();
+        String messageWithEventContext = "Event: " + eventTitle + "\n\n" + message;
+
         profileService.ensureSignedIn(firebaseUser -> sendEntrantNotificationsUseCase.execute(
                 firebaseUser.getUid(),
                 eventId,
                 audience,
                 title,
-                message,
+                messageWithEventContext,
                 result -> {
                     if (!isAdded()) return;
                     sendButton.setEnabled(true);
