@@ -251,7 +251,7 @@ public class OrganizerNotificationService {
                 event.getEventId(),
                 NotificationAudience.INVITED,
                 "You've been selected for " + event.getTitle(),
-                "A draw occurred and you were selected. Open the app to accept or decline.",
+                "A draw occurred and you were selected. Open the event to accept or decline.",
                 invitedUids,
                 invitedResult -> sendToRecipients(
                         organizerUid,

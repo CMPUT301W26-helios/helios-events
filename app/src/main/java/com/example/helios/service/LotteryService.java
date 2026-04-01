@@ -4,8 +4,6 @@ import androidx.annotation.NonNull;
 
 import com.example.helios.data.FirebaseRepository;
 import com.example.helios.model.Event;
-import com.example.helios.model.NotificationAudience;
-import com.example.helios.model.NotificationRecord;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -14,7 +12,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 public class LotteryService {
 
@@ -37,8 +34,19 @@ public class LotteryService {
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
+        int defaultTargetCount = event.getSampleSize() > 0 ? event.getSampleSize() : event.getCapacity();
+        runDraw(organizerUid, event, defaultTargetCount, onSuccess, onFailure);
+    }
+
+    public void runDraw(
+            @NonNull String organizerUid,
+            @NonNull Event event,
+            int targetCount,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
         String eventId = event.getEventId();
-        int sampleSize = event.getSampleSize() > 0 ? event.getSampleSize() : event.getCapacity();
+        int sampleSize = Math.max(0, targetCount);
 
         repository.getAllWaitingListEntries(eventId, entries -> {
             List<WaitingListEntry> waiting = new ArrayList<>();
@@ -123,25 +131,5 @@ public class LotteryService {
                         ),
                 onFailure
         );
-    }
-    private void sendNotification(
-            @NonNull String senderUid,
-            @NonNull String eventId,
-            @NonNull String recipientUid,
-            @NonNull String title,
-            @NonNull String message,
-            @NonNull NotificationAudience audience
-    ) {
-        NotificationRecord record = new NotificationRecord(
-                UUID.randomUUID().toString(),
-                eventId,
-                senderUid,
-                recipientUid,
-                audience,
-                title,
-                message,
-                System.currentTimeMillis()
-        );
-        repository.saveNotification(record, unused -> {}, e -> {});
     }
 }
