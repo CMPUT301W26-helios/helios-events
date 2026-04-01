@@ -16,6 +16,11 @@ public class WaitingListEntry {
     private String entrantUid;
     private WaitingListStatus status;
     private long joinedAtMillis;
+    private long invitedAtMillis;
+    private long respondedAtMillis;
+    private long cancelledAtMillis;
+    private String statusReason;
+
 
     /**
      * Default constructor required for Firestore deserialization.
@@ -77,9 +82,40 @@ public class WaitingListEntry {
      */
     public void setJoinedAtMillis(long joinedAtMillis) { this.joinedAtMillis = joinedAtMillis; }
 
+
+    public long getInvitedAtMillis() {
+        return invitedAtMillis;
+    }
     public void setInvitedAtMillis(long l) {
+        this.invitedAtMillis = l;
     }
 
-    public void setRespondedAtMillis(long l) {
+
+
+
+    public String getStatusReason() {
+        return statusReason;
     }
+    public void setStatusReason(String statusReason) {
+        this.statusReason = statusReason;
+    }
+
+
+    public long getRespondedAtMillis() {
+        return respondedAtMillis;
+    }
+
+    public void setRespondedAtMillis(long respondedAtMillis) {
+        this.respondedAtMillis = respondedAtMillis;
+    }
+
+    public long getCancelledAtMillis() {
+        return cancelledAtMillis;
+    }
+    public void setCancelledAtMillis(long cancelledAtMillis) {
+        this.cancelledAtMillis = cancelledAtMillis;
+    }
+
+
+
 }

@@ -23,6 +23,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
+import com.example.helios.service.ProfileService;
 import com.google.android.material.button.MaterialButton;
 
 import java.text.SimpleDateFormat;
@@ -38,6 +39,7 @@ public class SetupEventFragment extends Fragment {
             new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
 
     private final EventService eventService = new EventService();
+    private final ProfileService profileService = new ProfileService();
     private boolean isPrivateEvent = false;
 
     @Nullable private String eventId;
@@ -128,10 +130,12 @@ public class SetupEventFragment extends Fragment {
         privateOn.setOnClickListener(v -> {
             isPrivateEvent = true;
             updatePrivateToggle(privateOn, privateOff, true);
+            if (mode == Mode.CREATE) updateCreatePrimaryButtonLabel(primaryButton);
         });
         privateOff.setOnClickListener(v -> {
             isPrivateEvent = false;
             updatePrivateToggle(privateOn, privateOff, false);
+            if (mode == Mode.CREATE) updateCreatePrimaryButtonLabel(primaryButton);
         });
         updatePrivateToggle(privateOn, privateOff, isPrivateEvent);
 
@@ -149,7 +153,7 @@ public class SetupEventFragment extends Fragment {
 
         if (mode == Mode.CREATE) {
             titleView.setText("Create Event");
-            primaryButton.setText("Next - QR Code");
+            updateCreatePrimaryButtonLabel(primaryButton);
 
             if (registrationOpensMillis == 0L || registrationClosesMillis == 0L) {
                 Calendar c = Calendar.getInstance();
@@ -187,6 +191,11 @@ public class SetupEventFragment extends Fragment {
                     try {
                         maxEntrants = Integer.parseInt(maxEntrantsStr);
                     } catch (NumberFormatException ignored) {}
+                }
+
+                if (isPrivateEvent) {
+                    createPrivateEvent(title, description, tagsRaw, maxEntrants);
+                    return;
                 }
 
                 Bundle args = new Bundle();
@@ -306,6 +315,9 @@ public class SetupEventFragment extends Fragment {
                 loadedEvent.setRegistrationClosesMillis(registrationClosesMillis);
                 loadedEvent.setGeolocationRequired(geolocationRequired);
                 loadedEvent.setPrivateEvent(isPrivateEvent);
+                if (isPrivateEvent) {
+                    loadedEvent.setQrCodeValue(null);
+                }
 
                 java.util.List<String> interests = null;
                 if (!tagsRaw.isEmpty()) {
@@ -336,6 +348,93 @@ public class SetupEventFragment extends Fragment {
                 );
             });
         }
+    }
+
+    private void createPrivateEvent(
+            @NonNull String title,
+            @NonNull String description,
+            @NonNull String tagsRaw,
+            int maxEntrants
+    ) {
+        profileService.ensureSignedIn(
+                firebaseUser -> eventService.saveEvent(
+                        buildCreateModeEvent(
+                                title,
+                                description,
+                                tagsRaw,
+                                maxEntrants,
+                                true,
+                                firebaseUser.getUid()
+                        ),
+                        unused -> {
+                            if (!isAdded()) return;
+                            Toast.makeText(requireContext(),
+                                    "Private event created.",
+                                    Toast.LENGTH_SHORT).show();
+                            NavHostFragment.findNavController(this)
+                                    .popBackStack(R.id.organizeFragment, false);
+                        },
+                        error -> {
+                            if (!isAdded()) return;
+                            Toast.makeText(requireContext(),
+                                    "Create failed: " + error.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                ),
+                error -> {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(),
+                            "Auth failed: " + error.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                }
+        );
+    }
+
+    @NonNull
+    private Event buildCreateModeEvent(
+            @NonNull String title,
+            @NonNull String description,
+            @NonNull String tagsRaw,
+            int maxEntrants,
+            boolean privateEvent,
+            @NonNull String organizerUid
+    ) {
+        long now = System.currentTimeMillis();
+        long oneWeek = 7L * 24 * 60 * 60 * 1000;
+
+        java.util.List<String> interests = null;
+        if (!tagsRaw.isEmpty()) {
+            interests = new java.util.ArrayList<>();
+            for (String part : tagsRaw.split(",")) {
+                String trimmed = part.trim();
+                if (!trimmed.isEmpty()) interests.add(trimmed);
+            }
+            if (interests.isEmpty()) interests = null;
+        }
+
+        Event event = new Event(
+                null,
+                title,
+                description,
+                null,
+                null,
+                now + oneWeek,
+                now + oneWeek + 3600000L,
+                registrationOpensMillis > 0 ? registrationOpensMillis : now,
+                registrationClosesMillis > 0 ? registrationClosesMillis : (now + (3L * 24 * 60 * 60 * 1000)),
+                maxEntrants > 0 ? maxEntrants : 0,
+                maxEntrants > 0 ? maxEntrants : 0,
+                null,
+                geolocationRequired,
+                "Lottery details TBD.",
+                organizerUid,
+                selectedPosterUri != null ? selectedPosterUri.toString() : null,
+                null,
+                interests,
+                false,
+                privateEvent
+        );
+        return event;
     }
 
     private void persistReadPermission(@NonNull Uri uri) {
@@ -379,6 +478,10 @@ public class SetupEventFragment extends Fragment {
             on.setBackgroundResource(R.drawable.bg_toggle_left_inactive);
             off.setBackgroundResource(R.drawable.bg_toggle_right_active);
         }
+    }
+
+    private void updateCreatePrimaryButtonLabel(@NonNull MaterialButton primaryButton) {
+        primaryButton.setText(isPrivateEvent ? "Create Private Event" : "Next - QR Code");
     }
 
     private void updatePrivateToggle(@NonNull TextView on, @NonNull TextView off, boolean isPrivate) {

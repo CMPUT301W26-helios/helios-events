@@ -63,4 +63,29 @@
         android:name="com.example.helios.ui.nav.AdminFragment"
         android:label="Admin" />
 
+    <fragment
+        android:id="@+id/privateEventInviteFragment"
+        android:name="com.example.helios.ui.nav.EventUserPickerFragment"
+        android:label="Invite Entrants" >
+        <argument
+            android:name="arg_mode"
+            app:argType="string"
+            android:defaultValue="INVITE_PRIVATE" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/notifyEntrantsFragment"
+        android:name="com.example.helios.ui.nav.NotifyEntrantsFragment"
+        android:label="Notify Entrants" />
+
+    <fragment
+        android:id="@+id/assignCoOrganizerFragment"
+        android:name="com.example.helios.ui.nav.EventUserPickerFragment"
+        android:label="Assign Co-organizer" >
+        <argument
+            android:name="arg_mode"
+            app:argType="string"
+            android:defaultValue="ASSIGN_CO_ORGANIZER" />
+    </fragment>
+
 </navigation>

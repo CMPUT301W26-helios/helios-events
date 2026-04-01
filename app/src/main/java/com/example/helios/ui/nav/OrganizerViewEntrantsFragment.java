@@ -24,6 +24,8 @@ import com.example.helios.model.Event;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
 import com.example.helios.service.EventService;
+import com.example.helios.service.LotteryService;
+import com.example.helios.service.OrganizerNotificationService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.service.WaitingListService;
 import com.google.android.material.button.MaterialButton;
@@ -48,6 +50,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
     private String eventId;
     private Event event;
     private final EventService eventService = new EventService();
+    private final LotteryService lotteryService = new LotteryService();
     private final WaitingListService waitingListService = new WaitingListService();
     private final ProfileService profileService = new ProfileService();
 
@@ -62,6 +65,8 @@ public class OrganizerViewEntrantsFragment extends Fragment {
     private EditText etDrawCount;
     private MaterialButton btnRemoveEntrant;
     private ChipGroup cgStatus;
+    private final OrganizerNotificationService organizerNotificationService =
+            new OrganizerNotificationService();
 
     /**
      * Default constructor for OrganizerViewEntrantsFragment.
@@ -298,14 +303,21 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             return;
         }
 
-        Collections.shuffle(candidates);
-        int toSelect = Math.min(targetCount, candidates.size());
-        for (int i = 0; i < candidates.size(); i++) {
-            WaitingListEntry entry = candidates.get(i);
-            entry.setStatus(i < toSelect ? WaitingListStatus.INVITED : WaitingListStatus.NOT_SELECTED);
-        }
+        int selectedCount = Math.min(targetCount, candidates.size());
 
-        updateEntries(candidates, () -> completeDrawEventUpdate(toSelect));
+        profileService.ensureSignedIn(firebaseUser ->
+                        lotteryService.runDraw(
+                                firebaseUser.getUid(),
+                                event,
+                                targetCount,
+                                unused -> {
+                                    toast("Draw completed! Selected " + selectedCount + " entrants");
+                                    refreshEntries();
+                                },
+                                error -> toast("Failed to run draw: " + error.getMessage())
+                        ),
+                error -> toast("Auth failed: " + error.getMessage())
+        );
     }
 
     /**
@@ -367,19 +379,6 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             toast("Draw updated. Moved " + toUninvite + " entrants to waitlist");
             refreshEntries();
         });
-    }
-
-    /**
-     * Updates the event's draw status and notifies completion.
-     *
-     * @param selectedCount The total number of entrants selected in the draw.
-     */
-    private void completeDrawEventUpdate(int selectedCount) {
-        event.setDrawHappened(true);
-        eventService.saveEvent(event, unused -> {
-            toast("Draw completed! Selected " + selectedCount + " entrants");
-            refreshEntries();
-        }, e -> toast("Failed to update event status"));
     }
 
     /**
@@ -483,11 +482,26 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             return;
         }
 
-        waitingListService.removeEntry(eventId, entrantUid, unused -> {
-            String name = model.name != null ? model.name : "Entrant";
-            toast(name + " removed");
-            refreshEntries();
-        }, e -> toast("Failed to remove entrant"));
+        if (event == null) {
+            toast("Event not loaded");
+            return;
+        }
+
+        profileService.ensureSignedIn(firebaseUser ->
+                        organizerNotificationService.cancelEntrant(
+                                firebaseUser.getUid(),
+                                event,
+                                model.entry,
+                                "Removed by organizer",
+                                unused -> {
+                                    String name = model.name != null ? model.name : "Entrant";
+                                    toast(name + " removed");
+                                    refreshEntries();
+                                },
+                                error -> toast("Failed to remove entrant: " + error.getMessage())
+                        ),
+                error -> toast("Auth failed: " + error.getMessage())
+        );
     }
 
     /**

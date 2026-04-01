@@ -91,7 +91,8 @@ public class MainActivity extends AppCompatActivity {
             boolean shouldUseOrganizerMenu =
                     destId == R.id.manageEventFragment
                             || destId == R.id.editEventFragment
-                            || destId == R.id.viewEventQrFragment;
+                            || destId == R.id.viewEventQrFragment
+                            || destId == R.id.notifyEntrantsFragment;
 
             if (shouldUseOrganizerMenu) {
                 showOrganizerBottomNav(destId);
@@ -203,8 +204,8 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
 
-            if (itemId == R.id.notificationsFragment) {
-                navController.navigate(R.id.notificationsFragment, args);
+            if (itemId == R.id.notifyEntrantsFragment) {
+                navController.navigate(R.id.notifyEntrantsFragment, args);
                 return true;
             }
 

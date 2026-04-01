@@ -13,6 +13,7 @@ public class EventComment {
     private long updatedAtMillis;
     private int likeCount;
     private boolean isDeleted;
+    private boolean pinned;
 
     public EventComment() {
         // Required for Firestore
@@ -27,7 +28,8 @@ public class EventComment {
                         long createdAtMillis,
                         long updatedAtMillis,
                         int likeCount,
-                        boolean isDeleted) {
+                        boolean isDeleted,
+                        boolean pinned) {
         this.commentId = commentId;
         this.eventId = eventId;
         this.authorUid = authorUid;
@@ -38,6 +40,7 @@ public class EventComment {
         this.updatedAtMillis = updatedAtMillis;
         this.likeCount = likeCount;
         this.isDeleted = isDeleted;
+        this.pinned = pinned;
     }
 
     public String getCommentId() {
@@ -119,6 +122,14 @@ public class EventComment {
 
     public void setDeleted(boolean deleted) {
         isDeleted = deleted;
+    }
+
+    public boolean isPinned() {
+        return pinned;
+    }
+
+    public void setPinned(boolean pinned) {
+        this.pinned = pinned;
     }
 
     public boolean isTopLevel() {

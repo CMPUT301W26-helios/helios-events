@@ -572,6 +572,32 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    public void saveNotificationsBatch(
+            @NonNull List<NotificationRecord> records,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (records.isEmpty()) {
+            onSuccess.onSuccess(null);
+            return;
+        }
+
+        WriteBatch batch = db.batch();
+        for (NotificationRecord record : records) {
+            if (record == null || !isNonEmpty(record.getNotificationId())) {
+                onFailure.onFailure(new IllegalArgumentException("All notification records must have IDs."));
+                return;
+            }
+            DocumentReference ref = db.collection("notifications")
+                    .document(record.getNotificationId());
+            batch.set(ref, record);
+        }
+
+        batch.commit()
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
     // COMMENTS SECTION:
     public void addComment(
             @NonNull String eventId,
@@ -622,6 +648,54 @@ public class FirebaseRepository {
                         }
                     }
                     onSuccess.onSuccess(comment);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    public void updateComment(
+            @NonNull String eventId,
+            @NonNull EventComment comment,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(eventId) || comment == null || !isNonEmpty(comment.getCommentId())) {
+            onFailure.onFailure(new IllegalArgumentException("eventId and commentId must not be empty."));
+            return;
+        }
+        db.collection("events")
+                .document(eventId)
+                .collection("comments")
+                .document(comment.getCommentId())
+                .set(comment)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    public void getTopLevelCommentsOnce(
+            @NonNull String eventId,
+            @NonNull OnSuccessListener<List<EventComment>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(eventId)) {
+            onFailure.onFailure(new IllegalArgumentException("eventId must not be empty."));
+            return;
+        }
+        db.collection("events")
+                .document(eventId)
+                .collection("comments")
+                .whereEqualTo("parentCommentId", null)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<EventComment> comments = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        EventComment comment = doc.toObject(EventComment.class);
+                        if (comment == null) continue;
+                        if (comment.getCommentId() == null || comment.getCommentId().trim().isEmpty()) {
+                            comment.setCommentId(doc.getId());
+                        }
+                        comments.add(comment);
+                    }
+                    onSuccess.onSuccess(comments);
                 })
                 .addOnFailureListener(onFailure);
     }

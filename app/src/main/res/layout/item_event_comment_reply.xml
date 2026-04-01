@@ -33,6 +33,19 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/text_comment_reply_role"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/bg_helios_form_card"
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp"
+            android:text="Organizer"
+            android:textColor="@color/helios_text_hint"
+            android:textSize="11sp"
+            android:visibility="gone" />
+
+        <TextView
             android:id="@+id/text_comment_reply_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

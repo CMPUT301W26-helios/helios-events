@@ -51,7 +51,8 @@ public class ManageEventFragment extends Fragment {
         Button viewPageButton = view.findViewById(R.id.button_view_event_page);
         Button entrantListButton = view.findViewById(R.id.button_entrant_list);
         Button runLotteryButton = view.findViewById(R.id.button_run_lottery);
-        Button viewQrButton = view.findViewById(R.id.button_view_qr_code);
+        Button invitePrivateEntrantsButton = view.findViewById(R.id.button_invite_private_entrants);
+        Button assignCoOrganizerButton = view.findViewById(R.id.button_assign_coorganizer);
         Button editButton = view.findViewById(R.id.button_edit_event);
         Button mapButton = view.findViewById(R.id.button_show_mapped_location);
 
@@ -67,6 +68,7 @@ public class ManageEventFragment extends Fragment {
             if (!isAdded() || event == null) return;
             loadedEvent = event;
             nameView.setText(event.getTitle() != null ? event.getTitle() : "(no title)");
+            invitePrivateEntrantsButton.setVisibility(event.isPrivateEvent() ? View.VISIBLE : View.GONE);
 
             // Show draw status
             if (event.isDrawHappened()) {
@@ -98,13 +100,20 @@ public class ManageEventFragment extends Fragment {
 
         runLotteryButton.setOnClickListener(v -> showLotteryConfirmDialog());
 
-        viewQrButton.setOnClickListener(v -> {
-            if (eventId != null) {
-                Bundle args = new Bundle();
-                args.putString("arg_event_id", eventId);
-                NavHostFragment.findNavController(this)
-                        .navigate(R.id.viewEventQrFragment, args);
-            }
+        invitePrivateEntrantsButton.setOnClickListener(v -> {
+            if (eventId == null) return;
+            Bundle args = new Bundle();
+            args.putString("arg_event_id", eventId);
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.privateEventInviteFragment, args);
+        });
+
+        assignCoOrganizerButton.setOnClickListener(v -> {
+            if (eventId == null) return;
+            Bundle args = new Bundle();
+            args.putString("arg_event_id", eventId);
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.assignCoOrganizerFragment, args);
         });
 
         mapButton.setOnClickListener(v ->

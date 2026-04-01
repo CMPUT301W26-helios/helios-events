@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.helios.R;
+import com.example.helios.service.EventService;
 import com.example.helios.ui.event.EventDetailsBottomSheet;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
@@ -47,6 +48,7 @@ public class ScanQrFragment extends Fragment {
     private PreviewView viewFinder;
     private ExecutorService cameraExecutor;
     private ProcessCameraProvider cameraProvider;
+    private final EventService eventService = new EventService();
 
     /**
      * Default constructor for ScanQrFragment.
@@ -230,8 +232,27 @@ public class ScanQrFragment extends Fragment {
      */
     private void handleQrCode(String value) {
         if (!isAdded()) return;
-        EventDetailsBottomSheet.newInstance(value)
-                .show(getParentFragmentManager(), "event_details");
+        String eventId = value == null ? "" : value.trim();
+        if (eventId.isEmpty()) {
+            Toast.makeText(getContext(), "Invalid QR code.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        eventService.getEventById(eventId, event -> {
+            if (!isAdded()) return;
+            if (event == null) {
+                Toast.makeText(getContext(), "Event not found for this QR.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (event.isPrivateEvent()) {
+                Toast.makeText(getContext(), "Private events do not have promotional QR access.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            EventDetailsBottomSheet.newInstance(eventId)
+                    .show(getParentFragmentManager(), "event_details");
+        }, error -> {
+            if (!isAdded()) return;
+            Toast.makeText(getContext(), "Failed to open event: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+        });
     }
 
     @Override
