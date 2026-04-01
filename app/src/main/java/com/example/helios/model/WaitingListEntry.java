@@ -82,24 +82,24 @@ public class WaitingListEntry {
      */
     public void setJoinedAtMillis(long joinedAtMillis) { this.joinedAtMillis = joinedAtMillis; }
 
-    public void setInvitedAtMillis(long l) {
-        this.invitedAtMillis = l;
-    }
 
     public long getInvitedAtMillis() {
         return invitedAtMillis;
     }
-
-    public void setCancelledAtMillis(long cancelledAtMillis) {
-        this.cancelledAtMillis = cancelledAtMillis;
+    public void setInvitedAtMillis(long l) {
+        this.invitedAtMillis = l;
     }
 
-    public void setStatusReason(String statusReason) {
-        this.statusReason = statusReason;
-    }
+
+
+
     public String getStatusReason() {
         return statusReason;
     }
+    public void setStatusReason(String statusReason) {
+        this.statusReason = statusReason;
+    }
+
 
     public long getRespondedAtMillis() {
         return respondedAtMillis;
@@ -111,6 +111,9 @@ public class WaitingListEntry {
 
     public long getCancelledAtMillis() {
         return cancelledAtMillis;
+    }
+    public void setCancelledAtMillis(long cancelledAtMillis) {
+        this.cancelledAtMillis = cancelledAtMillis;
     }
 
 

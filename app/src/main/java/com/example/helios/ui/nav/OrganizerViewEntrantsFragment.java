@@ -24,6 +24,7 @@ import com.example.helios.model.Event;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
 import com.example.helios.service.EventService;
+import com.example.helios.service.OrganizerNotificationService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.service.WaitingListService;
 import com.google.android.material.button.MaterialButton;
@@ -62,6 +63,8 @@ public class OrganizerViewEntrantsFragment extends Fragment {
     private EditText etDrawCount;
     private MaterialButton btnRemoveEntrant;
     private ChipGroup cgStatus;
+    private final OrganizerNotificationService organizerNotificationService =
+            new OrganizerNotificationService();
 
     /**
      * Default constructor for OrganizerViewEntrantsFragment.
@@ -483,11 +486,26 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             return;
         }
 
-        waitingListService.removeEntry(eventId, entrantUid, unused -> {
-            String name = model.name != null ? model.name : "Entrant";
-            toast(name + " removed");
-            refreshEntries();
-        }, e -> toast("Failed to remove entrant"));
+        if (event == null) {
+            toast("Event not loaded");
+            return;
+        }
+
+        profileService.ensureSignedIn(firebaseUser ->
+                        organizerNotificationService.cancelEntrant(
+                                firebaseUser.getUid(),
+                                event,
+                                model.entry,
+                                "Removed by organizer",
+                                unused -> {
+                                    String name = model.name != null ? model.name : "Entrant";
+                                    toast(name + " removed");
+                                    refreshEntries();
+                                },
+                                error -> toast("Failed to remove entrant: " + error.getMessage())
+                        ),
+                error -> toast("Auth failed: " + error.getMessage())
+        );
     }
 
     /**
