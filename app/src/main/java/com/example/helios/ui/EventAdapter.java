@@ -28,6 +28,8 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
 
     @Nullable
     private final OnEventClickListener onEventClick;
+    @Nullable
+    private String organizerViewerUid;
 
     /**
      * Listener interface for handling event click actions.
@@ -58,6 +60,11 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     public EventAdapter(@NonNull List<Event> events, @Nullable OnEventClickListener onEventClick) {
         this.events = events;
         this.onEventClick = onEventClick;
+    }
+
+    public void setOrganizerViewerUid(@Nullable String organizerViewerUid) {
+        this.organizerViewerUid = organizerViewerUid;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -102,6 +109,10 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         }
 
         holder.tvMaxEntrants.setText("Max: " + event.getCapacity());
+        boolean showCoOrganizerBadge = organizerViewerUid != null
+                && !organizerViewerUid.equals(event.getOrganizerUid())
+                && event.isCoOrganizer(organizerViewerUid);
+        holder.tvCoOrganizerBadge.setVisibility(showCoOrganizerBadge ? View.VISIBLE : View.GONE);
 
         holder.itemView.setOnClickListener(v -> {
             if (onEventClick != null) {
@@ -131,6 +142,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         TextView tvDate;
         TextView tvTags;
         TextView tvMaxEntrants;
+        TextView tvCoOrganizerBadge;
 
         /**
          * Constructs an EventViewHolder.
@@ -144,6 +156,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             tvDate = itemView.findViewById(R.id.tv_event_date);
             tvTags = itemView.findViewById(R.id.tv_event_tags);
             tvMaxEntrants = itemView.findViewById(R.id.tv_event_max_entrants);
+            tvCoOrganizerBadge = itemView.findViewById(R.id.tv_event_coorganizer_badge);
         }
     }
 }

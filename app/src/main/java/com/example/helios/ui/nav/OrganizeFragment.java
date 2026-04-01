@@ -40,6 +40,8 @@ public class OrganizeFragment extends Fragment {
 
     private EventAdapter currentAdapter;
     private EventAdapter pastAdapter;
+    @Nullable
+    private String organizerUid;
 
     private EditText searchEditText;
     private TextView currentEmptyText;
@@ -121,14 +123,20 @@ public class OrganizeFragment extends Fragment {
      */
     private void loadOrganizerEvents() {
         profileService.ensureSignedIn(firebaseUser -> {
-            String uid = firebaseUser.getUid();
+            organizerUid = firebaseUser.getUid();
+            if (currentAdapter != null) {
+                currentAdapter.setOrganizerViewerUid(organizerUid);
+            }
+            if (pastAdapter != null) {
+                pastAdapter.setOrganizerViewerUid(organizerUid);
+            }
 
             eventService.getAllEvents(events -> {
                 if (!isAdded()) return;
 
                 allOrganizerEvents.clear();
                 for (com.example.helios.model.Event e : events) {
-                    if (uid.equals(e.getOrganizerUid())) {
+                    if (isManagedByCurrentOrganizer(e)) {
                         allOrganizerEvents.add(e);
                     }
                 }
@@ -152,6 +160,11 @@ public class OrganizeFragment extends Fragment {
                     "Auth failed: " + error.getMessage(),
                     Toast.LENGTH_LONG).show();
         });
+    }
+
+    private boolean isManagedByCurrentOrganizer(@NonNull com.example.helios.model.Event event) {
+        return organizerUid != null
+                && (organizerUid.equals(event.getOrganizerUid()) || event.isCoOrganizer(organizerUid));
     }
 
     /**
