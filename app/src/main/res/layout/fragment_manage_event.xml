@@ -95,27 +95,38 @@
                 android:textColor="#FFFFFF"
                 android:text="Entrant List"
                 android:textAllCaps="false" />
-
             <Button
-                android:id="@+id/button_manage_notifications"
+                android:id="@+id/button_run_lottery"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:minHeight="44dp"
                 android:background="@drawable/bg_helios_button_primary"
                 android:textColor="#FFFFFF"
-                android:text="Manage Notifications"
+                android:text="Run Lottery Draw"
                 android:textAllCaps="false" />
 
             <Button
-                android:id="@+id/button_view_qr_code"
+                android:id="@+id/button_invite_private_entrants"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:minHeight="44dp"
                 android:background="@drawable/bg_helios_button_primary"
                 android:textColor="#FFFFFF"
-                android:text="View QR Code"
+                android:text="Invite Private Entrants"
+                android:textAllCaps="false"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/button_assign_coorganizer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:minHeight="48dp"
+                android:background="@drawable/bg_helios_button_primary"
+                android:textColor="#FFFFFF"
+                android:text="Assign Co-organizer"
                 android:textAllCaps="false" />
 
             <Button

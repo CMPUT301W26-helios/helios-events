@@ -23,6 +23,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
+import com.example.helios.service.ProfileService;
 import com.google.android.material.button.MaterialButton;
 
 import java.text.SimpleDateFormat;
@@ -30,37 +31,26 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-/**
- * Shared fragment for creating a new event or editing an existing one.
- *
- * - If launched with an "arg_event_id", it loads and edits that event.
- * - If launched without "arg_event_id", it behaves like the old CreateEventFragment
- *   and forwards to the QR/preview step.
- */
 public class SetupEventFragment extends Fragment {
 
-    private enum Mode {
-        CREATE,
-        EDIT
-    }
+    private enum Mode { CREATE, EDIT }
 
     private final SimpleDateFormat dateFormat =
             new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
 
     private final EventService eventService = new EventService();
+    private final ProfileService profileService = new ProfileService();
+    private boolean isPrivateEvent = false;
 
-    @Nullable
-    private String eventId;
-    @Nullable
-    private Event loadedEvent;
+    @Nullable private String eventId;
+    @Nullable private Event loadedEvent;
     private Mode mode = Mode.CREATE;
 
     private long registrationOpensMillis = 0L;
     private long registrationClosesMillis = 0L;
     private boolean geolocationRequired = true;
 
-    @Nullable
-    private Uri selectedPosterUri = null;
+    @Nullable private Uri selectedPosterUri = null;
 
     private final ActivityResultLauncher<String[]> pickImageLauncher =
             registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
@@ -110,52 +100,61 @@ public class SetupEventFragment extends Fragment {
         EditText nameInput = view.findViewById(R.id.edit_event_name);
         EditText maxEntrantsInput = view.findViewById(R.id.edit_max_entrants);
         EditText descriptionInput = view.findViewById(R.id.edit_event_description);
+        EditText tagsInput = view.findViewById(R.id.edit_event_tags);
         TextView startDateView = view.findViewById(R.id.tv_registration_start);
         TextView endDateView = view.findViewById(R.id.tv_registration_end);
         TextView geoOn = view.findViewById(R.id.tv_geo_on);
         TextView geoOff = view.findViewById(R.id.tv_geo_off);
+        TextView privateOn = view.findViewById(R.id.tv_private_on);
+        TextView privateOff = view.findViewById(R.id.tv_private_off);
         ImageView uploadImage = view.findViewById(R.id.iv_upload_image);
 
         MaterialButton cancelButton = view.findViewById(R.id.button_cancel_back);
         MaterialButton primaryButton = view.findViewById(R.id.button_next_qr);
 
-        // Common controls
         cancelButton.setOnClickListener(v ->
-                NavHostFragment.findNavController(this).navigateUp()
-        );
+                NavHostFragment.findNavController(this).navigateUp());
 
-        uploadImage.setOnClickListener(v -> pickImageLauncher.launch(new String[]{"image/*"}));
+        uploadImage.setOnClickListener(v ->
+                pickImageLauncher.launch(new String[]{"image/*"}));
 
         geoOn.setOnClickListener(v -> {
             geolocationRequired = true;
             updateGeoToggle(geoOn, geoOff, true);
         });
-
         geoOff.setOnClickListener(v -> {
             geolocationRequired = false;
             updateGeoToggle(geoOn, geoOff, false);
         });
 
+        privateOn.setOnClickListener(v -> {
+            isPrivateEvent = true;
+            updatePrivateToggle(privateOn, privateOff, true);
+            if (mode == Mode.CREATE) updateCreatePrimaryButtonLabel(primaryButton);
+        });
+        privateOff.setOnClickListener(v -> {
+            isPrivateEvent = false;
+            updatePrivateToggle(privateOn, privateOff, false);
+            if (mode == Mode.CREATE) updateCreatePrimaryButtonLabel(primaryButton);
+        });
+        updatePrivateToggle(privateOn, privateOff, isPrivateEvent);
+
         startDateView.setOnClickListener(v ->
                 openDatePicker(registrationOpensMillis, picked -> {
                     registrationOpensMillis = picked;
                     startDateView.setText(dateFormat.format(new Date(picked)));
-                })
-        );
+                }));
 
         endDateView.setOnClickListener(v ->
                 openDatePicker(registrationClosesMillis, picked -> {
                     registrationClosesMillis = picked;
                     endDateView.setText(dateFormat.format(new Date(picked)));
-                })
-        );
+                }));
 
         if (mode == Mode.CREATE) {
-            // Initial UI text
             titleView.setText("Create Event");
-            primaryButton.setText("Next - QR Code");
+            updateCreatePrimaryButtonLabel(primaryButton);
 
-            // Defaults to match placeholders
             if (registrationOpensMillis == 0L || registrationClosesMillis == 0L) {
                 Calendar c = Calendar.getInstance();
                 c.set(2025, Calendar.MARCH, 1, 0, 0, 0);
@@ -167,12 +166,12 @@ public class SetupEventFragment extends Fragment {
             }
             startDateView.setText(dateFormat.format(new Date(registrationOpensMillis)));
             endDateView.setText(dateFormat.format(new Date(registrationClosesMillis)));
-
             updateGeoToggle(geoOn, geoOff, geolocationRequired);
 
             primaryButton.setOnClickListener(v -> {
                 String title = safeText(nameInput);
                 String description = safeText(descriptionInput);
+                String tagsRaw = safeText(tagsInput);
                 String maxEntrantsStr = safeText(maxEntrantsInput);
 
                 if (TextUtils.isEmpty(title)) {
@@ -180,7 +179,6 @@ public class SetupEventFragment extends Fragment {
                             "Event name is required.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 if (registrationClosesMillis < registrationOpensMillis) {
                     Toast.makeText(requireContext(),
                             "Registration end date must be after start date.",
@@ -192,17 +190,23 @@ public class SetupEventFragment extends Fragment {
                 if (!TextUtils.isEmpty(maxEntrantsStr)) {
                     try {
                         maxEntrants = Integer.parseInt(maxEntrantsStr);
-                    } catch (NumberFormatException ignored) {
-                    }
+                    } catch (NumberFormatException ignored) {}
+                }
+
+                if (isPrivateEvent) {
+                    createPrivateEvent(title, description, tagsRaw, maxEntrants);
+                    return;
                 }
 
                 Bundle args = new Bundle();
                 args.putString("arg_event_title", title);
                 args.putString("arg_event_description", description);
+                args.putString("arg_event_tags", tagsRaw);
                 args.putInt("arg_event_max_entrants", maxEntrants);
                 args.putLong("arg_registration_opens_millis", registrationOpensMillis);
                 args.putLong("arg_registration_closes_millis", registrationClosesMillis);
                 args.putBoolean("arg_geolocation_required", geolocationRequired);
+                args.putBoolean("arg_private_event", isPrivateEvent);
                 if (selectedPosterUri != null) {
                     args.putString("arg_poster_uri", selectedPosterUri.toString());
                 }
@@ -210,8 +214,8 @@ public class SetupEventFragment extends Fragment {
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.createEventQrFragment, args);
             });
+
         } else {
-            // EDIT mode
             titleView.setText("Edit Event");
             primaryButton.setText("Save");
 
@@ -226,16 +230,19 @@ public class SetupEventFragment extends Fragment {
                 if (!isAdded() || event == null) return;
                 loadedEvent = event;
 
-                if (event.getTitle() != null) {
-                    nameInput.setText(event.getTitle());
-                }
-                if (event.getDescription() != null) {
-                    descriptionInput.setText(event.getDescription());
+                if (event.getTitle() != null) nameInput.setText(event.getTitle());
+                if (event.getDescription() != null) descriptionInput.setText(event.getDescription());
+                if (event.getInterests() != null && !event.getInterests().isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < event.getInterests().size(); i++) {
+                        if (i > 0) sb.append(", ");
+                        sb.append(event.getInterests().get(i));
+                    }
+                    tagsInput.setText(sb.toString());
                 }
                 if (event.getCapacity() > 0) {
                     maxEntrantsInput.setText(String.valueOf(event.getCapacity()));
                 }
-
                 if (event.getRegistrationOpensMillis() > 0) {
                     registrationOpensMillis = event.getRegistrationOpensMillis();
                     startDateView.setText(dateFormat.format(
@@ -250,14 +257,15 @@ public class SetupEventFragment extends Fragment {
                 geolocationRequired = event.isGeolocationRequired();
                 updateGeoToggle(geoOn, geoOff, geolocationRequired);
 
+                isPrivateEvent = event.isPrivateEvent();
+                updatePrivateToggle(privateOn, privateOff, isPrivateEvent);
+
                 if (!TextUtils.isEmpty(event.getPosterImageId())) {
                     Uri existingPosterUri = Uri.parse(event.getPosterImageId());
                     persistReadPermission(existingPosterUri);
                     try {
                         uploadImage.setImageURI(existingPosterUri);
                     } catch (SecurityException se) {
-                        // Existing URI may have been saved from a one-time picker permission.
-                        // Keep edit flow working and let organizer choose a new image if needed.
                         uploadImage.setImageResource(android.R.drawable.ic_menu_upload);
                     }
                 }
@@ -271,13 +279,13 @@ public class SetupEventFragment extends Fragment {
             primaryButton.setOnClickListener(v -> {
                 if (loadedEvent == null) {
                     Toast.makeText(requireContext(),
-                            "Event not loaded yet.",
-                            Toast.LENGTH_SHORT).show();
+                            "Event not loaded yet.", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 String title = safeText(nameInput);
                 String description = safeText(descriptionInput);
+                String tagsRaw = safeText(tagsInput);
                 String maxEntrantsStr = safeText(maxEntrantsInput);
 
                 if (TextUtils.isEmpty(title)) {
@@ -285,7 +293,6 @@ public class SetupEventFragment extends Fragment {
                             "Event name is required.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
                 if (registrationClosesMillis < registrationOpensMillis) {
                     Toast.makeText(requireContext(),
                             "Registration end date must be after start date.",
@@ -297,8 +304,7 @@ public class SetupEventFragment extends Fragment {
                 if (!TextUtils.isEmpty(maxEntrantsStr)) {
                     try {
                         maxEntrants = Integer.parseInt(maxEntrantsStr);
-                    } catch (NumberFormatException ignored) {
-                    }
+                    } catch (NumberFormatException ignored) {}
                 }
 
                 loadedEvent.setTitle(title);
@@ -308,6 +314,21 @@ public class SetupEventFragment extends Fragment {
                 loadedEvent.setRegistrationOpensMillis(registrationOpensMillis);
                 loadedEvent.setRegistrationClosesMillis(registrationClosesMillis);
                 loadedEvent.setGeolocationRequired(geolocationRequired);
+                loadedEvent.setPrivateEvent(isPrivateEvent);
+                if (isPrivateEvent) {
+                    loadedEvent.setQrCodeValue(null);
+                }
+
+                java.util.List<String> interests = null;
+                if (!tagsRaw.isEmpty()) {
+                    interests = new java.util.ArrayList<>();
+                    for (String part : tagsRaw.split(",")) {
+                        String trimmed = part.trim();
+                        if (!trimmed.isEmpty()) interests.add(trimmed);
+                    }
+                    if (interests.isEmpty()) interests = null;
+                }
+                loadedEvent.setInterests(interests);
 
                 if (selectedPosterUri != null) {
                     loadedEvent.setPosterImageId(selectedPosterUri.toString());
@@ -329,16 +350,99 @@ public class SetupEventFragment extends Fragment {
         }
     }
 
+    private void createPrivateEvent(
+            @NonNull String title,
+            @NonNull String description,
+            @NonNull String tagsRaw,
+            int maxEntrants
+    ) {
+        profileService.ensureSignedIn(
+                firebaseUser -> eventService.saveEvent(
+                        buildCreateModeEvent(
+                                title,
+                                description,
+                                tagsRaw,
+                                maxEntrants,
+                                true,
+                                firebaseUser.getUid()
+                        ),
+                        unused -> {
+                            if (!isAdded()) return;
+                            Toast.makeText(requireContext(),
+                                    "Private event created.",
+                                    Toast.LENGTH_SHORT).show();
+                            NavHostFragment.findNavController(this)
+                                    .popBackStack(R.id.organizeFragment, false);
+                        },
+                        error -> {
+                            if (!isAdded()) return;
+                            Toast.makeText(requireContext(),
+                                    "Create failed: " + error.getMessage(),
+                                    Toast.LENGTH_LONG).show();
+                        }
+                ),
+                error -> {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(),
+                            "Auth failed: " + error.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                }
+        );
+    }
+
+    @NonNull
+    private Event buildCreateModeEvent(
+            @NonNull String title,
+            @NonNull String description,
+            @NonNull String tagsRaw,
+            int maxEntrants,
+            boolean privateEvent,
+            @NonNull String organizerUid
+    ) {
+        long now = System.currentTimeMillis();
+        long oneWeek = 7L * 24 * 60 * 60 * 1000;
+
+        java.util.List<String> interests = null;
+        if (!tagsRaw.isEmpty()) {
+            interests = new java.util.ArrayList<>();
+            for (String part : tagsRaw.split(",")) {
+                String trimmed = part.trim();
+                if (!trimmed.isEmpty()) interests.add(trimmed);
+            }
+            if (interests.isEmpty()) interests = null;
+        }
+
+        Event event = new Event(
+                null,
+                title,
+                description,
+                null,
+                null,
+                now + oneWeek,
+                now + oneWeek + 3600000L,
+                registrationOpensMillis > 0 ? registrationOpensMillis : now,
+                registrationClosesMillis > 0 ? registrationClosesMillis : (now + (3L * 24 * 60 * 60 * 1000)),
+                maxEntrants > 0 ? maxEntrants : 0,
+                maxEntrants > 0 ? maxEntrants : 0,
+                null,
+                geolocationRequired,
+                "Lottery details TBD.",
+                organizerUid,
+                selectedPosterUri != null ? selectedPosterUri.toString() : null,
+                null,
+                interests,
+                false,
+                privateEvent
+        );
+        return event;
+    }
+
     private void persistReadPermission(@NonNull Uri uri) {
         if (getContext() == null) return;
         try {
             getContext().getContentResolver().takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-            );
-        } catch (SecurityException | IllegalArgumentException ignored) {
-            // Some providers don't support persistable permissions; best effort is enough.
-        }
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (SecurityException | IllegalArgumentException ignored) {}
     }
 
     private String safeText(EditText editText) {
@@ -352,7 +456,6 @@ public class SetupEventFragment extends Fragment {
     private void openDatePicker(long initialMillis, @NonNull DatePickedCallback callback) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(initialMillis > 0 ? initialMillis : System.currentTimeMillis());
-
         new DatePickerDialog(
                 requireContext(),
                 (picker, year, month, dayOfMonth) -> {
@@ -369,6 +472,20 @@ public class SetupEventFragment extends Fragment {
 
     private void updateGeoToggle(@NonNull TextView on, @NonNull TextView off, boolean required) {
         if (required) {
+            on.setBackgroundResource(R.drawable.bg_toggle_left_active);
+            off.setBackgroundResource(R.drawable.bg_toggle_right_inactive);
+        } else {
+            on.setBackgroundResource(R.drawable.bg_toggle_left_inactive);
+            off.setBackgroundResource(R.drawable.bg_toggle_right_active);
+        }
+    }
+
+    private void updateCreatePrimaryButtonLabel(@NonNull MaterialButton primaryButton) {
+        primaryButton.setText(isPrivateEvent ? "Create Private Event" : "Next - QR Code");
+    }
+
+    private void updatePrivateToggle(@NonNull TextView on, @NonNull TextView off, boolean isPrivate) {
+        if (isPrivate) {
             on.setBackgroundResource(R.drawable.bg_toggle_left_active);
             off.setBackgroundResource(R.drawable.bg_toggle_right_inactive);
         } else {

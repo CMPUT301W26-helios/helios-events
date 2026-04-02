@@ -17,19 +17,53 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * RecyclerView adapter for displaying a list of events, typically for administrative purposes.
+ */
 public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.ViewHolder> {
 
-    public interface OnEventClickListener {
-        void onEventClick(@NonNull Event event);
+    /**
+     * Listener interface for handling the delete button click on an event item.
+     */
+    public interface OnEventDeleteListener {
+        /**
+         * Called when an event's delete button is clicked.
+         * @param event The event associated with the clicked item.
+         */
+        void onEventDelete(@NonNull Event event);
+    }
+
+    /**
+     * Listener interface for handling the "View Organizer" button click on an event item.
+     */
+    public interface OnViewOrganizerListener {
+        /**
+         * Called when the "View Organizer" button is clicked.
+         * @param event The event whose organizer should be shown.
+         */
+        void onViewOrganizer(@NonNull Event event);
     }
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
     private final List<Event> events;
-    private final OnEventClickListener onClick;
+    private final OnEventDeleteListener onDelete;
+    private final OnViewOrganizerListener onViewOrganizer;
 
-    public AdminEventAdapter(@NonNull List<Event> events, @NonNull OnEventClickListener onClick) {
+    /**
+     * Constructs an AdminEventAdapter.
+     *
+     * @param events          The list of events to display.
+     * @param onDelete        The listener for delete button clicks.
+     * @param onViewOrganizer The listener for "View Organizer" button clicks.
+     */
+    public AdminEventAdapter(
+            @NonNull List<Event> events,
+            @NonNull OnEventDeleteListener onDelete,
+            @NonNull OnViewOrganizerListener onViewOrganizer
+    ) {
         this.events = events;
-        this.onClick = onClick;
+        this.onDelete = onDelete;
+        this.onViewOrganizer = onViewOrganizer;
     }
 
     @NonNull
@@ -65,8 +99,8 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
 
         holder.tvMaxEntrants.setText("Max: " + event.getCapacity());
 
-        // Delete button only — does not make the whole row clickable
-        holder.btnDelete.setOnClickListener(v -> onClick.onEventClick(event));
+        holder.btnDelete.setOnClickListener(v -> onDelete.onEventDelete(event));
+        holder.btnViewOrganizer.setOnClickListener(v -> onViewOrganizer.onViewOrganizer(event));
     }
 
     @Override
@@ -80,6 +114,9 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
         return trimmed.isEmpty() ? fallback : trimmed;
     }
 
+    /**
+     * ViewHolder class for admin event items.
+     */
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle;
         TextView tvDescription;
@@ -88,7 +125,12 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
         TextView tvTags;
         TextView tvMaxEntrants;
         Button btnDelete;
+        Button btnViewOrganizer;
 
+        /**
+         * Constructs a ViewHolder.
+         * @param itemView The view for a single list item.
+         */
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tv_event_title);
@@ -98,6 +140,7 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
             tvTags = itemView.findViewById(R.id.tv_event_tags);
             tvMaxEntrants = itemView.findViewById(R.id.tv_event_max_entrants);
             btnDelete = itemView.findViewById(R.id.btn_delete_event);
+            btnViewOrganizer = itemView.findViewById(R.id.btn_view_organizer);
         }
     }
 }

@@ -15,12 +15,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.helios.R;
 import com.example.helios.service.ProfileService;
 
+/**
+ * Activity for setting up or editing a user profile.
+ * Requires name and email to be provided for account completion.
+ */
 public class ProfileSetupActivity extends AppCompatActivity {
 
+    /** Intent extra key to indicate if the activity should return to MainActivity after completion. */
     public static final String EXTRA_RETURN_TO_MAIN = "extra_return_to_main";
 
+    /** Intent extra key to specify the operation mode (setup or edit). */
     public static final String EXTRA_MODE = "extra_mode";
+    /** Mode for initial profile setup when required information is missing. */
     public static final String MODE_SETUP_REQUIRED = "setup_required";
+    /** Mode for editing an existing profile. */
     public static final String MODE_EDIT_PROFILE = "edit_profile";
 
     private final ProfileService profileService = new ProfileService();
@@ -65,6 +73,9 @@ public class ProfileSetupActivity extends AppCompatActivity {
         primaryButton.setOnClickListener(v -> saveProfile());
     }
 
+    /**
+     * Configures the UI elements (titles, button text) based on the current mode.
+     */
     private void configureUiForMode() {
         if (MODE_EDIT_PROFILE.equals(mode)) {
             titleText.setText("Edit Profile");
@@ -79,12 +90,18 @@ public class ProfileSetupActivity extends AppCompatActivity {
         primaryButton.setEnabled(false);
     }
 
+    /**
+     * Attaches text watchers to input fields to validate required fields in real-time.
+     */
     private void attachValidationWatchers() {
         TextWatcher watcher = new SimpleWatcher(this::updatePrimaryButtonState);
         nameInput.addTextChangedListener(watcher);
         emailInput.addTextChangedListener(watcher);
     }
 
+    /**
+     * Loads the current user's profile and prefills the input fields.
+     */
     private void prefillCurrentProfile() {
         profileService.loadCurrentProfile(this, profile -> {
             if (profile == null) return;
@@ -99,16 +116,26 @@ public class ProfileSetupActivity extends AppCompatActivity {
                 Toast.LENGTH_LONG).show());
     }
 
+    /**
+     * Updates the enabled state of the primary action button based on input validity.
+     */
     private void updatePrimaryButtonState() {
         primaryButton.setEnabled(hasRequiredInputs());
     }
 
+    /**
+     * Checks if the required input fields (name and email) are not empty.
+     * @return True if valid, false otherwise.
+     */
     private boolean hasRequiredInputs() {
         String name = nameInput.getText() != null ? nameInput.getText().toString().trim() : "";
         String email = emailInput.getText() != null ? emailInput.getText().toString().trim() : "";
         return !name.isEmpty() && !email.isEmpty();
     }
 
+    /**
+     * Saves the profile information using {@link ProfileService}.
+     */
     private void saveProfile() {
         String name = nameInput.getText() != null ? nameInput.getText().toString() : "";
         String email = emailInput.getText() != null ? emailInput.getText().toString() : "";
@@ -127,6 +154,9 @@ public class ProfileSetupActivity extends AppCompatActivity {
         );
     }
 
+    /**
+     * Finishes the activity or navigates to {@link MainActivity} depending on {@link #returnToMain}.
+     */
     private void finishOrGoMain() {
         if (!returnToMain) {
             finish();
@@ -137,6 +167,9 @@ public class ProfileSetupActivity extends AppCompatActivity {
         finish();
     }
 
+    /**
+     * A simple implementation of {@link TextWatcher} that runs a callback on text change.
+     */
     private static class SimpleWatcher implements TextWatcher {
         private final Runnable callback;
         SimpleWatcher(Runnable callback) { this.callback = callback; }

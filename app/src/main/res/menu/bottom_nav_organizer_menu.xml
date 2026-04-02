@@ -17,7 +17,7 @@
         android:title="QR Code" />
 
     <item
-        android:id="@+id/notificationsFragment"
+        android:id="@+id/notifyEntrantsFragment"
         android:icon="@android:drawable/ic_popup_reminder"
         android:title="Notify" />
 

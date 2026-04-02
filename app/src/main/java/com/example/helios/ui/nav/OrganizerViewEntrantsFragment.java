@@ -24,6 +24,8 @@ import com.example.helios.model.Event;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
 import com.example.helios.service.EventService;
+import com.example.helios.service.LotteryService;
+import com.example.helios.service.OrganizerNotificationService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.service.WaitingListService;
 import com.google.android.material.button.MaterialButton;
@@ -39,11 +41,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+/**
+ * Fragment that allows an organizer to view and manage the list of entrants for an event.
+ * Handles the lottery draw, redraws, and removing entrants from various statuses (invited, accepted, declined).
+ */
 public class OrganizerViewEntrantsFragment extends Fragment {
 
     private String eventId;
     private Event event;
     private final EventService eventService = new EventService();
+    private final LotteryService lotteryService = new LotteryService();
     private final WaitingListService waitingListService = new WaitingListService();
     private final ProfileService profileService = new ProfileService();
 
@@ -58,7 +65,12 @@ public class OrganizerViewEntrantsFragment extends Fragment {
     private EditText etDrawCount;
     private MaterialButton btnRemoveEntrant;
     private ChipGroup cgStatus;
+    private final OrganizerNotificationService organizerNotificationService =
+            new OrganizerNotificationService();
 
+    /**
+     * Default constructor for OrganizerViewEntrantsFragment.
+     */
     public OrganizerViewEntrantsFragment() {
         super(R.layout.fragment_organizer_view_entrants);
     }
@@ -81,6 +93,11 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         loadData();
     }
 
+    /**
+     * Initializes UI references from the layout.
+     *
+     * @param view The fragment's root view.
+     */
     private void initViews(View view) {
         tvDrawIndicator = view.findViewById(R.id.tv_draw_indicator);
         tvListHeader = view.findViewById(R.id.tv_list_header);
@@ -96,6 +113,11 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         updateRemoveEntrantButtonState();
     }
 
+    /**
+     * Sets up the RecyclerView for displaying the entrant list.
+     *
+     * @param view The fragment's root view.
+     */
     private void setupRecyclerView(View view) {
         RecyclerView rv = view.findViewById(R.id.rv_entrants);
         adapter = new EntrantAdapter(displayList);
@@ -103,6 +125,11 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         rv.setAdapter(adapter);
     }
 
+    /**
+     * Sets up listeners for various UI interactions (back button, search, filters, actions).
+     *
+     * @param view The fragment's root view.
+     */
     private void setupListeners(View view) {
         view.findViewById(R.id.btn_back).setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
 
@@ -121,6 +148,9 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         btnRemoveEntrant.setOnClickListener(v -> toggleRemoveEntrantMode());
     }
 
+    /**
+     * Loads event and entrant data from services.
+     */
     private void loadData() {
         if (eventId == null) return;
 
@@ -130,6 +160,9 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         }, e -> toast("Failed to load event"));
     }
 
+    /**
+     * Refreshes the entrant list for the current event.
+     */
     private void refreshEntries() {
         waitingListService.getEntriesForEvent(eventId, entries -> {
             allEntries.clear();
@@ -140,6 +173,9 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         }, e -> toast("Failed to load entrants"));
     }
 
+    /**
+     * Updates the general UI state based on whether the draw has occurred.
+     */
     private void updateUiState() {
         boolean drawn = event != null && event.isDrawHappened();
         tvDrawIndicator.setVisibility(drawn ? View.VISIBLE : View.GONE);
@@ -153,6 +189,9 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         }
     }
 
+    /**
+     * Filters and updates the displayed entrant list based on search query and selected status filter.
+     */
     private void updateDisplayList() {
         displayList.clear();
         String query = etSearch.getText().toString().toLowerCase(Locale.CANADA);
@@ -217,6 +256,9 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         adapter.notifyDataSetChanged();
     }
 
+    /**
+     * Performs a lottery draw or adjusts the number of invited entrants based on the requested count.
+     */
     private void performDraw() {
         if (event == null) {
             toast("Event not loaded");
@@ -251,6 +293,11 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         }
     }
 
+    /**
+     * Runs the initial lottery draw, moving entrants from WAITING to INVITED or NOT_SELECTED.
+     *
+     * @param targetCount The number of entrants to invite.
+     */
     private void runInitialDraw(int targetCount) {
         List<WaitingListEntry> candidates = allEntries.stream()
                 .filter(e -> e.getStatus() == WaitingListStatus.WAITING)
@@ -261,16 +308,28 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             return;
         }
 
-        Collections.shuffle(candidates);
-        int toSelect = Math.min(targetCount, candidates.size());
-        for (int i = 0; i < candidates.size(); i++) {
-            WaitingListEntry entry = candidates.get(i);
-            entry.setStatus(i < toSelect ? WaitingListStatus.INVITED : WaitingListStatus.NOT_SELECTED);
-        }
+        int selectedCount = Math.min(targetCount, candidates.size());
 
-        updateEntries(candidates, () -> completeDrawEventUpdate(toSelect));
+        profileService.ensureSignedIn(firebaseUser ->
+                        lotteryService.runDraw(
+                                firebaseUser.getUid(),
+                                event,
+                                targetCount,
+                                unused -> {
+                                    toast("Draw completed! Selected " + selectedCount + " entrants");
+                                    refreshEntries();
+                                },
+                                error -> toast("Failed to run draw: " + error.getMessage())
+                        ),
+                error -> toast("Auth failed: " + error.getMessage())
+        );
     }
 
+    /**
+     * Invites additional entrants from the waitlist to meet the target count.
+     *
+     * @param additionalNeeded Number of additional entrants to invite.
+     */
     private void increaseDrawCount(int additionalNeeded) {
         List<WaitingListEntry> waitlisted = allEntries.stream()
                 .filter(this::isWaitlistStatus)
@@ -300,6 +359,12 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         });
     }
 
+    /**
+     * Moves invited/accepted entrants back to NOT_SELECTED status to reduce the count.
+     *
+     * @param removeCount      Number of entrants to uninvite.
+     * @param selectedEntrants List of currently selected entrants.
+     */
     private void decreaseDrawCount(int removeCount, @NonNull List<WaitingListEntry> selectedEntrants) {
         if (removeCount <= 0 || selectedEntrants.isEmpty()) {
             toast("No entrants available to move to waitlist");
@@ -321,14 +386,11 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         });
     }
 
-    private void completeDrawEventUpdate(int selectedCount) {
-        event.setDrawHappened(true);
-        eventService.saveEvent(event, unused -> {
-            toast("Draw completed! Selected " + selectedCount + " entrants");
-            refreshEntries();
-        }, e -> toast("Failed to update event status"));
-    }
-
+    /**
+     * Parses the requested draw count from the input field.
+     *
+     * @return The target count, or -1 if the input is invalid.
+     */
     private int parseRequestedDrawCount() {
         String raw = etDrawCount.getText() == null ? "" : etDrawCount.getText().toString().trim();
         if (raw.isEmpty()) {
@@ -349,16 +411,28 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         }
     }
 
+    /**
+     * Checks if an entry's status is either INVITED or ACCEPTED.
+     */
     private boolean isSelectedStatus(@NonNull WaitingListEntry entry) {
         return entry.getStatus() == WaitingListStatus.INVITED
                 || entry.getStatus() == WaitingListStatus.ACCEPTED;
     }
 
+    /**
+     * Checks if an entry's status is either WAITING or NOT_SELECTED.
+     */
     private boolean isWaitlistStatus(@NonNull WaitingListEntry entry) {
         return entry.getStatus() == WaitingListStatus.WAITING
                 || entry.getStatus() == WaitingListStatus.NOT_SELECTED;
     }
 
+    /**
+     * Updates multiple waiting list entries in Firestore sequentially.
+     *
+     * @param entriesToUpdate List of entries to update.
+     * @param onComplete      Runnable to execute after all updates are finished.
+     */
     private void updateEntries(@NonNull List<WaitingListEntry> entriesToUpdate, @NonNull Runnable onComplete) {
         if (entriesToUpdate.isEmpty()) {
             onComplete.run();
@@ -384,17 +458,28 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         }
     }
 
+    /**
+     * Toggles the mode for removing specific entrants from the invited/accepted list.
+     */
     private void toggleRemoveEntrantMode() {
         removeEntrantMode = !removeEntrantMode;
         updateRemoveEntrantButtonState();
         adapter.notifyDataSetChanged();
     }
 
+    /**
+     * Updates the text of the remove entrant toggle button.
+     */
     private void updateRemoveEntrantButtonState() {
         if (btnRemoveEntrant == null) return;
         btnRemoveEntrant.setText(removeEntrantMode ? "Done" : "Remove Entrant");
     }
 
+    /**
+     * Removes a single entrant from the event's waiting list.
+     *
+     * @param model The display model of the entrant to remove.
+     */
     private void removeEntrant(@NonNull EntrantDisplayModel model) {
         String entrantUid = model.entry.getEntrantUid();
         if (entrantUid == null || entrantUid.trim().isEmpty()) {
@@ -402,13 +487,31 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             return;
         }
 
-        waitingListService.removeEntry(eventId, entrantUid, unused -> {
-            String name = model.name != null ? model.name : "Entrant";
-            toast(name + " removed");
-            refreshEntries();
-        }, e -> toast("Failed to remove entrant"));
+        if (event == null) {
+            toast("Event not loaded");
+            return;
+        }
+
+        profileService.ensureSignedIn(firebaseUser ->
+                        organizerNotificationService.cancelEntrant(
+                                firebaseUser.getUid(),
+                                event,
+                                model.entry,
+                                "Removed by organizer",
+                                unused -> {
+                                    String name = model.name != null ? model.name : "Entrant";
+                                    toast(name + " removed");
+                                    refreshEntries();
+                                },
+                                error -> toast("Failed to remove entrant: " + error.getMessage())
+                        ),
+                error -> toast("Auth failed: " + error.getMessage())
+        );
     }
 
+    /**
+     * Updates the draw count input field with the current number of selected entrants.
+     */
     private void updateDrawCountDisplay() {
         long selectedCount = allEntries.stream()
                 .filter(e -> e.getStatus() == WaitingListStatus.INVITED
@@ -417,6 +520,9 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         etDrawCount.setText(String.valueOf(selectedCount));
     }
 
+    /**
+     * Deletes all entrants currently selected via checkboxes (typically in the Declined tab).
+     */
     private void deleteSelectedDeclined() {
         Set<String> selectedUids = adapter.getSelectedUids();
         if (selectedUids.isEmpty()) {
@@ -430,6 +536,9 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         refreshEntries();
     }
 
+    /**
+     * Replaces selected declined/cancelled entrants with new ones drawn randomly from the waitlist.
+     */
     private void redrawReplacements() {
         Set<String> selectedUids = adapter.getSelectedUids();
         if (selectedUids.isEmpty()) {
@@ -463,12 +572,18 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         if (isAdded()) Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * Display model that combines a waiting list entry with a user's name.
+     */
     private static class EntrantDisplayModel {
         WaitingListEntry entry;
         String name = "Loading...";
         EntrantDisplayModel(WaitingListEntry entry) { this.entry = entry; }
     }
 
+    /**
+     * RecyclerView adapter for the entrant list.
+     */
     private class EntrantAdapter extends RecyclerView.Adapter<EntrantAdapter.ViewHolder> {
         private final List<EntrantDisplayModel> list;
         private final Set<String> selectedUids = new HashSet<>();
@@ -515,8 +630,14 @@ public class OrganizerViewEntrantsFragment extends Fragment {
 
         @Override public int getItemCount() { return list.size(); }
 
+        /**
+         * @return The set of UIDs of entrants currently selected via checkboxes.
+         */
         public Set<String> getSelectedUids() { return selectedUids; }
 
+        /**
+         * ViewHolder for entrant items.
+         */
         class ViewHolder extends RecyclerView.ViewHolder {
             TextView tvName;
             CheckBox checkbox;

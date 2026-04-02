@@ -10,6 +10,10 @@ import androidx.navigation.NavController;
 import com.example.helios.R;
 import com.example.helios.service.ProfileService;
 
+/**
+ * Helper class for handling navigation between top-level fragments and activities.
+ * Manages tab selection and profile-based access control for certain sections.
+ */
 public class AppNavigator {
 
     private final AppCompatActivity activity;
@@ -18,6 +22,12 @@ public class AppNavigator {
 
     private int lastSelectedItemId = R.id.eventsFragment;
 
+    /**
+     * Constructs an AppNavigator.
+     *
+     * @param activity      The host activity.
+     * @param navController The navigation controller managing fragment transitions.
+     */
     public AppNavigator(
             @NonNull AppCompatActivity activity,
             @NonNull NavController navController
@@ -27,39 +37,55 @@ public class AppNavigator {
         this.profileService = new ProfileService();
     }
 
+    /**
+     * @return The ID of the last selected navigation item.
+     */
     public int getLastSelectedItemId() {
         return lastSelectedItemId;
     }
 
+    /**
+     * @param id The ID of the navigation item to set as last selected.
+     */
     public void setLastSelectedItemId(int id) {
         lastSelectedItemId = id;
     }
 
-    /** Tabs */
+    /**
+     * Navigates to the Events fragment.
+     */
     public void goEvents() {
         lastSelectedItemId = R.id.eventsFragment;
         safeNavigate(R.id.eventsFragment);
     }
 
+    /**
+     * Navigates to the QR Scan fragment.
+     */
     public void goScanQr() {
         lastSelectedItemId = R.id.scanQrFragment;
         safeNavigate(R.id.scanQrFragment);
     }
 
+    /**
+     * Navigates to the Profile fragment.
+     */
     public void goProfile() {
         lastSelectedItemId = R.id.profileFragment;
         safeNavigate(R.id.profileFragment);
     }
 
+    /**
+     * Navigates to the Notifications fragment.
+     */
     public void goNotifications() {
         lastSelectedItemId = R.id.notificationsFragment;
         safeNavigate(R.id.notificationsFragment);
     }
 
     /**
-     * Organizer is a "complex action" tab:
-     * - if profile incomplete -> open ProfileSetupActivity prompt
-     * - else -> navigate to Organize tab
+     * Navigates to the Organize fragment if the profile is complete.
+     * If the profile is incomplete, prompts the user to complete it via {@link ProfileSetupActivity}.
      */
     public void goOrganizeOrPrompt() {
         profileService.loadCurrentProfile(activity, profile -> {
@@ -85,6 +111,12 @@ public class AppNavigator {
                 Toast.LENGTH_LONG
         ).show());
     }
+
+    /**
+     * Safely navigates to a destination if it's not already the current destination.
+     *
+     * @param destinationId The ID of the destination to navigate to.
+     */
     private void safeNavigate(int destinationId) {
         // Avoid crashing if already at destination
         if (navController.getCurrentDestination() != null

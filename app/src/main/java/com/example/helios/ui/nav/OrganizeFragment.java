@@ -17,18 +17,25 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.helios.R;
+import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
 import com.example.helios.service.ProfileService;
+import com.example.helios.service.WaitingListService;
 import com.example.helios.ui.EventAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Fragment that allows organizers to view and manage their events.
+ * It separates events into current and past categories and provides search functionality.
+ */
 public class OrganizeFragment extends Fragment {
 
     private final EventService eventService = new EventService();
     private final ProfileService profileService = new ProfileService();
+    private final WaitingListService waitingListService = new WaitingListService();
 
     private final List<com.example.helios.model.Event> allOrganizerEvents = new ArrayList<>();
     private final List<com.example.helios.model.Event> currentEvents = new ArrayList<>();
@@ -36,11 +43,16 @@ public class OrganizeFragment extends Fragment {
 
     private EventAdapter currentAdapter;
     private EventAdapter pastAdapter;
+    @Nullable
+    private String organizerUid;
 
     private EditText searchEditText;
     private TextView currentEmptyText;
     private TextView pastEmptyText;
 
+    /**
+     * Default constructor for OrganizeFragment.
+     */
     public OrganizeFragment() {
         super(R.layout.fragment_organize);
     }
@@ -59,33 +71,31 @@ public class OrganizeFragment extends Fragment {
 
         RecyclerView rvCurrent = view.findViewById(R.id.rv_current_events);
         rvCurrent.setLayoutManager(new LinearLayoutManager(requireContext()));
-        currentAdapter = new EventAdapter(currentEvents, event -> {
-            if (event.getEventId() == null || event.getEventId().trim().isEmpty()) {
-                Toast.makeText(requireContext(),
-                        "Missing event id.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            Bundle args = new Bundle();
-            args.putString("arg_event_id", event.getEventId());
-            NavHostFragment.findNavController(this)
-                    .navigate(R.id.manageEventFragment, args);
-        });
+        currentAdapter = new EventAdapter(
+                currentEvents,
+                this::openManagedEvent,
+                new EventAdapter.OnCoOrganizerInviteActionListener() {
+                    @Override
+                    public void onAcceptInvite(@NonNull Event event) {
+                        acceptCoOrganizerInvite(event);
+                    }
+
+                    @Override
+                    public void onDeclineInvite(@NonNull Event event) {
+                        declineCoOrganizerInvite(event);
+                    }
+                }
+        );
         rvCurrent.setAdapter(currentAdapter);
 
         RecyclerView rvPast = view.findViewById(R.id.rv_past_events);
         if (rvPast != null) {
             rvPast.setLayoutManager(new LinearLayoutManager(requireContext()));
-            pastAdapter = new EventAdapter(pastEvents, event -> {
-                if (event.getEventId() == null || event.getEventId().trim().isEmpty()) {
-                    Toast.makeText(requireContext(),
-                            "Missing event id.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                Bundle args = new Bundle();
-                args.putString("arg_event_id", event.getEventId());
-                NavHostFragment.findNavController(this)
-                        .navigate(R.id.manageEventFragment, args);
-            });
+            pastAdapter = new EventAdapter(
+                    pastEvents,
+                    this::openManagedEvent,
+                    null
+            );
             rvPast.setAdapter(pastAdapter);
         }
 
@@ -109,16 +119,25 @@ public class OrganizeFragment extends Fragment {
         loadOrganizerEvents();
     }
 
+    /**
+     * Loads events created by the current organizer from {@link EventService}.
+     */
     private void loadOrganizerEvents() {
         profileService.ensureSignedIn(firebaseUser -> {
-            String uid = firebaseUser.getUid();
+            organizerUid = firebaseUser.getUid();
+            if (currentAdapter != null) {
+                currentAdapter.setOrganizerViewerUid(organizerUid);
+            }
+            if (pastAdapter != null) {
+                pastAdapter.setOrganizerViewerUid(organizerUid);
+            }
 
             eventService.getAllEvents(events -> {
                 if (!isAdded()) return;
 
                 allOrganizerEvents.clear();
                 for (com.example.helios.model.Event e : events) {
-                    if (uid.equals(e.getOrganizerUid())) {
+                    if (isManagedByCurrentOrganizer(e)) {
                         allOrganizerEvents.add(e);
                     }
                 }
@@ -144,6 +163,18 @@ public class OrganizeFragment extends Fragment {
         });
     }
 
+    private boolean isManagedByCurrentOrganizer(@NonNull com.example.helios.model.Event event) {
+        return organizerUid != null
+                && (organizerUid.equals(event.getOrganizerUid())
+                || event.isCoOrganizer(organizerUid)
+                || event.isPendingCoOrganizer(organizerUid));
+    }
+
+    /**
+     * Filters the organizer's events based on a search query and categorizes them into current and past events.
+     *
+     * @param query The search query string.
+     */
     private void applyOrganizerFilter(@NonNull String query) {
         currentEvents.clear();
         pastEvents.clear();
@@ -153,6 +184,11 @@ public class OrganizeFragment extends Fragment {
 
         for (com.example.helios.model.Event event : allOrganizerEvents) {
             if (!matchesQuery(event, normalizedQuery)) {
+                continue;
+            }
+
+            if (organizerUid != null && event.isPendingCoOrganizer(organizerUid)) {
+                currentEvents.add(event);
                 continue;
             }
 
@@ -174,6 +210,13 @@ public class OrganizeFragment extends Fragment {
         updateEmptyStates();
     }
 
+    /**
+     * Checks if an event matches the search query.
+     *
+     * @param event The event to check.
+     * @param query The normalized search query.
+     * @return True if the event matches the query, false otherwise.
+     */
     private boolean matchesQuery(com.example.helios.model.Event event, @NonNull String query) {
         if (query.isEmpty()) {
             return true;
@@ -190,10 +233,19 @@ public class OrganizeFragment extends Fragment {
                 || address.contains(query);
     }
 
+    /**
+     * Safely converts a string to lowercase.
+     *
+     * @param value The string to convert.
+     * @return The lowercase string, or an empty string if the input was null.
+     */
     private String safeLower(String value) {
         return value == null ? "" : value.toLowerCase(Locale.CANADA);
     }
 
+    /**
+     * Updates the visibility of the "empty" text views based on whether the event lists are empty.
+     */
     private void updateEmptyStates() {
         if (currentEmptyText != null) {
             currentEmptyText.setVisibility(currentEvents.isEmpty() ? View.VISIBLE : View.GONE);
@@ -203,47 +255,82 @@ public class OrganizeFragment extends Fragment {
         }
     }
 
-    /*
-    // Previous debug helper to seed a demo event directly from Organizer.
-    // Kept here for reference; navigation now goes to the Create Event flow instead.
-    private void seedDemoEvent() {
-        // Ensure we have a Firebase uid (anonymous auth provides this)
-        profileService.ensureSignedIn(firebaseUser -> {
-            String uid = firebaseUser.getUid();
-
-            com.example.helios.model.Event demo = new com.example.helios.model.Event(
-                    "demo_event_dance_elders",              // eventId (doc id)
-                    "Dance Class for Elders",               // title
-                    "Hosting a great dance class for elders\nTags: Dance", // description
-                    "Edmonton, AB",                         // locationName
-                    null,                                   // address
-                    1772607600000L,                         // startTimeMillis
-                    1772611200000L,                         // endTimeMillis
-                    1772002800000L,                         // registrationOpensMillis
-                    1772607599000L,                         // registrationClosesMillis
-                    50,                                     // capacity
-                    50,                                     // sampleSize
-                    null,                                   // waitlistLimit
-                    false,                                  // geolocationRequired
-                    "Random lottery draw after registration closes.", // lotteryGuidelines
-                    uid,                                    // organizerUid
-                    null,                                   // posterImageId
-                    null                                    // qrCodeValue
-            );
-
-            eventService.saveEvent(
-                    demo,
-                    unused -> android.widget.Toast.makeText(requireContext(),
-                            "Demo event added: " + demo.getEventId(),
-                            android.widget.Toast.LENGTH_SHORT).show(),
-                    error -> android.widget.Toast.makeText(requireContext(),
-                            "Failed to add demo event: " + error.getMessage(),
-                            android.widget.Toast.LENGTH_LONG).show()
-            );
-
-        }, error -> android.widget.Toast.makeText(requireContext(),
-                "Auth failed: " + error.getMessage(),
-                android.widget.Toast.LENGTH_LONG).show());
+    private void openManagedEvent(@NonNull Event event) {
+        if (event.getEventId() == null || event.getEventId().trim().isEmpty()) {
+            Toast.makeText(requireContext(),
+                    "Missing event id.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Bundle args = new Bundle();
+        args.putString("arg_event_id", event.getEventId());
+        NavHostFragment.findNavController(this)
+                .navigate(R.id.manageEventFragment, args);
     }
-    */
+
+    private void acceptCoOrganizerInvite(@NonNull Event event) {
+        if (organizerUid == null || event.getEventId() == null) return;
+
+        List<String> pending = event.getPendingCoOrganizerUids();
+        if (pending == null || !pending.remove(organizerUid)) {
+            Toast.makeText(requireContext(),
+                    "Invite no longer exists.", Toast.LENGTH_SHORT).show();
+            loadOrganizerEvents();
+            return;
+        }
+
+        List<String> coOrganizers = event.getCoOrganizerUids();
+        if (coOrganizers == null) coOrganizers = new ArrayList<>();
+        if (!coOrganizers.contains(organizerUid)) {
+            coOrganizers.add(organizerUid);
+        }
+
+        event.setPendingCoOrganizerUids(pending);
+        event.setCoOrganizerUids(coOrganizers);
+
+        eventService.saveEvent(event, unused -> {
+            if (!isAdded()) return;
+            waitingListService.removeEntry(event.getEventId(), organizerUid, unused2 -> {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(),
+                        "Co-organizer invite accepted!", Toast.LENGTH_SHORT).show();
+                loadOrganizerEvents();
+            }, error -> {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(),
+                        "Accepted, but could not remove waiting list entry: " + error.getMessage(),
+                        Toast.LENGTH_LONG).show();
+                loadOrganizerEvents();
+            });
+        }, error -> {
+            if (!isAdded()) return;
+            Toast.makeText(requireContext(),
+                    "Failed to accept invite: " + error.getMessage(),
+                    Toast.LENGTH_LONG).show();
+        });
+    }
+
+    private void declineCoOrganizerInvite(@NonNull Event event) {
+        if (organizerUid == null) return;
+
+        List<String> pending = event.getPendingCoOrganizerUids();
+        if (pending == null || !pending.remove(organizerUid)) {
+            Toast.makeText(requireContext(),
+                    "Invite no longer exists.", Toast.LENGTH_SHORT).show();
+            loadOrganizerEvents();
+            return;
+        }
+
+        event.setPendingCoOrganizerUids(pending);
+        eventService.saveEvent(event, unused -> {
+            if (!isAdded()) return;
+            Toast.makeText(requireContext(),
+                    "Co-organizer invite declined.", Toast.LENGTH_SHORT).show();
+            loadOrganizerEvents();
+        }, error -> {
+            if (!isAdded()) return;
+            Toast.makeText(requireContext(),
+                    "Failed to decline invite: " + error.getMessage(),
+                    Toast.LENGTH_LONG).show();
+        });
+    }
 }

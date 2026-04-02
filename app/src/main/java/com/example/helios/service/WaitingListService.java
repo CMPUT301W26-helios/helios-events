@@ -4,18 +4,44 @@ import androidx.annotation.NonNull;
 
 import com.example.helios.data.FirebaseRepository;
 import com.example.helios.model.WaitingListEntry;
+import com.example.helios.model.WaitingListStatus;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.List;
-
+/**
+ * Service for organizer-side waiting-list retrieval, update, and removal actions.
+ *
+ * Role: control/service layer for waiting-list management.
+ * Issues: validation is minimal and most operations delegate directly to the repository.
+ * 
+ * Alt Description:
+ * Service class that provides business logic for managing event waiting lists.
+ * It interacts with the {@link FirebaseRepository} to perform operations on waiting list entries.
+ */
 public class WaitingListService {
+
     private final FirebaseRepository repository;
 
+    /**
+     * Initializes the WaitingListService with a new FirebaseRepository instance.
+     */
     public WaitingListService() {
-        this.repository = new FirebaseRepository();
+        this(new FirebaseRepository());
     }
 
+    // Package-private test seam
+    WaitingListService(@NonNull FirebaseRepository repository) {
+        this.repository = repository;
+    }
+
+    /**
+     * Retrieves all waiting list entries for a specific event.
+     *
+     * @param eventId   The unique identifier for the event.
+     * @param onSuccess Callback receiving the list of waiting list entries.
+     * @param onFailure Callback for failed operation.
+     */
     public void getEntriesForEvent(
             @NonNull String eventId,
             @NonNull OnSuccessListener<List<WaitingListEntry>> onSuccess,
@@ -24,19 +50,37 @@ public class WaitingListService {
         repository.getAllWaitingListEntries(eventId, onSuccess, onFailure);
     }
 
+    /**
+     * Updates an existing waiting list entry.
+     *
+     * @param eventId   The unique identifier for the event.
+     * @param entry     The updated waiting list entry.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
     public void updateEntry(
             @NonNull String eventId,
             @NonNull WaitingListEntry entry,
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        if (entry.getEntrantUid() == null || entry.getEntrantUid().trim().isEmpty()) {
+        String entrantUid = entry.getEntrantUid();
+        if (entrantUid == null || entrantUid.trim().isEmpty()) {
             onFailure.onFailure(new IllegalArgumentException("entrantUid must not be empty."));
             return;
         }
-        repository.updateWaitingListEntry(eventId, entry.getEntrantUid(), entry, onSuccess, onFailure);
+
+        repository.updateWaitingListEntry(eventId, entrantUid, entry, onSuccess, onFailure);
     }
 
+    /**
+     * Removes an entry from a waiting list.
+     *
+     * @param eventId    The unique identifier for the event.
+     * @param entrantUid The unique identifier for the entrant.
+     * @param onSuccess  Callback for successful operation.
+     * @param onFailure  Callback for failed operation.
+     */
     public void removeEntry(
             @NonNull String eventId,
             @NonNull String entrantUid,
@@ -44,5 +88,32 @@ public class WaitingListService {
             @NonNull OnFailureListener onFailure
     ) {
         repository.deleteWaitingListEntry(eventId, entrantUid, onSuccess, onFailure);
+    }
+
+    public void inviteEntrantToWaitingList(
+            @NonNull String eventId,
+            @NonNull String entrantUid,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.getWaitingListEntry(eventId, entrantUid, existing -> {
+            if (existing != null
+                    && existing.getStatus() != null
+                    && existing.getStatus() != WaitingListStatus.CANCELLED
+                    && existing.getStatus() != WaitingListStatus.NOT_SELECTED
+                    && existing.getStatus() != WaitingListStatus.DECLINED) {
+                onFailure.onFailure(new IllegalStateException("User is already on this waiting list."));
+                return;
+            }
+
+            WaitingListEntry entry = existing != null ? existing : new WaitingListEntry();
+            entry.setEventId(eventId);
+            entry.setEntrantUid(entrantUid);
+            entry.setStatus(WaitingListStatus.WAITING);
+            if (entry.getJoinedAtMillis() <= 0) {
+                entry.setJoinedAtMillis(System.currentTimeMillis());
+            }
+            repository.upsertWaitingListEntry(eventId, entrantUid, entry, onSuccess, onFailure);
+        }, onFailure);
     }
 }
