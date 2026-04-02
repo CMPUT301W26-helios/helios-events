@@ -6,6 +6,7 @@
     <color name="helios_button_primary_disabled">#D9D9D9</color>
     <color name="helios_button_secondary">#E8F4EC</color>
     <color name="helios_button_secondary_border">#CAC4D0</color>
+    <color name="helios_danger">#B3261E</color>
 
     <!-- Surfaces / backgrounds -->
     <color name="helios_background">#F2FBF7</color>

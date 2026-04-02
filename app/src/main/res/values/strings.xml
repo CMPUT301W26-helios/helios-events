@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">helios</string>
+    <string name="accept">Accept</string>
+    <string name="decline">Decline</string>
     <string name="co_organizer_badge">Co-organizer</string>
+    <string name="co_organizer_invite_title">Co-Organizer Invite</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

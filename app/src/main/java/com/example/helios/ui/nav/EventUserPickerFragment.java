@@ -1,5 +1,6 @@
 package com.example.helios.ui.nav;
 
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -12,6 +13,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -39,6 +41,12 @@ public class EventUserPickerFragment extends Fragment {
     public enum Mode {
         INVITE_PRIVATE,
         ASSIGN_CO_ORGANIZER
+    }
+
+    private enum CoOrganizerActionState {
+        INVITE,
+        CANCEL,
+        REMOVE
     }
 
     private static final String ARG_EVENT_ID = "arg_event_id";
@@ -99,7 +107,12 @@ public class EventUserPickerFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.rv_user_picker_users);
         MaterialButton doneButton = view.findViewById(R.id.btn_user_picker_done);
 
-        adapter = new UserAdapter(filteredUsers, this::onUserActionPressed);
+        adapter = new UserAdapter(
+                filteredUsers,
+                mode == Mode.ASSIGN_CO_ORGANIZER,
+                this::onUserActionPressed,
+                this::getCoOrganizerActionState
+        );
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
 
@@ -120,10 +133,8 @@ public class EventUserPickerFragment extends Fragment {
         if (titleView == null || subtitleView == null || searchInput == null) return;
         if (mode == Mode.ASSIGN_CO_ORGANIZER) {
             titleView.setText("Assign Co-organizer");
-            adapter.setActionLabel("Assign");
         } else {
             titleView.setText("Invite Entrants");
-            adapter.setActionLabel("Invite");
         }
     }
 
@@ -164,8 +175,6 @@ public class EventUserPickerFragment extends Fragment {
             Set<String> blocked = new HashSet<>();
             if (loadedEvent != null) {
                 blocked.add(loadedEvent.getOrganizerUid());
-                List<String> co = loadedEvent.getCoOrganizerUids();
-                if (co != null) blocked.addAll(co);
             }
 
             for (UserProfile user : users) {
@@ -200,7 +209,14 @@ public class EventUserPickerFragment extends Fragment {
         if (eventId == null || loadedEvent == null || user.getUid() == null) return;
 
         if (mode == Mode.ASSIGN_CO_ORGANIZER) {
-            assignCoOrganizer(user);
+            CoOrganizerActionState actionState = getCoOrganizerActionState(user);
+            if (actionState == CoOrganizerActionState.CANCEL) {
+                cancelCoOrganizerInvite(user);
+            } else if (actionState == CoOrganizerActionState.REMOVE) {
+                removeCoOrganizer(user);
+            } else {
+                inviteCoOrganizer(user);
+            }
         } else {
             inviteToPrivateEvent(user);
         }
@@ -215,27 +231,76 @@ public class EventUserPickerFragment extends Fragment {
         );
     }
 
-    private void assignCoOrganizer(@NonNull UserProfile user) {
-        if (loadedEvent == null) return;
+    @NonNull
+    private CoOrganizerActionState getCoOrganizerActionState(@NonNull UserProfile user) {
+        if (loadedEvent == null || user.getUid() == null) {
+            return CoOrganizerActionState.INVITE;
+        }
+        if (loadedEvent.isCoOrganizer(user.getUid())) {
+            return CoOrganizerActionState.REMOVE;
+        }
+        if (loadedEvent.isPendingCoOrganizer(user.getUid())) {
+            return CoOrganizerActionState.CANCEL;
+        }
+        return CoOrganizerActionState.INVITE;
+    }
 
-        List<String> co = loadedEvent.getCoOrganizerUids();
-        if (co == null) co = new ArrayList<>();
-        if (co.contains(user.getUid())) {
-            toast("Already a co-organizer.");
+    private void inviteCoOrganizer(@NonNull UserProfile user) {
+        if (loadedEvent == null || user.getUid() == null) return;
+
+        List<String> pending = loadedEvent.getPendingCoOrganizerUids();
+        if (pending == null) pending = new ArrayList<>();
+        if (pending.contains(user.getUid())) {
+            toast("Co-organizer invite already pending.");
             return;
         }
-        co.add(user.getUid());
-        loadedEvent.setCoOrganizerUids(co);
+        pending.add(user.getUid());
+        loadedEvent.setPendingCoOrganizerUids(pending);
 
         eventService.saveEvent(loadedEvent, unused -> {
             if (!isAdded()) return;
-            waitingListService.removeEntry(eventId, user.getUid(), unused2 -> {
-                toast("Assigned co-organizer: " + nonEmptyOr(user.getName(), user.getUid()));
-                allUsers.remove(user);
-                filteredUsers.remove(user);
-                adapter.notifyDataSetChanged();
-            }, e -> toast("Assigned co-organizer (could not remove from waiting list): " + e.getMessage()));
-        }, e -> toast("Assign failed: " + e.getMessage()));
+            adapter.notifyDataSetChanged();
+            toast("Invited " + nonEmptyOr(user.getName(), user.getUid()) + " to co-organize.");
+        }, e -> toast("Invite failed: " + e.getMessage()));
+    }
+
+    private void cancelCoOrganizerInvite(@NonNull UserProfile user) {
+        if (loadedEvent == null || user.getUid() == null) return;
+
+        List<String> pending = loadedEvent.getPendingCoOrganizerUids();
+        if (pending == null || !pending.remove(user.getUid())) {
+            toast("No pending invite to cancel.");
+            return;
+        }
+        loadedEvent.setPendingCoOrganizerUids(pending);
+
+        eventService.saveEvent(loadedEvent, unused -> {
+            if (!isAdded()) return;
+            adapter.notifyDataSetChanged();
+            toast("Cancelled invite for " + nonEmptyOr(user.getName(), user.getUid()) + ".");
+        }, e -> toast("Cancel failed: " + e.getMessage()));
+    }
+
+    private void removeCoOrganizer(@NonNull UserProfile user) {
+        if (loadedEvent == null || user.getUid() == null) return;
+
+        List<String> coOrganizers = loadedEvent.getCoOrganizerUids();
+        if (coOrganizers == null || !coOrganizers.remove(user.getUid())) {
+            toast("User is not a co-organizer.");
+            return;
+        }
+        loadedEvent.setCoOrganizerUids(coOrganizers);
+        List<String> pending = loadedEvent.getPendingCoOrganizerUids();
+        if (pending != null) {
+            pending.remove(user.getUid());
+            loadedEvent.setPendingCoOrganizerUids(pending);
+        }
+
+        eventService.saveEvent(loadedEvent, unused -> {
+            if (!isAdded()) return;
+            adapter.notifyDataSetChanged();
+            toast("Removed co-organizer: " + nonEmptyOr(user.getName(), user.getUid()));
+        }, e -> toast("Remove failed: " + e.getMessage()));
     }
 
     private String safeLower(@Nullable String value) {
@@ -259,18 +324,25 @@ public class EventUserPickerFragment extends Fragment {
             void onAction(@NonNull UserProfile user);
         }
 
-        private final List<UserProfile> users;
-        private final OnAction onAction;
-        private String actionLabel = "Invite";
-
-        UserAdapter(@NonNull List<UserProfile> users, @NonNull OnAction onAction) {
-            this.users = users;
-            this.onAction = onAction;
+        interface CoOrganizerStateResolver {
+            @NonNull CoOrganizerActionState resolve(@NonNull UserProfile user);
         }
 
-        void setActionLabel(@NonNull String label) {
-            this.actionLabel = label;
-            notifyDataSetChanged();
+        private final List<UserProfile> users;
+        private final boolean coOrganizerMode;
+        private final OnAction onAction;
+        private final CoOrganizerStateResolver coOrganizerStateResolver;
+
+        UserAdapter(
+                @NonNull List<UserProfile> users,
+                boolean coOrganizerMode,
+                @NonNull OnAction onAction,
+                @NonNull CoOrganizerStateResolver coOrganizerStateResolver
+        ) {
+            this.users = users;
+            this.coOrganizerMode = coOrganizerMode;
+            this.onAction = onAction;
+            this.coOrganizerStateResolver = coOrganizerStateResolver;
         }
 
         @NonNull
@@ -297,8 +369,38 @@ public class EventUserPickerFragment extends Fragment {
 
             holder.nameView.setText(name);
             holder.contactView.setText(contact);
-            holder.actionButton.setText(actionLabel);
+            bindActionButton(holder.actionButton, user);
             holder.actionButton.setOnClickListener(v -> onAction.onAction(user));
+        }
+
+        private void bindActionButton(@NonNull MaterialButton button, @NonNull UserProfile user) {
+            if (!coOrganizerMode) {
+                applyInviteButtonStyle(button);
+                return;
+            }
+
+            CoOrganizerActionState actionState = coOrganizerStateResolver.resolve(user);
+            if (actionState == CoOrganizerActionState.INVITE) {
+                applyInviteButtonStyle(button);
+            } else if (actionState == CoOrganizerActionState.CANCEL) {
+                applyDestructiveButtonStyle(button, "Cancel");
+            } else {
+                applyDestructiveButtonStyle(button, "Remove");
+            }
+        }
+
+        private void applyInviteButtonStyle(@NonNull MaterialButton button) {
+            button.setText("Invite");
+            button.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(button.getContext(), R.color.helios_button_primary)));
+            button.setTextColor(ContextCompat.getColor(button.getContext(), R.color.helios_text_primary));
+        }
+
+        private void applyDestructiveButtonStyle(@NonNull MaterialButton button, @NonNull String label) {
+            button.setText(label);
+            button.setBackgroundTintList(ColorStateList.valueOf(
+                    ContextCompat.getColor(button.getContext(), R.color.helios_danger)));
+            button.setTextColor(ContextCompat.getColor(button.getContext(), R.color.helios_surface));
         }
 
         @Override
@@ -320,4 +422,3 @@ public class EventUserPickerFragment extends Fragment {
         }
     }
 }
-

@@ -26,6 +26,7 @@ import com.example.helios.service.CommentService;
 import com.example.helios.service.EntrantEventService;
 import com.example.helios.service.EventService;
 import com.example.helios.service.ProfileService;
+import com.example.helios.service.WaitingListService;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
@@ -65,6 +66,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private final EntrantEventService entrantEventService = new EntrantEventService();
     private final CommentService commentService = new CommentService();
     private final ProfileService profileService = new ProfileService();
+    private final WaitingListService waitingListService = new WaitingListService();
 
     private final SimpleDateFormat dateFormat =
             new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
@@ -300,6 +302,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                 commentsAdapter.setCurrentUser(currentUserUid, currentUserAdmin);
             }
             refreshLikeStates();
+            updateWaitingListButton();
         }, error -> {
             if (!isAdded()) return;
             toast("Comment profile unavailable: " + error.getMessage());
@@ -571,9 +574,37 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private void updateWaitingListButton() {
         if (btnWaitingList == null || hideJoinButton) return;
 
+        if (currentUserUid != null && loadedEvent != null) {
+            if (loadedEvent.isPendingCoOrganizer(currentUserUid)) {
+                btnWaitingList.setVisibility(View.GONE);
+                showActionButtons(
+                        "Accept Co-organizer Invite",
+                        "Decline Co-organizer Invite",
+                        this::acceptCoOrganizerInvite,
+                        this::declineCoOrganizerInvite
+                );
+                return;
+            }
+
+            if (currentUserUid.equals(loadedEvent.getOrganizerUid()) || loadedEvent.isCoOrganizer(currentUserUid)) {
+                hideActionButtons();
+                btnWaitingList.setVisibility(View.VISIBLE);
+                btnWaitingList.setText("You are organizing this event");
+                btnWaitingList.setEnabled(false);
+                return;
+            }
+        }
+
+        hideActionButtons();
+
         if (currentEntry != null && currentEntry.getStatus() == WaitingListStatus.INVITED) {
             btnWaitingList.setVisibility(View.GONE);
-            showAcceptDeclineButtons();
+            showActionButtons(
+                    "Accept Invitation",
+                    "Decline Invitation",
+                    this::acceptInvitation,
+                    this::declineInvitation
+            );
             return;
         }
 
@@ -598,7 +629,12 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         }
     }
 
-    private void showAcceptDeclineButtons() {
+    private void showActionButtons(
+            @NonNull String acceptText,
+            @NonNull String declineText,
+            @NonNull Runnable acceptAction,
+            @NonNull Runnable declineAction
+    ) {
         if (getView() == null) return;
         View container = getView().findViewById(R.id.layout_action_buttons);
         if (container == null) return;
@@ -607,8 +643,22 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         MaterialButton btnAccept = getView().findViewById(R.id.button_accept_invitation);
         MaterialButton btnDecline = getView().findViewById(R.id.button_decline_invitation);
 
-        if (btnAccept != null) btnAccept.setOnClickListener(v -> acceptInvitation());
-        if (btnDecline != null) btnDecline.setOnClickListener(v -> declineInvitation());
+        if (btnAccept != null) {
+            btnAccept.setText(acceptText);
+            btnAccept.setOnClickListener(v -> acceptAction.run());
+        }
+        if (btnDecline != null) {
+            btnDecline.setText(declineText);
+            btnDecline.setOnClickListener(v -> declineAction.run());
+        }
+    }
+
+    private void hideActionButtons() {
+        if (getView() == null) return;
+        View container = getView().findViewById(R.id.layout_action_buttons);
+        if (container != null) {
+            container.setVisibility(View.GONE);
+        }
     }
 
     private void acceptInvitation() {
@@ -637,6 +687,69 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                     if (!isAdded()) return;
                     toast("Failed to save response: " + error.getMessage());
                 });
+    }
+
+    private void acceptCoOrganizerInvite() {
+        if (loadedEvent == null || currentUserUid == null) return;
+
+        List<String> pending = loadedEvent.getPendingCoOrganizerUids();
+        if (pending == null || !pending.remove(currentUserUid)) {
+            toast("Co-organizer invite no longer exists.");
+            updateWaitingListButton();
+            return;
+        }
+
+        List<String> coOrganizers = loadedEvent.getCoOrganizerUids();
+        if (coOrganizers == null) coOrganizers = new ArrayList<>();
+        if (!coOrganizers.contains(currentUserUid)) {
+            coOrganizers.add(currentUserUid);
+        }
+
+        loadedEvent.setPendingCoOrganizerUids(pending);
+        loadedEvent.setCoOrganizerUids(coOrganizers);
+
+        eventService.saveEvent(loadedEvent, unused -> {
+            if (!isAdded()) return;
+            waitingListService.removeEntry(eventId, currentUserUid, unused2 -> {
+                if (!isAdded()) return;
+                currentEntry = null;
+                isCurrentlyOnWaitingList = false;
+                updateWaitingListButton();
+                refreshCapacityCount();
+                toast("Co-organizer invite accepted!");
+            }, error -> {
+                if (!isAdded()) return;
+                currentEntry = null;
+                isCurrentlyOnWaitingList = false;
+                updateWaitingListButton();
+                refreshCapacityCount();
+                toast("Accepted, but could not remove waiting list entry: " + error.getMessage());
+            });
+        }, error -> {
+            if (!isAdded()) return;
+            toast("Failed to accept co-organizer invite: " + error.getMessage());
+        });
+    }
+
+    private void declineCoOrganizerInvite() {
+        if (loadedEvent == null || currentUserUid == null) return;
+
+        List<String> pending = loadedEvent.getPendingCoOrganizerUids();
+        if (pending == null || !pending.remove(currentUserUid)) {
+            toast("Co-organizer invite no longer exists.");
+            updateWaitingListButton();
+            return;
+        }
+
+        loadedEvent.setPendingCoOrganizerUids(pending);
+        eventService.saveEvent(loadedEvent, unused -> {
+            if (!isAdded()) return;
+            updateWaitingListButton();
+            toast("Co-organizer invite declined.");
+        }, error -> {
+            if (!isAdded()) return;
+            toast("Failed to decline co-organizer invite: " + error.getMessage());
+        });
     }
 
     private void refreshCapacityCount() {
