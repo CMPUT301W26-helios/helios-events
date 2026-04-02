@@ -27,6 +27,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
+import com.example.helios.service.ProfileService;
 import com.example.helios.ui.EventAdapter;
 import com.example.helios.ui.event.EventDetailsBottomSheet;
 import com.google.android.material.chip.Chip;
@@ -61,9 +62,12 @@ public class EventsFragment extends Fragment {
 
     private EventAdapter eventAdapter;
     private final EventService eventService = new EventService();
+    private final ProfileService profileService = new ProfileService();
 
     private final List<Event> allEvents = new ArrayList<>();
     private final List<Event> filteredEvents = new ArrayList<>();
+    @Nullable
+    private String currentUid;
 
     // Filter State
     private Long startDateFilter = null;
@@ -196,23 +200,31 @@ public class EventsFragment extends Fragment {
      * Loads events from the {@link EventService}.
      */
     private void loadEvents() {
-        eventService.getAllEvents(
-                events -> {
-                    if (!isAdded()) return;
+        profileService.ensureSignedIn(firebaseUser -> {
+            currentUid = firebaseUser.getUid();
+            eventService.getAllEvents(
+                    events -> {
+                        if (!isAdded()) return;
 
-                    loadedOnce = true;
-                    allEvents.clear();
-                    allEvents.addAll(events);
+                        loadedOnce = true;
+                        allEvents.clear();
+                        allEvents.addAll(events);
 
-                    applyFilters();
-                },
-                e -> {
-                    if (!isAdded()) return;
-                    Toast.makeText(requireContext(),
-                            "Failed to load events: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
-                }
-        );
+                        applyFilters();
+                    },
+                    e -> {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(),
+                                "Failed to load events: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+            );
+        }, e -> {
+            if (!isAdded()) return;
+            Toast.makeText(requireContext(),
+                    "Auth failed: " + e.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+        });
     }
 
     /**
@@ -416,7 +428,7 @@ public class EventsFragment extends Fragment {
         String query = etSearch.getText().toString().toLowerCase().trim();
 
         for (Event event : allEvents) {
-            if (event.isPrivateEvent()) {
+            if (!shouldDisplayEvent(event)) {
                 continue;
             }
 
@@ -456,6 +468,13 @@ public class EventsFragment extends Fragment {
 
         updateFilterVisuals();
         eventAdapter.notifyDataSetChanged();
+    }
+
+    private boolean shouldDisplayEvent(@NonNull Event event) {
+        if (!event.isPrivateEvent()) {
+            return true;
+        }
+        return currentUid != null && event.isPendingCoOrganizer(currentUid);
     }
 
     /**

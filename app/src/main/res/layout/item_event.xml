@@ -27,10 +27,26 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tv_event_coorganizer_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_event_role_badge"
+            android:paddingStart="12dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="6dp"
+            android:text="@string/co_organizer_badge"
+            android:textColor="@color/helios_text_primary"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <TextView
             android:id="@+id/tv_event_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="8dp"
             android:ellipsize="end"
             android:maxLines="2"
             android:text="Event description"

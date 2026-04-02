@@ -49,6 +49,7 @@ public class Event {
     private boolean drawHappened; // Track if the lottery draw has occurred
     private boolean privateEvent;
     private List<String> coOrganizerUids;
+    private List<String> pendingCoOrganizerUids;
 
     /**
      * Default constructor required for Firestore deserialization.
@@ -302,10 +303,24 @@ public class Event {
     public List<String> getCoOrganizerUids() { return coOrganizerUids; }
     public void setCoOrganizerUids(List<String> coOrganizerUids) { this.coOrganizerUids = coOrganizerUids; }
 
+    public List<String> getPendingCoOrganizerUids() { return pendingCoOrganizerUids; }
+    public void setPendingCoOrganizerUids(List<String> pendingCoOrganizerUids) {
+        this.pendingCoOrganizerUids = pendingCoOrganizerUids;
+    }
+
     public boolean isCoOrganizer(String uid) {
         if (uid == null || uid.trim().isEmpty()) return false;
         if (coOrganizerUids == null) return false;
         for (String id : coOrganizerUids) {
+            if (uid.equals(id)) return true;
+        }
+        return false;
+    }
+
+    public boolean isPendingCoOrganizer(String uid) {
+        if (uid == null || uid.trim().isEmpty()) return false;
+        if (pendingCoOrganizerUids == null) return false;
+        for (String id : pendingCoOrganizerUids) {
             if (uid.equals(id)) return true;
         }
         return false;

@@ -140,6 +140,19 @@ public class EventTest {
     }
 
     @Test
+    public void coOrganizerHelpers_reportAcceptedAndPendingUsers() {
+        Event event = new Event();
+
+        event.setCoOrganizerUids(Arrays.asList("co-1", "co-2"));
+        event.setPendingCoOrganizerUids(Arrays.asList("pending-1"));
+
+        assertTrue(event.isCoOrganizer("co-1"));
+        assertFalse(event.isCoOrganizer("pending-1"));
+        assertTrue(event.isPendingCoOrganizer("pending-1"));
+        assertFalse(event.isPendingCoOrganizer("co-2"));
+    }
+
+    @Test
     public void constructor_ignoresPassedDrawHappenedValue_andStillSetsFalse() {
         Event event = new Event(
                 "event-3003",
