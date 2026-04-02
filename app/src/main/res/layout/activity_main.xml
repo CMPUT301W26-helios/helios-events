@@ -31,9 +31,17 @@
         app:navGraph="@navigation/nav_graph"
         app:defaultNavHost="true"
         app:layout_constraintTop_toBottomOf="@id/top_inset_container"
-        app:layout_constraintBottom_toTopOf="@id/bottom_nav"
+        app:layout_constraintBottom_toTopOf="@id/bottom_nav_top_barrier"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/bottom_nav_top_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="top"
+        app:barrierAllowsGoneWidgets="false"
+        app:constraint_referenced_ids="bottom_nav,bottom_nav_organizer" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_nav"

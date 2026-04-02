@@ -333,6 +333,13 @@ public class MainActivity extends AppCompatActivity {
                     bottomInset
             );
 
+            bottomNavOrganizer.setPadding(
+                    bottomNavOrganizer.getPaddingLeft(),
+                    bottomNavOrganizer.getPaddingTop(),
+                    bottomNavOrganizer.getPaddingRight(),
+                    bottomInset
+            );
+
             return insets;
         });
     }
