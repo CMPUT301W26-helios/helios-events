@@ -12,6 +12,10 @@ public enum NotificationAudience {
     /** Notification addressed to entrants selected/invited for the event. */
     SELECTED,
     AUDIENCE,
+    /** The user has been invited to co-organize an event. */
+    CO_ORGANIZER_INVITE,
+    /** The user has been invited directly to a private event. */
+    PRIVATE_EVENT_INVITE,
     /** The entrant has been selected and invited to the event. */
     INVITED,
     /** The entrant has accepted the invitation. */

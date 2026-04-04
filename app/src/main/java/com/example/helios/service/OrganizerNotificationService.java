@@ -30,7 +30,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  */
 public class OrganizerNotificationService {
-    private final FirebaseRepository repository = new FirebaseRepository();
+    private final FirebaseRepository repository;
+
+    public OrganizerNotificationService() {
+        this(new FirebaseRepository());
+    }
+
+    // Package-private test seam.
+    OrganizerNotificationService(@NonNull FirebaseRepository repository) {
+        this.repository = repository;
+    }
 
 
     /**
@@ -263,6 +272,44 @@ public class OrganizerNotificationService {
                         notSelectedResult -> onSuccess.onSuccess(null),
                         onFailure
                 ),
+                onFailure
+        );
+    }
+
+    public void notifyCoOrganizerInvite(
+            @NonNull String organizerUid,
+            @NonNull Event event,
+            @NonNull String recipientUid,
+            @NonNull OnSuccessListener<NotificationSendResult> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        sendToSingleRecipient(
+                organizerUid,
+                event.getEventId(),
+                recipientUid,
+                NotificationAudience.CO_ORGANIZER_INVITE,
+                "Co-organizer invitation",
+                "You were invited to co-organize " + event.getTitle() + ". Open the event to accept or decline.",
+                onSuccess,
+                onFailure
+        );
+    }
+
+    public void notifyPrivateEventInvite(
+            @NonNull String organizerUid,
+            @NonNull Event event,
+            @NonNull String recipientUid,
+            @NonNull OnSuccessListener<NotificationSendResult> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        sendToSingleRecipient(
+                organizerUid,
+                event.getEventId(),
+                recipientUid,
+                NotificationAudience.PRIVATE_EVENT_INVITE,
+                "Private event invitation",
+                "You were invited to " + event.getTitle() + ". Open the event to accept or decline.",
+                onSuccess,
                 onFailure
         );
     }

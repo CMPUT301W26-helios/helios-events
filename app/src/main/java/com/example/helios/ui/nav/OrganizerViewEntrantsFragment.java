@@ -178,14 +178,15 @@ public class OrganizerViewEntrantsFragment extends Fragment {
      */
     private void updateUiState() {
         boolean drawn = event != null && event.isDrawHappened();
+        boolean statusViewEnabled = isStatusViewEnabled();
         tvDrawIndicator.setVisibility(drawn ? View.VISIBLE : View.GONE);
-        llFilters.setVisibility(drawn ? View.VISIBLE : View.GONE);
-        tvListHeader.setText(drawn ? "Entrant Status" : "Waiting List");
+        llFilters.setVisibility(statusViewEnabled ? View.VISIBLE : View.GONE);
+        tvListHeader.setText(statusViewEnabled ? "Entrant Status" : "Waiting List");
         layoutDrawControls.setVisibility(View.VISIBLE);
         layoutInvitedActions.setVisibility(View.GONE);
         
-        if (drawn && cgStatus.getCheckedChipId() == View.NO_ID) {
-            cgStatus.check(R.id.chip_waitlisted);
+        if (statusViewEnabled && cgStatus.getCheckedChipId() == View.NO_ID) {
+            cgStatus.check(getDefaultStatusChipId());
         }
     }
 
@@ -195,15 +196,15 @@ public class OrganizerViewEntrantsFragment extends Fragment {
     private void updateDisplayList() {
         displayList.clear();
         String query = etSearch.getText().toString().toLowerCase(Locale.CANADA);
-        boolean drawn = event != null && event.isDrawHappened();
+        boolean statusViewEnabled = isStatusViewEnabled();
         int checkedId = cgStatus.getCheckedChipId();
-        final int selectedChipId = (drawn && checkedId == View.NO_ID)
-                ? R.id.chip_waitlisted
+        final int selectedChipId = (statusViewEnabled && checkedId == View.NO_ID)
+                ? getDefaultStatusChipId()
                 : checkedId;
-        boolean invitedFilter = drawn && selectedChipId == R.id.chip_invited;
+        boolean invitedFilter = statusViewEnabled && selectedChipId == R.id.chip_invited;
 
         List<WaitingListEntry> filtered = allEntries.stream().filter(entry -> {
-            if (!drawn) return entry.getStatus() == WaitingListStatus.WAITING;
+            if (!statusViewEnabled) return entry.getStatus() == WaitingListStatus.WAITING;
             
             if (selectedChipId == R.id.chip_invited) 
                 return entry.getStatus() == WaitingListStatus.INVITED || entry.getStatus() == WaitingListStatus.ACCEPTED;
@@ -216,8 +217,12 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             return false;
         }).collect(Collectors.toList());
 
-        layoutDeclinedActions.setVisibility(drawn && selectedChipId == R.id.chip_declined ? View.VISIBLE : View.GONE);
-        layoutInvitedActions.setVisibility(drawn && selectedChipId == R.id.chip_invited ? View.VISIBLE : View.GONE);
+        layoutDeclinedActions.setVisibility(
+                statusViewEnabled && selectedChipId == R.id.chip_declined ? View.VISIBLE : View.GONE
+        );
+        layoutInvitedActions.setVisibility(
+                statusViewEnabled && selectedChipId == R.id.chip_invited ? View.VISIBLE : View.GONE
+        );
         btnRemoveEntrant.setVisibility(invitedFilter ? View.VISIBLE : View.GONE);
         if (!invitedFilter && removeEntrantMode) {
             removeEntrantMode = false;
@@ -229,10 +234,10 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             long confirmed = filtered.stream().filter(e -> e.getStatus() == WaitingListStatus.ACCEPTED).count();
             tvInfoStats.setText(confirmed + "/" + filtered.size() + " people confirmed");
             tvInfoStats.setVisibility(View.VISIBLE);
-        } else if (drawn && selectedChipId == R.id.chip_waitlisted) {
+        } else if (statusViewEnabled && selectedChipId == R.id.chip_waitlisted) {
             tvInfoStats.setText(filtered.size() + " people");
             tvInfoStats.setVisibility(View.VISIBLE);
-        } else if (drawn && selectedChipId == R.id.chip_declined) {
+        } else if (statusViewEnabled && selectedChipId == R.id.chip_declined) {
             tvInfoStats.setText("Select entrants to delete or redraw");
             tvInfoStats.setVisibility(View.VISIBLE);
         } else {
@@ -417,6 +422,16 @@ public class OrganizerViewEntrantsFragment extends Fragment {
     private boolean isSelectedStatus(@NonNull WaitingListEntry entry) {
         return entry.getStatus() == WaitingListStatus.INVITED
                 || entry.getStatus() == WaitingListStatus.ACCEPTED;
+    }
+
+    private boolean isStatusViewEnabled() {
+        return event != null && (event.isDrawHappened() || event.isPrivateEvent());
+    }
+
+    private int getDefaultStatusChipId() {
+        return event != null && event.isPrivateEvent()
+                ? R.id.chip_invited
+                : R.id.chip_waitlisted;
     }
 
     /**

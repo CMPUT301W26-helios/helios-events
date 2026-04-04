@@ -4,6 +4,9 @@
     <string name="decline">Decline</string>
     <string name="co_organizer_badge">Co-organizer</string>
     <string name="co_organizer_invite_title">Co-Organizer Invite</string>
+    <string name="private_event_badge">Private Event</string>
+    <string name="private_event_invite_title">Private Event Invite</string>
+    <string name="private_event_invite_message">You have been invited.</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

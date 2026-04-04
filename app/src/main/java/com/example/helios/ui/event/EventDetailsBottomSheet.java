@@ -46,6 +46,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
     public static final String ARG_EVENT_ID = "arg_event_id";
     public static final String ARG_HIDE_JOIN_BUTTON = "arg_hide_join_button";
+    public static final String RESULT_INVITATION_RESPONSE = "event_invitation_response";
+    public static final String RESULT_EVENT_ID = "result_event_id";
+    public static final String RESULT_STATUS = "result_status";
 
     @Nullable private WaitingListEntry currentEntry = null;
 
@@ -611,8 +614,20 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         btnWaitingList.setVisibility(View.VISIBLE);
         btnWaitingList.setEnabled(true);
 
-        if (currentEntry != null && currentEntry.getStatus() == WaitingListStatus.ACCEPTED) {
+        if (loadedEvent != null
+                && loadedEvent.isPrivateEvent()
+                && currentEntry != null
+                && currentEntry.getStatus() == WaitingListStatus.ACCEPTED) {
+            btnWaitingList.setText("Leave Private Event");
+            return;
+        } else if (currentEntry != null && currentEntry.getStatus() == WaitingListStatus.ACCEPTED) {
             btnWaitingList.setText("✅ Invitation Accepted");
+            btnWaitingList.setEnabled(false);
+        } else if (loadedEvent != null
+                && loadedEvent.isPrivateEvent()
+                && currentEntry != null
+                && currentEntry.getStatus() == WaitingListStatus.CANCELLED) {
+            btnWaitingList.setText("You left this private event");
             btnWaitingList.setEnabled(false);
         } else if (currentEntry != null
                 && currentEntry.getStatus() == WaitingListStatus.NOT_SELECTED) {
@@ -621,6 +636,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         } else if (currentEntry != null
                 && currentEntry.getStatus() == WaitingListStatus.DECLINED) {
             btnWaitingList.setText("Invitation Declined");
+            btnWaitingList.setEnabled(false);
+        } else if (loadedEvent != null && loadedEvent.isPrivateEvent()) {
+            btnWaitingList.setText("Private event invite unavailable");
             btnWaitingList.setEnabled(false);
         } else if (isCurrentlyOnWaitingList) {
             btnWaitingList.setText("Leave Waiting List");
@@ -681,12 +699,31 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                 unused -> {
                     if (!isAdded()) return;
                     updateWaitingListButton();
+                    refreshCapacityCount();
+                    notifyInvitationResponseChanged();
                     toast(successMsg);
                 },
                 error -> {
                     if (!isAdded()) return;
                     toast("Failed to save response: " + error.getMessage());
                 });
+    }
+
+    private void notifyEntryStatusChanged() {
+        if (currentEntry == null) {
+            return;
+        }
+        notifyWaitingListStatusChanged(currentEntry.getStatus());
+    }
+
+    private void notifyWaitingListStatusChanged(@Nullable WaitingListStatus status) {
+        if (eventId == null || status == null) {
+            return;
+        }
+        Bundle result = new Bundle();
+        result.putString(RESULT_EVENT_ID, eventId);
+        result.putString(RESULT_STATUS, status.name());
+        getParentFragmentManager().setFragmentResult(RESULT_INVITATION_RESPONSE, result);
     }
 
     private void acceptCoOrganizerInvite() {
@@ -792,13 +829,22 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
     private void leaveWaitingList() {
         if (btnWaitingList != null) btnWaitingList.setEnabled(false);
+        boolean leavingPrivateEvent = loadedEvent != null
+                && loadedEvent.isPrivateEvent()
+                && currentEntry != null
+                && currentEntry.getStatus() == WaitingListStatus.ACCEPTED;
         entrantEventService.leaveWaitingList(requireContext(), eventId,
                 unused -> {
                     if (!isAdded()) return;
+                    if (currentEntry != null) {
+                        currentEntry.setStatus(WaitingListStatus.CANCELLED);
+                        currentEntry.setCancelledAtMillis(System.currentTimeMillis());
+                    }
                     isCurrentlyOnWaitingList = false;
                     updateWaitingListButton();
                     refreshCapacityCount();
-                    toast("Left waiting list.");
+                    notifyEntryStatusChanged();
+                    toast(leavingPrivateEvent ? "Left private event." : "Left waiting list.");
                 },
                 error -> {
                     if (!isAdded()) return;
@@ -818,6 +864,10 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private void setLoading(boolean loading) {
         if (tvName != null && loading) tvName.setText("Loading...");
         if (btnWaitingList != null && !hideJoinButton) btnWaitingList.setEnabled(!loading);
+    }
+
+    private void notifyInvitationResponseChanged() {
+        notifyEntryStatusChanged();
     }
 
     private void toast(String msg) {

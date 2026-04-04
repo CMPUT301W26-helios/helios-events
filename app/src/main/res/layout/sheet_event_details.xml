@@ -206,21 +206,19 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_accept_invitation"
+                style="@style/Widget.Helios.Button.Primary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Accept Invitation"
-                android:textAllCaps="false"
-                app:backgroundTint="#2E7D32" />
+                android:text="Accept Invitation" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_decline_invitation"
+                style="@style/Widget.Helios.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Decline Invitation"
-                android:textAllCaps="false"
-                app:backgroundTint="#B3261E" />
+                android:text="Decline Invitation" />
 
         </LinearLayout>
 
