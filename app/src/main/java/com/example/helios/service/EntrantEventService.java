@@ -110,6 +110,24 @@ public class EntrantEventService {
     }
 
     /**
+     * Retrieves all waiting-list entries that belong to the current user across events.
+     *
+     * @param context   The application context.
+     * @param onSuccess Callback receiving the user's entries.
+     * @param onFailure Callback for failed operation.
+     */
+    public void getCurrentUserWaitlistEntries(
+            @NonNull Context context,
+            @NonNull OnSuccessListener<java.util.List<WaitingListEntry>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        profileService.ensureSignedIn(
+                firebaseUser -> repository.getWaitlistEntriesForUser(firebaseUser.getUid(), onSuccess, onFailure),
+                onFailure
+        );
+    }
+
+    /**
      * Calculates the number of filled slots for an event based on waiting list statuses.
      * Counts entries with WAITING, INVITED, or ACCEPTED status.
      *

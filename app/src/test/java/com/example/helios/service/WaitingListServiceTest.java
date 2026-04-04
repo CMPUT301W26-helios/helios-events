@@ -2,6 +2,7 @@ package com.example.helios.service;
 
 import com.example.helios.data.FirebaseRepository;
 import com.example.helios.model.WaitingListEntry;
+import com.example.helios.model.WaitingListStatus;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
@@ -141,5 +142,77 @@ public class WaitingListServiceTest {
 
         assertTrue(successCalled.get());
         verify(repository).deleteWaitingListEntry(eq("event-z"), eq("entrant-z"), any(), any());
+    }
+
+    @Test
+    public void inviteEntrantToWaitingList_createsInvitedEntry() {
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+
+        doAnswer(invocation -> {
+            OnSuccessListener<WaitingListEntry> onSuccess = invocation.getArgument(2);
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(repository).getWaitingListEntry(eq("event-private"), eq("entrant-private"), any(), any());
+
+        AtomicReference<WaitingListEntry> savedEntry = new AtomicReference<>();
+        AtomicBoolean successCalled = new AtomicBoolean(false);
+        doAnswer(invocation -> {
+            savedEntry.set(invocation.getArgument(2));
+            OnSuccessListener<Void> onSuccess = invocation.getArgument(3);
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(repository).upsertWaitingListEntry(eq("event-private"), eq("entrant-private"), any(), any(), any());
+
+        WaitingListService service = new WaitingListService(repository);
+        service.inviteEntrantToWaitingList(
+                "event-private",
+                "entrant-private",
+                unused -> successCalled.set(true),
+                e -> fail("Unexpected failure: " + e.getMessage())
+        );
+
+        assertTrue(successCalled.get());
+        assertNotNull(savedEntry.get());
+        assertEquals(WaitingListStatus.INVITED, savedEntry.get().getStatus());
+        assertTrue(savedEntry.get().getJoinedAtMillis() > 0L);
+        assertTrue(savedEntry.get().getInvitedAtMillis() > 0L);
+    }
+
+    @Test
+    public void inviteEntrantToWaitingList_updatesExistingEntryToInvited() {
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+
+        WaitingListEntry existing = new WaitingListEntry();
+        existing.setEventId("event-private");
+        existing.setEntrantUid("entrant-private");
+        existing.setStatus(WaitingListStatus.DECLINED);
+        existing.setJoinedAtMillis(1234L);
+
+        doAnswer(invocation -> {
+            OnSuccessListener<WaitingListEntry> onSuccess = invocation.getArgument(2);
+            onSuccess.onSuccess(existing);
+            return null;
+        }).when(repository).getWaitingListEntry(eq("event-private"), eq("entrant-private"), any(), any());
+
+        AtomicReference<WaitingListEntry> savedEntry = new AtomicReference<>();
+        doAnswer(invocation -> {
+            savedEntry.set(invocation.getArgument(2));
+            OnSuccessListener<Void> onSuccess = invocation.getArgument(3);
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(repository).upsertWaitingListEntry(eq("event-private"), eq("entrant-private"), any(), any(), any());
+
+        WaitingListService service = new WaitingListService(repository);
+        service.inviteEntrantToWaitingList(
+                "event-private",
+                "entrant-private",
+                unused -> { },
+                e -> fail("Unexpected failure: " + e.getMessage())
+        );
+
+        assertNotNull(savedEntry.get());
+        assertEquals(WaitingListStatus.INVITED, savedEntry.get().getStatus());
+        assertEquals(1234L, savedEntry.get().getJoinedAtMillis());
+        assertTrue(savedEntry.get().getInvitedAtMillis() > 0L);
     }
 }

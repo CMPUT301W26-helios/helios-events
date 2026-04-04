@@ -26,6 +26,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.helios.R;
 import com.example.helios.model.Event;
+import com.example.helios.model.WaitingListEntry;
+import com.example.helios.model.WaitingListStatus;
+import com.example.helios.service.EntrantEventService;
 import com.example.helios.service.EventService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.ui.EventAdapter;
@@ -37,6 +40,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -62,10 +67,12 @@ public class EventsFragment extends Fragment {
 
     private EventAdapter eventAdapter;
     private final EventService eventService = new EventService();
+    private final EntrantEventService entrantEventService = new EntrantEventService();
     private final ProfileService profileService = new ProfileService();
 
     private final List<Event> allEvents = new ArrayList<>();
     private final List<Event> filteredEvents = new ArrayList<>();
+    private final Map<String, WaitingListStatus> currentUserEntryStatuses = new TreeMap<>();
     @Nullable
     private String currentUid;
 
@@ -106,6 +113,11 @@ public class EventsFragment extends Fragment {
 
         setupRecyclerView();
         setupSearch();
+        getParentFragmentManager().setFragmentResultListener(
+                EventDetailsBottomSheet.RESULT_INVITATION_RESPONSE,
+                getViewLifecycleOwner(),
+                (requestKey, bundle) -> handleInvitationResult(bundle)
+        );
         
         btnFilter.setOnClickListener(v -> showFilterDialog());
         view.findViewById(R.id.btn_clear_date_filter).setOnClickListener(v -> {
@@ -138,19 +150,22 @@ public class EventsFragment extends Fragment {
      * Initializes the RecyclerView and its adapter.
      */
     private void setupRecyclerView() {
-        eventAdapter = new EventAdapter(filteredEvents, event -> {
-            if (!isAdded()) return;
+        eventAdapter = new EventAdapter(
+                filteredEvents,
+                this::openEventDetails,
+                null,
+                new EventAdapter.OnPrivateEventInviteActionListener() {
+                    @Override
+                    public void onAcceptInvite(@NonNull Event event) {
+                        respondToPrivateInvite(event, WaitingListStatus.ACCEPTED, "Invitation accepted!");
+                    }
 
-            String eventId = event.getEventId();
-            if (eventId == null || eventId.trim().isEmpty()) {
-                Toast.makeText(requireContext(), "Event is missing an ID.", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            EventDetailsBottomSheet
-                    .newInstance(eventId)
-                    .show(getParentFragmentManager(), "event_details");
-        });
+                    @Override
+                    public void onDeclineInvite(@NonNull Event event) {
+                        respondToPrivateInvite(event, WaitingListStatus.DECLINED, "Invitation declined.");
+                    }
+                }
+        );
 
         rvEvents.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvEvents.setAdapter(eventAdapter);
@@ -209,8 +224,7 @@ public class EventsFragment extends Fragment {
                         loadedOnce = true;
                         allEvents.clear();
                         allEvents.addAll(events);
-
-                        applyFilters();
+                        loadCurrentUserEntries();
                     },
                     e -> {
                         if (!isAdded()) return;
@@ -225,6 +239,72 @@ public class EventsFragment extends Fragment {
                     "Auth failed: " + e.getMessage(),
                     Toast.LENGTH_SHORT).show();
         });
+    }
+
+    private void loadCurrentUserEntries() {
+        entrantEventService.getCurrentUserWaitlistEntries(requireContext(), entries -> {
+            if (!isAdded()) return;
+            currentUserEntryStatuses.clear();
+            for (WaitingListEntry entry : entries) {
+                if (entry == null || entry.getStatus() == null) continue;
+                String eventId = entry.getEventId();
+                if (eventId == null || eventId.trim().isEmpty()) continue;
+                currentUserEntryStatuses.put(eventId, entry.getStatus());
+            }
+            eventAdapter.setEntrantViewerState(currentUid, currentUserEntryStatuses);
+            applyFilters();
+        }, e -> {
+            if (!isAdded()) return;
+            loadCurrentUserEntriesFallback();
+        });
+    }
+
+    private void loadCurrentUserEntriesFallback() {
+        List<Event> privateEvents = new ArrayList<>();
+        for (Event event : allEvents) {
+            if (event != null && event.isPrivateEvent()) {
+                privateEvents.add(event);
+            }
+        }
+
+        currentUserEntryStatuses.clear();
+        if (privateEvents.isEmpty()) {
+            eventAdapter.setEntrantViewerState(currentUid, currentUserEntryStatuses);
+            applyFilters();
+            return;
+        }
+
+        final int[] remaining = {privateEvents.size()};
+        for (Event event : privateEvents) {
+            String eventId = event.getEventId();
+            if (eventId == null || eventId.trim().isEmpty()) {
+                remaining[0]--;
+                if (remaining[0] == 0 && isAdded()) {
+                    eventAdapter.setEntrantViewerState(currentUid, currentUserEntryStatuses);
+                    applyFilters();
+                }
+                continue;
+            }
+
+            entrantEventService.getCurrentUserWaitingListEntry(requireContext(), eventId, entry -> {
+                if (!isAdded()) return;
+                if (entry != null && entry.getStatus() != null) {
+                    updateStoredEntryStatus(eventId, entry.getStatus());
+                }
+                remaining[0]--;
+                if (remaining[0] == 0) {
+                    eventAdapter.setEntrantViewerState(currentUid, currentUserEntryStatuses);
+                    applyFilters();
+                }
+            }, error -> {
+                if (!isAdded()) return;
+                remaining[0]--;
+                if (remaining[0] == 0) {
+                    eventAdapter.setEntrantViewerState(currentUid, currentUserEntryStatuses);
+                    applyFilters();
+                }
+            });
+        }
     }
 
     /**
@@ -466,15 +546,156 @@ public class EventsFragment extends Fragment {
             }
         }
 
+        sortFilteredEvents();
+
         updateFilterVisuals();
         eventAdapter.notifyDataSetChanged();
+    }
+
+    private void sortFilteredEvents() {
+        Collections.sort(filteredEvents, new Comparator<Event>() {
+            @Override
+            public int compare(Event left, Event right) {
+                int inviteComparison = Boolean.compare(
+                        !isPendingPrivateInvite(left),
+                        !isPendingPrivateInvite(right)
+                );
+                if (inviteComparison != 0) {
+                    return inviteComparison;
+                }
+
+                long leftStart = left.getStartTimeMillis();
+                long rightStart = right.getStartTimeMillis();
+                if (leftStart <= 0 && rightStart <= 0) {
+                    return compareTitles(left, right);
+                }
+                if (leftStart <= 0) {
+                    return 1;
+                }
+                if (rightStart <= 0) {
+                    return -1;
+                }
+
+                int startComparison = Long.compare(leftStart, rightStart);
+                if (startComparison != 0) {
+                    return startComparison;
+                }
+                return compareTitles(left, right);
+            }
+        });
+    }
+
+    private boolean isPendingPrivateInvite(@NonNull Event event) {
+        return currentUserEntryStatuses.get(event.getEventId()) == WaitingListStatus.INVITED;
+    }
+
+    private int compareTitles(@NonNull Event left, @NonNull Event right) {
+        String leftTitle = left.getTitle() == null ? "" : left.getTitle().trim();
+        String rightTitle = right.getTitle() == null ? "" : right.getTitle().trim();
+        return leftTitle.compareToIgnoreCase(rightTitle);
     }
 
     private boolean shouldDisplayEvent(@NonNull Event event) {
         if (!event.isPrivateEvent()) {
             return true;
         }
-        return currentUid != null && event.isPendingCoOrganizer(currentUid);
+        if (currentUid == null) {
+            return false;
+        }
+        if (event.isPendingCoOrganizer(currentUid)) {
+            return true;
+        }
+        WaitingListStatus status = currentUserEntryStatuses.get(event.getEventId());
+        return status == WaitingListStatus.INVITED || status == WaitingListStatus.ACCEPTED;
+    }
+
+    private void openEventDetails(@NonNull Event event) {
+        if (!isAdded()) return;
+
+        String eventId = event.getEventId();
+        if (eventId == null || eventId.trim().isEmpty()) {
+            Toast.makeText(requireContext(), "Event is missing an ID.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        EventDetailsBottomSheet
+                .newInstance(eventId)
+                .show(getParentFragmentManager(), "event_details");
+    }
+
+    private void respondToPrivateInvite(
+            @NonNull Event event,
+            @NonNull WaitingListStatus newStatus,
+            @NonNull String successMessage
+    ) {
+        String eventId = event.getEventId();
+        if (eventId == null || eventId.trim().isEmpty()) {
+            Toast.makeText(requireContext(), "Event is missing an ID.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        entrantEventService.getCurrentUserWaitingListEntry(requireContext(), eventId, entry -> {
+            if (!isAdded()) return;
+            if (entry == null || entry.getStatus() != WaitingListStatus.INVITED) {
+                Toast.makeText(requireContext(),
+                        "Invite no longer exists.",
+                        Toast.LENGTH_SHORT).show();
+                currentUserEntryStatuses.remove(eventId);
+                eventAdapter.setEntrantViewerState(currentUid, currentUserEntryStatuses);
+                applyFilters();
+                return;
+            }
+
+            entry.setStatus(newStatus);
+            entry.setRespondedAtMillis(System.currentTimeMillis());
+            entrantEventService.updateEntry(requireContext(), eventId, entry,
+                    unused -> {
+                        if (!isAdded()) return;
+                        updateStoredEntryStatus(eventId, newStatus);
+                        eventAdapter.setEntrantViewerState(currentUid, currentUserEntryStatuses);
+                        applyFilters();
+                        Toast.makeText(requireContext(), successMessage, Toast.LENGTH_SHORT).show();
+                    },
+                    e -> {
+                        if (!isAdded()) return;
+                        Toast.makeText(requireContext(),
+                                "Failed to save response: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    });
+        }, e -> {
+            if (!isAdded()) return;
+            Toast.makeText(requireContext(),
+                    "Failed to load invite: " + e.getMessage(),
+                    Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void handleInvitationResult(@NonNull Bundle bundle) {
+        String eventId = bundle.getString(EventDetailsBottomSheet.RESULT_EVENT_ID);
+        String statusName = bundle.getString(EventDetailsBottomSheet.RESULT_STATUS);
+        if (eventId == null || statusName == null) {
+            return;
+        }
+
+        try {
+            WaitingListStatus status = WaitingListStatus.valueOf(statusName);
+            updateStoredEntryStatus(eventId, status);
+            eventAdapter.setEntrantViewerState(currentUid, currentUserEntryStatuses);
+            applyFilters();
+        } catch (IllegalArgumentException ignored) {
+            // Ignore malformed results from older sheets.
+        }
+    }
+
+    private void updateStoredEntryStatus(
+            @NonNull String eventId,
+            @NonNull WaitingListStatus status
+    ) {
+        if (status == WaitingListStatus.INVITED || status == WaitingListStatus.ACCEPTED) {
+            currentUserEntryStatuses.put(eventId, status);
+        } else {
+            currentUserEntryStatuses.remove(eventId);
+        }
     }
 
     /**

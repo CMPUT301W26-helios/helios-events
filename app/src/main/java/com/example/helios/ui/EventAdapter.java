@@ -11,11 +11,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.helios.R;
 import com.example.helios.model.Event;
+import com.example.helios.model.WaitingListStatus;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * RecyclerView adapter for displaying a list of events.
@@ -24,6 +27,7 @@ import java.util.Locale;
 public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHolder> {
     private static final int VIEW_TYPE_EVENT = 0;
     private static final int VIEW_TYPE_CO_ORGANIZER_INVITE = 1;
+    private static final int VIEW_TYPE_PRIVATE_EVENT_INVITE = 2;
 
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
     private final List<Event> events;
@@ -33,7 +37,13 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
     @Nullable
     private final OnCoOrganizerInviteActionListener onCoOrganizerInviteAction;
     @Nullable
+    private final OnPrivateEventInviteActionListener onPrivateEventInviteAction;
+    @Nullable
     private String organizerViewerUid;
+    @Nullable
+    private String entrantViewerUid;
+    @NonNull
+    private final Map<String, WaitingListStatus> entrantStatusesByEventId = new HashMap<>();
 
     /**
      * Listener interface for handling event click actions.
@@ -51,13 +61,18 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         void onDeclineInvite(@NonNull Event event);
     }
 
+    public interface OnPrivateEventInviteActionListener {
+        void onAcceptInvite(@NonNull Event event);
+        void onDeclineInvite(@NonNull Event event);
+    }
+
     /**
      * Constructs an EventAdapter without a click listener.
      *
      * @param events The list of events to display.
      */
     public EventAdapter(@NonNull List<Event> events) {
-        this(events, null, null);
+        this(events, null, null, null);
     }
 
     /**
@@ -67,7 +82,7 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
      * @param onEventClick The listener for click events.
      */
     public EventAdapter(@NonNull List<Event> events, @Nullable OnEventClickListener onEventClick) {
-        this(events, onEventClick, null);
+        this(events, onEventClick, null, null);
     }
 
     public EventAdapter(
@@ -75,13 +90,35 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             @Nullable OnEventClickListener onEventClick,
             @Nullable OnCoOrganizerInviteActionListener onCoOrganizerInviteAction
     ) {
+        this(events, onEventClick, onCoOrganizerInviteAction, null);
+    }
+
+    public EventAdapter(
+            @NonNull List<Event> events,
+            @Nullable OnEventClickListener onEventClick,
+            @Nullable OnCoOrganizerInviteActionListener onCoOrganizerInviteAction,
+            @Nullable OnPrivateEventInviteActionListener onPrivateEventInviteAction
+    ) {
         this.events = events;
         this.onEventClick = onEventClick;
         this.onCoOrganizerInviteAction = onCoOrganizerInviteAction;
+        this.onPrivateEventInviteAction = onPrivateEventInviteAction;
     }
 
     public void setOrganizerViewerUid(@Nullable String organizerViewerUid) {
         this.organizerViewerUid = organizerViewerUid;
+        notifyDataSetChanged();
+    }
+
+    public void setEntrantViewerState(
+            @Nullable String entrantViewerUid,
+            @Nullable Map<String, WaitingListStatus> entrantStatusesByEventId
+    ) {
+        this.entrantViewerUid = entrantViewerUid;
+        this.entrantStatusesByEventId.clear();
+        if (entrantStatusesByEventId != null) {
+            this.entrantStatusesByEventId.putAll(entrantStatusesByEventId);
+        }
         notifyDataSetChanged();
     }
 
@@ -93,6 +130,10 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             View view = inflater.inflate(R.layout.item_coorganizer_invite, parent, false);
             return new CoOrganizerInviteViewHolder(view);
         }
+        if (viewType == VIEW_TYPE_PRIVATE_EVENT_INVITE) {
+            View view = inflater.inflate(R.layout.item_private_event_invite, parent, false);
+            return new PrivateEventInviteViewHolder(view);
+        }
         View view = inflater.inflate(R.layout.item_event, parent, false);
         return new EventCardViewHolder(view);
     }
@@ -102,6 +143,10 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         Event event = events.get(position);
         if (holder instanceof CoOrganizerInviteViewHolder) {
             bindCoOrganizerInvite((CoOrganizerInviteViewHolder) holder, event);
+            return;
+        }
+        if (holder instanceof PrivateEventInviteViewHolder) {
+            bindPrivateEventInvite((PrivateEventInviteViewHolder) holder, event);
             return;
         }
         bindEventCard((EventCardViewHolder) holder, event);
@@ -142,6 +187,13 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
                 && !organizerViewerUid.equals(event.getOrganizerUid())
                 && event.isCoOrganizer(organizerViewerUid);
         holder.tvCoOrganizerBadge.setVisibility(showCoOrganizerBadge ? View.VISIBLE : View.GONE);
+        boolean showPrivateEventBadge = event.isPrivateEvent()
+                && ((organizerViewerUid != null && organizerViewerUid.equals(event.getOrganizerUid()))
+                || getEntrantStatusForEvent(event) == WaitingListStatus.ACCEPTED);
+        holder.tvPrivateEventBadge.setVisibility(showPrivateEventBadge ? View.VISIBLE : View.GONE);
+        holder.badgeContainer.setVisibility(
+                showCoOrganizerBadge || showPrivateEventBadge ? View.VISIBLE : View.GONE
+        );
 
         holder.itemView.setOnClickListener(v -> {
             if (onEventClick != null) {
@@ -164,6 +216,33 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         });
     }
 
+    private void bindPrivateEventInvite(
+            @NonNull PrivateEventInviteViewHolder holder,
+            @NonNull Event event
+    ) {
+        holder.tvEventTitle.setText(nonEmptyOr(event.getTitle(), "Untitled Event"));
+
+        long startMillis = event.getStartTimeMillis();
+        holder.tvDate.setText(startMillis > 0 ? dateFormat.format(new Date(startMillis)) : "Date TBD");
+        holder.tvMaxEntrants.setText("Max: " + event.getCapacity());
+
+        holder.itemView.setOnClickListener(v -> {
+            if (onEventClick != null) {
+                onEventClick.onEventClick(event);
+            }
+        });
+        holder.btnAccept.setOnClickListener(v -> {
+            if (onPrivateEventInviteAction != null) {
+                onPrivateEventInviteAction.onAcceptInvite(event);
+            }
+        });
+        holder.btnDecline.setOnClickListener(v -> {
+            if (onPrivateEventInviteAction != null) {
+                onPrivateEventInviteAction.onDeclineInvite(event);
+            }
+        });
+    }
+
     @Override
     public int getItemCount() {
         return events.size();
@@ -175,7 +254,19 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         if (organizerViewerUid != null && event.isPendingCoOrganizer(organizerViewerUid)) {
             return VIEW_TYPE_CO_ORGANIZER_INVITE;
         }
+        if (event.isPrivateEvent() && getEntrantStatusForEvent(event) == WaitingListStatus.INVITED) {
+            return VIEW_TYPE_PRIVATE_EVENT_INVITE;
+        }
         return VIEW_TYPE_EVENT;
+    }
+
+    @Nullable
+    private WaitingListStatus getEntrantStatusForEvent(@NonNull Event event) {
+        String eventId = event.getEventId();
+        if (entrantViewerUid == null || eventId == null) {
+            return null;
+        }
+        return entrantStatusesByEventId.get(eventId);
     }
 
     private String nonEmptyOr(String value, String fallback) {
@@ -200,7 +291,9 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
         TextView tvDate;
         TextView tvTags;
         TextView tvMaxEntrants;
+        View badgeContainer;
         TextView tvCoOrganizerBadge;
+        TextView tvPrivateEventBadge;
 
         /**
          * Constructs an EventViewHolder.
@@ -214,7 +307,9 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             tvDate = itemView.findViewById(R.id.tv_event_date);
             tvTags = itemView.findViewById(R.id.tv_event_tags);
             tvMaxEntrants = itemView.findViewById(R.id.tv_event_max_entrants);
+            badgeContainer = itemView.findViewById(R.id.layout_event_badges_right);
             tvCoOrganizerBadge = itemView.findViewById(R.id.tv_event_coorganizer_badge);
+            tvPrivateEventBadge = itemView.findViewById(R.id.tv_event_private_badge);
         }
     }
 
@@ -228,6 +323,23 @@ public class EventAdapter extends RecyclerView.Adapter<EventAdapter.EventViewHol
             tvEventTitle = itemView.findViewById(R.id.tv_coorganizer_invite_event_title);
             btnAccept = itemView.findViewById(R.id.btn_coorganizer_invite_accept);
             btnDecline = itemView.findViewById(R.id.btn_coorganizer_invite_decline);
+        }
+    }
+
+    static class PrivateEventInviteViewHolder extends EventViewHolder {
+        TextView tvEventTitle;
+        TextView tvDate;
+        TextView tvMaxEntrants;
+        View btnAccept;
+        View btnDecline;
+
+        PrivateEventInviteViewHolder(@NonNull View itemView) {
+            super(itemView);
+            tvEventTitle = itemView.findViewById(R.id.tv_private_invite_event_title);
+            tvDate = itemView.findViewById(R.id.tv_private_invite_date);
+            tvMaxEntrants = itemView.findViewById(R.id.tv_private_invite_max_entrants);
+            btnAccept = itemView.findViewById(R.id.btn_private_invite_accept);
+            btnDecline = itemView.findViewById(R.id.btn_private_invite_decline);
         }
     }
 }

@@ -109,10 +109,12 @@ public class WaitingListService {
             WaitingListEntry entry = existing != null ? existing : new WaitingListEntry();
             entry.setEventId(eventId);
             entry.setEntrantUid(entrantUid);
-            entry.setStatus(WaitingListStatus.WAITING);
+            long now = System.currentTimeMillis();
+            entry.setStatus(WaitingListStatus.INVITED);
             if (entry.getJoinedAtMillis() <= 0) {
-                entry.setJoinedAtMillis(System.currentTimeMillis());
+                entry.setJoinedAtMillis(now);
             }
+            entry.setInvitedAtMillis(now);
             repository.upsertWaitingListEntry(eventId, entrantUid, entry, onSuccess, onFailure);
         }, onFailure);
     }

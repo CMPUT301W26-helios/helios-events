@@ -23,6 +23,7 @@ import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.model.UserProfile;
 import com.example.helios.service.EventService;
+import com.example.helios.service.OrganizerNotificationService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.service.WaitingListService;
 import com.google.android.material.button.MaterialButton;
@@ -53,6 +54,8 @@ public class EventUserPickerFragment extends Fragment {
     private static final String ARG_MODE = "arg_mode";
 
     private final EventService eventService = new EventService();
+    private final OrganizerNotificationService organizerNotificationService =
+            new OrganizerNotificationService();
     private final ProfileService profileService = new ProfileService();
     private final WaitingListService waitingListService = new WaitingListService();
 
@@ -226,7 +229,7 @@ public class EventUserPickerFragment extends Fragment {
         waitingListService.inviteEntrantToWaitingList(
                 eventId,
                 user.getUid(),
-                unused -> toast("Invited " + nonEmptyOr(user.getName(), user.getUid())),
+                unused -> sendPrivateInviteNotification(user),
                 e -> toast("Invite failed: " + e.getMessage())
         );
     }
@@ -260,8 +263,40 @@ public class EventUserPickerFragment extends Fragment {
         eventService.saveEvent(loadedEvent, unused -> {
             if (!isAdded()) return;
             adapter.notifyDataSetChanged();
-            toast("Invited " + nonEmptyOr(user.getName(), user.getUid()) + " to co-organize.");
+            sendCoOrganizerInviteNotification(user);
         }, e -> toast("Invite failed: " + e.getMessage()));
+    }
+
+    private void sendPrivateInviteNotification(@NonNull UserProfile user) {
+        if (loadedEvent == null || currentUid == null || user.getUid() == null) {
+            toast("Invited " + nonEmptyOr(user.getName(), user.getUid()));
+            return;
+        }
+
+        String displayName = nonEmptyOr(user.getName(), user.getUid());
+        organizerNotificationService.notifyPrivateEventInvite(
+                currentUid,
+                loadedEvent,
+                user.getUid(),
+                result -> toast("Invited " + displayName + "."),
+                error -> toast("Invited " + displayName + ", but failed to send notification.")
+        );
+    }
+
+    private void sendCoOrganizerInviteNotification(@NonNull UserProfile user) {
+        if (loadedEvent == null || currentUid == null || user.getUid() == null) {
+            toast("Invited " + nonEmptyOr(user.getName(), user.getUid()) + " to co-organize.");
+            return;
+        }
+
+        String displayName = nonEmptyOr(user.getName(), user.getUid());
+        organizerNotificationService.notifyCoOrganizerInvite(
+                currentUid,
+                loadedEvent,
+                user.getUid(),
+                result -> toast("Invited " + displayName + " to co-organize."),
+                error -> toast("Invited " + displayName + " to co-organize, but failed to send notification.")
+        );
     }
 
     private void cancelCoOrganizerInvite(@NonNull UserProfile user) {

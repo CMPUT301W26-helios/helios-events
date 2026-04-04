@@ -24,6 +24,8 @@ import com.example.helios.service.WaitingListService;
 import com.example.helios.ui.EventAdapter;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -200,6 +202,9 @@ public class OrganizeFragment extends Fragment {
             }
         }
 
+        sortOrganizerEvents(currentEvents, true);
+        sortOrganizerEvents(pastEvents, false);
+
         if (currentAdapter != null) {
             currentAdapter.notifyDataSetChanged();
         }
@@ -231,6 +236,57 @@ public class OrganizeFragment extends Fragment {
                 || description.contains(query)
                 || location.contains(query)
                 || address.contains(query);
+    }
+
+    private void sortOrganizerEvents(
+            @NonNull List<com.example.helios.model.Event> events,
+            boolean prioritizePendingInvites
+    ) {
+        Collections.sort(events, new Comparator<com.example.helios.model.Event>() {
+            @Override
+            public int compare(com.example.helios.model.Event left, com.example.helios.model.Event right) {
+                if (prioritizePendingInvites) {
+                    int inviteComparison = Boolean.compare(
+                            !isPendingInvite(left),
+                            !isPendingInvite(right)
+                    );
+                    if (inviteComparison != 0) {
+                        return inviteComparison;
+                    }
+                }
+
+                long leftStart = left.getStartTimeMillis();
+                long rightStart = right.getStartTimeMillis();
+                if (leftStart <= 0 && rightStart <= 0) {
+                    return compareTitles(left, right);
+                }
+                if (leftStart <= 0) {
+                    return 1;
+                }
+                if (rightStart <= 0) {
+                    return -1;
+                }
+
+                int startComparison = Long.compare(leftStart, rightStart);
+                if (startComparison != 0) {
+                    return startComparison;
+                }
+                return compareTitles(left, right);
+            }
+        });
+    }
+
+    private boolean isPendingInvite(@NonNull com.example.helios.model.Event event) {
+        return organizerUid != null && event.isPendingCoOrganizer(organizerUid);
+    }
+
+    private int compareTitles(
+            @NonNull com.example.helios.model.Event left,
+            @NonNull com.example.helios.model.Event right
+    ) {
+        String leftTitle = left.getTitle() == null ? "" : left.getTitle().trim();
+        String rightTitle = right.getTitle() == null ? "" : right.getTitle().trim();
+        return leftTitle.compareToIgnoreCase(rightTitle);
     }
 
     /**

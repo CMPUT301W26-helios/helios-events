@@ -191,6 +191,66 @@ public class EntrantEventServiceTest {
     }
 
     @Test
+    public void getCurrentUserWaitlistEntries_usesSignedInUidAndReturnsRepositoryEntries() {
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+        ProfileService profileService = mock(ProfileService.class);
+        FirebaseUser user = mockUser("user-11");
+        stubSignedInUser(profileService, user);
+
+        List<WaitingListEntry> expected = new ArrayList<>();
+        WaitingListEntry invited = new WaitingListEntry();
+        invited.setEntrantUid("user-11");
+        invited.setEventId("event-private");
+        invited.setStatus(WaitingListStatus.INVITED);
+        expected.add(invited);
+
+        doAnswer(invocation -> {
+            OnSuccessListener<List<WaitingListEntry>> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(expected);
+            return null;
+        }).when(repository).getWaitlistEntriesForUser(eq("user-11"), any(), any());
+
+        EntrantEventService service = new EntrantEventService(repository, profileService);
+        AtomicReference<List<WaitingListEntry>> result = new AtomicReference<>();
+
+        service.getCurrentUserWaitlistEntries(
+                mock(Context.class),
+                result::set,
+                e -> fail("Unexpected failure: " + e.getMessage())
+        );
+
+        assertSame(expected, result.get());
+        verify(profileService).ensureSignedIn(any(), any());
+        verify(repository).getWaitlistEntriesForUser(eq("user-11"), any(), any());
+    }
+
+    @Test
+    public void getCurrentUserWaitlistEntries_forwardsAuthFailure() {
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+        ProfileService profileService = mock(ProfileService.class);
+        RuntimeException expected = new RuntimeException("entry auth failed");
+
+        doAnswer(invocation -> {
+            OnFailureListener onFailure = invocation.getArgument(1);
+            onFailure.onFailure(expected);
+            return null;
+        }).when(profileService).ensureSignedIn(any(), any());
+
+        EntrantEventService service = new EntrantEventService(repository, profileService);
+        AtomicReference<Exception> failure = new AtomicReference<>();
+
+        service.getCurrentUserWaitlistEntries(
+                mock(Context.class),
+                entries -> fail("Success should not be called"),
+                failure::set
+        );
+
+        assertSame(expected, failure.get());
+        verify(profileService).ensureSignedIn(any(), any());
+        verify(repository, never()).getWaitlistEntriesForUser(any(), any(), any());
+    }
+
+    @Test
     public void joinWaitingList_createsWaitingEntryWhenNoExistingEntry() {
         FirebaseRepository repository = mock(FirebaseRepository.class);
         ProfileService profileService = mock(ProfileService.class);
