@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class LotteryService {
+    static final String NO_PEOPLE_IN_EVENT_MESSAGE = "There are no people in this event";
 
     private final FirebaseRepository repository;
     private final OrganizerNotificationService organizerNotificationService;
@@ -54,6 +55,16 @@ public class LotteryService {
                 if (e != null && e.getStatus() == WaitingListStatus.WAITING) {
                     waiting.add(e);
                 }
+            }
+
+            if (waiting.isEmpty()) {
+                onFailure.onFailure(new IllegalStateException(NO_PEOPLE_IN_EVENT_MESSAGE));
+                return;
+            }
+
+            if (sampleSize <= 0) {
+                onFailure.onFailure(new IllegalArgumentException("Draw count must be greater than 0."));
+                return;
             }
 
             Collections.shuffle(waiting);

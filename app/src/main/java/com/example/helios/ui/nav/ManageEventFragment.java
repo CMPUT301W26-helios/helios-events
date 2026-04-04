@@ -22,6 +22,7 @@ import com.example.helios.service.ProfileService;
 import com.example.helios.ui.event.EventDetailsBottomSheet;
 
 public class ManageEventFragment extends Fragment {
+    private static final String NO_PEOPLE_IN_EVENT_MESSAGE = "There are no people in this event";
 
     private final EventService eventService = new EventService();
     private final LotteryService lotteryService = new LotteryService();
@@ -167,8 +168,11 @@ public class ManageEventFragment extends Fragment {
                     },
                     error -> {
                         if (!isAdded()) return;
+                        String message = NO_PEOPLE_IN_EVENT_MESSAGE.equals(error.getMessage())
+                                ? NO_PEOPLE_IN_EVENT_MESSAGE
+                                : "Lottery failed: " + error.getMessage();
                         Toast.makeText(requireContext(),
-                                "Lottery failed: " + error.getMessage(),
+                                message,
                                 Toast.LENGTH_LONG).show();
                     });
         }, error -> Toast.makeText(requireContext(),

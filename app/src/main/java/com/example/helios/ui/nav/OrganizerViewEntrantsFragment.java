@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
  * Handles the lottery draw, redraws, and removing entrants from various statuses (invited, accepted, declined).
  */
 public class OrganizerViewEntrantsFragment extends Fragment {
+    private static final String NO_PEOPLE_IN_EVENT_MESSAGE = "There are no people in this event";
 
     private String eventId;
     private Event event;
@@ -303,8 +304,13 @@ public class OrganizerViewEntrantsFragment extends Fragment {
                 .filter(e -> e.getStatus() == WaitingListStatus.WAITING)
                 .collect(Collectors.toList());
 
-        if (candidates.isEmpty() && targetCount > 0) {
-            toast("No entrants in waiting list");
+        if (candidates.isEmpty()) {
+            toast(NO_PEOPLE_IN_EVENT_MESSAGE);
+            return;
+        }
+
+        if (targetCount <= 0) {
+            toast("Enter at least 1 entrant");
             return;
         }
 
@@ -319,7 +325,12 @@ public class OrganizerViewEntrantsFragment extends Fragment {
                                     toast("Draw completed! Selected " + selectedCount + " entrants");
                                     refreshEntries();
                                 },
-                                error -> toast("Failed to run draw: " + error.getMessage())
+                                error -> {
+                                    String message = NO_PEOPLE_IN_EVENT_MESSAGE.equals(error.getMessage())
+                                            ? NO_PEOPLE_IN_EVENT_MESSAGE
+                                            : "Failed to run draw: " + error.getMessage();
+                                    toast(message);
+                                }
                         ),
                 error -> toast("Auth failed: " + error.getMessage())
         );
