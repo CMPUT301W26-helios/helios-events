@@ -7,6 +7,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+    jacoco
 }
 
 val localProperties = Properties().apply {
@@ -100,6 +101,10 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     testImplementation("org.mockito:mockito-core:5.14.0")
+}
+
+jacoco {
+    toolVersion = "0.8.10"
 }
 
 afterEvaluate {
