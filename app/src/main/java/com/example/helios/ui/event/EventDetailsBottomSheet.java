@@ -80,6 +80,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private TextView tvDate;
     private TextView tvTimeStart;
     private TextView tvTimeEnd;
+    private TextView tvRegistrationStartDate;
+    private TextView tvRegistrationEndDate;
+    private TextView tvRegistrationEndTime;
     private ChipGroup cgEventTags;
     private TextView tvLocation;
     private TextView tvDescription;
@@ -161,6 +164,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         tvDate = view.findViewById(R.id.text_event_date);
         tvTimeStart = view.findViewById(R.id.text_event_starting_time);
         tvTimeEnd = view.findViewById(R.id.text_event_ending_time);
+        tvRegistrationStartDate = view.findViewById(R.id.text_registration_start_date);
+        tvRegistrationEndDate = view.findViewById(R.id.text_registration_end_date);
+        tvRegistrationEndTime = view.findViewById(R.id.text_registration_end_time);
         cgEventTags = view.findViewById(R.id.cg_event_tags);
         tvLocation = view.findViewById(R.id.text_event_location);
         tvDescription = view.findViewById(R.id.text_event_description);
@@ -283,6 +289,18 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
         if (tvTimeEnd != null) {
             tvTimeEnd.setText(EventUiFormatter.getEndTimeLabel(event));
+        }
+
+        if (tvRegistrationStartDate != null) {
+            tvRegistrationStartDate.setText(EventUiFormatter.getRegistrationStartDateLabel(event));
+        }
+
+        if (tvRegistrationEndDate != null) {
+            tvRegistrationEndDate.setText(EventUiFormatter.getRegistrationEndDateLabel(event));
+        }
+
+        if (tvRegistrationEndTime != null) {
+            tvRegistrationEndTime.setText(EventUiFormatter.getRegistrationEndTimeLabel(event));
         }
 
         if (tvLocation != null) {

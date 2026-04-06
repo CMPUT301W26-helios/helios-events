@@ -162,6 +162,9 @@ public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolde
         holder.tvTitle.setText(EventUiFormatter.getTitle(event));
         holder.tvLocation.setText(EventUiFormatter.getLocationLabel(event));
         holder.tvDate.setText(EventUiFormatter.getScheduleLabel(event));
+        holder.tvRegistrationStatus.setText(
+                EventUiFormatter.getRegistrationStatusLabel(event, System.currentTimeMillis())
+        );
 
         if (event.getPosterImageId() != null && !event.getPosterImageId().isEmpty()) {
             Glide.with(holder.itemView.getContext())
@@ -217,7 +220,7 @@ public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolde
             @NonNull Event event
     ) {
         holder.tvEventTitle.setText(EventUiFormatter.getTitle(event));
-        holder.tvDate.setText(EventUiFormatter.getDateLabel(event));
+        holder.tvDate.setText(EventUiFormatter.getScheduleLabel(event));
         holder.tvMaxEntrants.setText(event.getCapacity() + " seats");
 
         holder.itemView.setOnClickListener(v -> {
@@ -272,6 +275,7 @@ public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolde
         TextView tvTitle;
         TextView tvLocation;
         TextView tvDate;
+        TextView tvRegistrationStatus;
         TextView tvTags;
         TextView tvMaxEntrants;
         View badgeContainer;
@@ -288,6 +292,7 @@ public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolde
             tvTitle = itemView.findViewById(R.id.tv_event_title);
             tvLocation = itemView.findViewById(R.id.tv_event_location);
             tvDate = itemView.findViewById(R.id.tv_event_date);
+            tvRegistrationStatus = itemView.findViewById(R.id.tv_event_registration_status);
             tvTags = itemView.findViewById(R.id.tv_event_tags);
             tvMaxEntrants = itemView.findViewById(R.id.tv_event_max_entrants);
             badgeContainer = itemView.findViewById(R.id.layout_event_badges_right);

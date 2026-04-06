@@ -84,13 +84,27 @@ final class SetupEventFormData {
     String validate(
             long registrationOpensMillis,
             long registrationClosesMillis,
+            long eventStartMillis,
+            long eventEndMillis,
             boolean geolocationRequired
     ) {
         if (TextUtils.isEmpty(title)) {
             return "Event name is required.";
         }
+        if (registrationOpensMillis <= 0 || registrationClosesMillis <= 0) {
+            return "Registration dates are required.";
+        }
         if (registrationClosesMillis < registrationOpensMillis) {
-            return "Registration end date must be after start date.";
+            return "Registration end must be after the registration start.";
+        }
+        if (eventStartMillis <= 0 || eventEndMillis <= 0) {
+            return "Event date and time range are required.";
+        }
+        if (eventEndMillis <= eventStartMillis) {
+            return "Event end time must be after the start time.";
+        }
+        if (registrationClosesMillis > eventStartMillis) {
+            return "Registration must close before the event starts.";
         }
         Integer capacity = parseOptionalPositiveInt(maxEntrantsRaw);
         if (!TextUtils.isEmpty(maxEntrantsRaw) && capacity == null) {
@@ -179,6 +193,8 @@ final class SetupEventFormData {
             int capacity,
             long registrationOpensMillis,
             long registrationClosesMillis,
+            long eventStartMillis,
+            long eventEndMillis,
             boolean geolocationRequired,
             boolean privateEvent
     ) {
@@ -190,6 +206,8 @@ final class SetupEventFormData {
         event.setSampleSize(capacity);
         event.setRegistrationOpensMillis(registrationOpensMillis);
         event.setRegistrationClosesMillis(registrationClosesMillis);
+        event.setStartTimeMillis(eventStartMillis);
+        event.setEndTimeMillis(eventEndMillis);
         event.setGeolocationRequired(geolocationRequired);
         event.setPrivateEvent(privateEvent);
         event.setWaitlistLimit(resolveWaitlistLimit());
