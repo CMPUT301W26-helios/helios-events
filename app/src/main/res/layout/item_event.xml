@@ -134,7 +134,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:maxLines="1"
+            android:maxLines="2"
             android:textColor="?attr/colorOnSurface"
             android:textSize="13sp"
             android:textStyle="bold"
@@ -143,6 +143,21 @@
             app:layout_constraintBottom_toBottomOf="@id/iv_calendar_icon"
             app:layout_constraintStart_toEndOf="@id/iv_calendar_icon"
             app:layout_constraintEnd_toStartOf="@id/tv_event_max_entrants" />
+
+        <TextView
+            android:id="@+id/tv_event_registration_status"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="16dp"
+            android:maxLines="2"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp"
+            tools:text="Registration closes at Apr 8, 2026 @ 00:00"
+            app:layout_constraintTop_toBottomOf="@id/tv_event_date"
+            app:layout_constraintStart_toStartOf="@id/tv_event_date"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <ImageView
             android:id="@+id/iv_location_icon"
@@ -153,7 +168,7 @@
             android:contentDescription="@null"
             android:src="@drawable/ic_location_pin"
             app:tint="?attr/colorPrimary"
-            app:layout_constraintTop_toBottomOf="@id/tv_event_max_entrants"
+            app:layout_constraintTop_toBottomOf="@id/tv_event_registration_status"
             app:layout_constraintStart_toStartOf="parent" />
 
         <TextView

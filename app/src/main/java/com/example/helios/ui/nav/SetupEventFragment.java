@@ -3,6 +3,7 @@ package com.example.helios.ui.nav;
 import android.Manifest;
 import android.app.Activity;
 import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -66,6 +67,8 @@ public class SetupEventFragment extends Fragment {
 
     private final SimpleDateFormat dateFormat =
             new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+    private final SimpleDateFormat timeFormat =
+            new SimpleDateFormat("h:mm a", Locale.getDefault());
 
     private EventService eventService;
     private ImageService imageService;
@@ -78,6 +81,8 @@ public class SetupEventFragment extends Fragment {
 
     private long registrationOpensMillis = 0L;
     private long registrationClosesMillis = 0L;
+    private long eventStartMillis = 0L;
+    private long eventEndMillis = 0L;
     private boolean geolocationRequired = true;
     @Nullable private FusedLocationProviderClient locationClient;
     @Nullable private Runnable pendingLocationAction;
@@ -145,8 +150,12 @@ public class SetupEventFragment extends Fragment {
         EditText geofenceLatitudeInput = view.findViewById(R.id.edit_geofence_latitude);
         EditText geofenceLongitudeInput = view.findViewById(R.id.edit_geofence_longitude);
         EditText geofenceRadiusInput = view.findViewById(R.id.edit_geofence_radius);
-        TextView startDateView = view.findViewById(R.id.tv_registration_start);
-        TextView endDateView = view.findViewById(R.id.tv_registration_end);
+        TextView registrationStartDateView = view.findViewById(R.id.tv_registration_start);
+        TextView registrationEndDateView = view.findViewById(R.id.tv_registration_end);
+        TextView registrationEndTimeView = view.findViewById(R.id.tv_registration_end_time);
+        TextView eventDateView = view.findViewById(R.id.tv_event_start_date);
+        TextView eventStartTimeView = view.findViewById(R.id.tv_event_start_time);
+        TextView eventEndTimeView = view.findViewById(R.id.tv_event_end_time);
         TextView geoOn = view.findViewById(R.id.tv_geo_on);
         TextView geoOff = view.findViewById(R.id.tv_geo_off);
         TextView privateOn = view.findViewById(R.id.tv_private_on);
@@ -204,18 +213,77 @@ public class SetupEventFragment extends Fragment {
         });
         updatePrivateToggle(privateOn, privateOff, isPrivateEvent);
 
-        startDateView.setOnClickListener(v ->
+        registrationStartDateView.setOnClickListener(v ->
                 openDatePicker(registrationOpensMillis, picked -> {
-                    registrationOpensMillis = picked;
-                    startDateView.setText(dateFormat.format(new Date(picked)));
-                    updateDateChipStyle(startDateView, true);
+                    registrationOpensMillis = updateDatePortion(
+                            registrationOpensMillis,
+                            picked,
+                            0,
+                            0
+                    );
+                    updateRegistrationWindowViews(
+                            registrationStartDateView,
+                            registrationEndDateView,
+                            registrationEndTimeView
+                    );
                 }));
 
-        endDateView.setOnClickListener(v ->
+        registrationEndDateView.setOnClickListener(v ->
                 openDatePicker(registrationClosesMillis, picked -> {
-                    registrationClosesMillis = picked;
-                    endDateView.setText(dateFormat.format(new Date(picked)));
-                    updateDateChipStyle(endDateView, true);
+                    registrationClosesMillis = updateDatePortion(
+                            registrationClosesMillis,
+                            picked,
+                            23,
+                            59
+                    );
+                    updateRegistrationWindowViews(
+                            registrationStartDateView,
+                            registrationEndDateView,
+                            registrationEndTimeView
+                    );
+                }));
+
+        registrationEndTimeView.setOnClickListener(v ->
+                openTimePicker(registrationClosesMillis, (hourOfDay, minute) -> {
+                    registrationClosesMillis = updateTimePortion(
+                            registrationClosesMillis,
+                            hourOfDay,
+                            minute,
+                            registrationOpensMillis > 0
+                                    ? registrationOpensMillis
+                                    : System.currentTimeMillis()
+                    );
+                    updateRegistrationWindowViews(
+                            registrationStartDateView,
+                            registrationEndDateView,
+                            registrationEndTimeView
+                    );
+                }));
+
+        eventDateView.setOnClickListener(v ->
+                openDatePicker(eventStartMillis, picked -> {
+                    long baseDate = picked > 0 ? picked : System.currentTimeMillis();
+                    eventStartMillis = updateDatePortion(eventStartMillis, baseDate, 18, 0);
+                    eventEndMillis = updateDatePortion(eventEndMillis, baseDate, 19, 0);
+                    updateEventWindowViews(eventDateView, eventStartTimeView, eventEndTimeView);
+                }));
+
+        eventStartTimeView.setOnClickListener(v ->
+                openTimePicker(eventStartMillis, (hourOfDay, minute) -> {
+                    long dateBase = eventStartMillis > 0
+                            ? eventStartMillis
+                            : (eventEndMillis > 0 ? eventEndMillis : System.currentTimeMillis());
+                    eventStartMillis = updateTimePortion(eventStartMillis, hourOfDay, minute, dateBase);
+                    updateEventWindowViews(eventDateView, eventStartTimeView, eventEndTimeView);
+                }));
+
+        eventEndTimeView.setOnClickListener(v ->
+                openTimePicker(eventEndMillis, (hourOfDay, minute) -> {
+                    long dateBase = eventEndMillis > 0
+                            ? eventEndMillis
+                            : (eventStartMillis > 0 ? eventStartMillis : System.currentTimeMillis());
+                    eventEndMillis = updateTimePortion(eventEndMillis, hourOfDay, minute, dateBase);
+                    updateEventWindowViews(eventDateView, eventStartTimeView, eventEndTimeView);
                 }));
 
         subtitleView.setVisibility(View.GONE);
@@ -228,10 +296,15 @@ public class SetupEventFragment extends Fragment {
             if (registrationOpensMillis == 0L || registrationClosesMillis == 0L) {
                 initializeDefaultRegistrationWindow();
             }
-            startDateView.setText(dateFormat.format(new Date(registrationOpensMillis)));
-            endDateView.setText(dateFormat.format(new Date(registrationClosesMillis)));
-            updateDateChipStyle(startDateView, true);
-            updateDateChipStyle(endDateView, true);
+            if (eventStartMillis == 0L || eventEndMillis == 0L) {
+                initializeDefaultEventWindow();
+            }
+            updateRegistrationWindowViews(
+                    registrationStartDateView,
+                    registrationEndDateView,
+                    registrationEndTimeView
+            );
+            updateEventWindowViews(eventDateView, eventStartTimeView, eventEndTimeView);
             updateGeoToggle(geoOn, geoOff, geolocationRequired);
             updateGeofenceSectionVisibility(geofenceFields, geolocationRequired);
 
@@ -252,6 +325,8 @@ public class SetupEventFragment extends Fragment {
                 String validationError = formData.validate(
                         registrationOpensMillis,
                         registrationClosesMillis,
+                        eventStartMillis,
+                        eventEndMillis,
                         geolocationRequired
                 );
                 if (validationError != null) {
@@ -315,16 +390,22 @@ public class SetupEventFragment extends Fragment {
                 }
                 if (event.getRegistrationOpensMillis() > 0) {
                     registrationOpensMillis = event.getRegistrationOpensMillis();
-                    startDateView.setText(dateFormat.format(
-                            new Date(event.getRegistrationOpensMillis())));
-                    updateDateChipStyle(startDateView, true);
                 }
                 if (event.getRegistrationClosesMillis() > 0) {
                     registrationClosesMillis = event.getRegistrationClosesMillis();
-                    endDateView.setText(dateFormat.format(
-                            new Date(event.getRegistrationClosesMillis())));
-                    updateDateChipStyle(endDateView, true);
                 }
+                if (event.getStartTimeMillis() > 0) {
+                    eventStartMillis = event.getStartTimeMillis();
+                }
+                if (event.getEndTimeMillis() > 0) {
+                    eventEndMillis = event.getEndTimeMillis();
+                }
+                updateRegistrationWindowViews(
+                        registrationStartDateView,
+                        registrationEndDateView,
+                        registrationEndTimeView
+                );
+                updateEventWindowViews(eventDateView, eventStartTimeView, eventEndTimeView);
 
                 geolocationRequired = event.isGeolocationRequired();
                 updateGeoToggle(geoOn, geoOff, geolocationRequired);
@@ -369,6 +450,8 @@ public class SetupEventFragment extends Fragment {
                 String validationError = formData.validate(
                         registrationOpensMillis,
                         registrationClosesMillis,
+                        eventStartMillis,
+                        eventEndMillis,
                         geolocationRequired
                 );
                 if (validationError != null) {
@@ -381,6 +464,8 @@ public class SetupEventFragment extends Fragment {
                         formData.resolveCapacity(loadedEvent.getCapacity()),
                         registrationOpensMillis,
                         registrationClosesMillis,
+                        eventStartMillis,
+                        eventEndMillis,
                         geolocationRequired,
                         isPrivateEvent
                 );
@@ -515,6 +600,8 @@ public class SetupEventFragment extends Fragment {
     ) {
         long now = System.currentTimeMillis();
         long oneWeek = 7L * 24 * 60 * 60 * 1000;
+        long resolvedEventStart = eventStartMillis > 0 ? eventStartMillis : (now + oneWeek);
+        long resolvedEventEnd = eventEndMillis > 0 ? eventEndMillis : (resolvedEventStart + 3600000L);
 
         Event event = new Event(
                 null,
@@ -522,8 +609,8 @@ public class SetupEventFragment extends Fragment {
                 formData.getDescription(),
                 formData.getLocationName(),
                 formData.getAddress(),
-                now + oneWeek,
-                now + oneWeek + 3600000L,
+                resolvedEventStart,
+                resolvedEventEnd,
                 registrationOpensMillis > 0 ? registrationOpensMillis : now,
                 registrationClosesMillis > 0 ? registrationClosesMillis : (now + (3L * 24 * 60 * 60 * 1000)),
                 maxEntrants > 0 ? maxEntrants : 0,
@@ -821,6 +908,10 @@ public class SetupEventFragment extends Fragment {
         void onPicked(long millis);
     }
 
+    private interface TimePickedCallback {
+        void onPicked(int hourOfDay, int minute);
+    }
+
     private void openDatePicker(long initialMillis, @NonNull DatePickedCallback callback) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(initialMillis > 0 ? initialMillis : System.currentTimeMillis());
@@ -838,6 +929,18 @@ public class SetupEventFragment extends Fragment {
         ).show();
     }
 
+    private void openTimePicker(long initialMillis, @NonNull TimePickedCallback callback) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(initialMillis > 0 ? initialMillis : System.currentTimeMillis());
+        new TimePickerDialog(
+                requireContext(),
+                (picker, hourOfDay, minute) -> callback.onPicked(hourOfDay, minute),
+                cal.get(Calendar.HOUR_OF_DAY),
+                cal.get(Calendar.MINUTE),
+                false
+        ).show();
+    }
+
     private void initializeDefaultRegistrationWindow() {
         Calendar opens = Calendar.getInstance();
         opens.set(Calendar.HOUR_OF_DAY, 0);
@@ -848,7 +951,90 @@ public class SetupEventFragment extends Fragment {
 
         Calendar closes = (Calendar) opens.clone();
         closes.add(Calendar.DAY_OF_MONTH, 4);
+        closes.set(Calendar.HOUR_OF_DAY, 23);
+        closes.set(Calendar.MINUTE, 59);
         registrationClosesMillis = closes.getTimeInMillis();
+    }
+
+    private void initializeDefaultEventWindow() {
+        Calendar eventStart = Calendar.getInstance();
+        eventStart.add(Calendar.DAY_OF_MONTH, 7);
+        eventStart.set(Calendar.HOUR_OF_DAY, 18);
+        eventStart.set(Calendar.MINUTE, 0);
+        eventStart.set(Calendar.SECOND, 0);
+        eventStart.set(Calendar.MILLISECOND, 0);
+        eventStartMillis = eventStart.getTimeInMillis();
+
+        Calendar eventEnd = (Calendar) eventStart.clone();
+        eventEnd.add(Calendar.HOUR_OF_DAY, 1);
+        eventEndMillis = eventEnd.getTimeInMillis();
+    }
+
+    private void updateRegistrationWindowViews(
+            @NonNull TextView registrationStartDateView,
+            @NonNull TextView registrationEndDateView,
+            @NonNull TextView registrationEndTimeView
+    ) {
+        bindChipValue(registrationStartDateView, registrationOpensMillis, dateFormat, "Start date");
+        bindChipValue(registrationEndDateView, registrationClosesMillis, dateFormat, "End date");
+        bindChipValue(registrationEndTimeView, registrationClosesMillis, timeFormat, "End time");
+    }
+
+    private void updateEventWindowViews(
+            @NonNull TextView eventDateView,
+            @NonNull TextView eventStartTimeView,
+            @NonNull TextView eventEndTimeView
+    ) {
+        bindChipValue(eventDateView, eventStartMillis, dateFormat, "Event date");
+        bindChipValue(eventStartTimeView, eventStartMillis, timeFormat, "Start time");
+        bindChipValue(eventEndTimeView, eventEndMillis, timeFormat, "End time");
+    }
+
+    private void bindChipValue(
+            @NonNull TextView chipView,
+            long millis,
+            @NonNull SimpleDateFormat formatter,
+            @NonNull String placeholder
+    ) {
+        if (millis > 0) {
+            chipView.setText(formatter.format(new Date(millis)));
+            updateDateChipStyle(chipView, true);
+            return;
+        }
+        chipView.setText(placeholder);
+        updateDateChipStyle(chipView, false);
+    }
+
+    private long updateDatePortion(long existingMillis, long selectedDateMillis, int defaultHour, int defaultMinute) {
+        Calendar existing = Calendar.getInstance();
+        boolean hasExisting = existingMillis > 0;
+        existing.setTimeInMillis(hasExisting ? existingMillis : System.currentTimeMillis());
+
+        Calendar selectedDate = Calendar.getInstance();
+        selectedDate.setTimeInMillis(selectedDateMillis > 0 ? selectedDateMillis : System.currentTimeMillis());
+
+        Calendar merged = Calendar.getInstance();
+        merged.set(
+                selectedDate.get(Calendar.YEAR),
+                selectedDate.get(Calendar.MONTH),
+                selectedDate.get(Calendar.DAY_OF_MONTH),
+                hasExisting ? existing.get(Calendar.HOUR_OF_DAY) : defaultHour,
+                hasExisting ? existing.get(Calendar.MINUTE) : defaultMinute,
+                0
+        );
+        merged.set(Calendar.MILLISECOND, 0);
+        return merged.getTimeInMillis();
+    }
+
+    private long updateTimePortion(long existingMillis, int hourOfDay, int minute, long fallbackDateMillis) {
+        Calendar base = Calendar.getInstance();
+        long sourceMillis = existingMillis > 0 ? existingMillis : fallbackDateMillis;
+        base.setTimeInMillis(sourceMillis > 0 ? sourceMillis : System.currentTimeMillis());
+        base.set(Calendar.HOUR_OF_DAY, hourOfDay);
+        base.set(Calendar.MINUTE, minute);
+        base.set(Calendar.SECOND, 0);
+        base.set(Calendar.MILLISECOND, 0);
+        return base.getTimeInMillis();
     }
 
     private void bindExistingGeofence(

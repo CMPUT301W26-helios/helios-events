@@ -16,8 +16,16 @@ import java.util.Map;
 public final class EventUiFormatter {
     private static final SimpleDateFormat DATE_FORMAT =
             new SimpleDateFormat("EEE, MMM d", Locale.getDefault());
+    private static final SimpleDateFormat FULL_DATE_FORMAT =
+            new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
     private static final SimpleDateFormat TIME_FORMAT =
             new SimpleDateFormat("h:mm a", Locale.getDefault());
+    private static final SimpleDateFormat REGISTRATION_TIME_FORMAT =
+            new SimpleDateFormat("HH:mm", Locale.getDefault());
+    private static final SimpleDateFormat SHORT_TIME_FORMAT =
+            new SimpleDateFormat("h:mm", Locale.getDefault());
+    private static final SimpleDateFormat MERIDIEM_FORMAT =
+            new SimpleDateFormat("a", Locale.getDefault());
 
     private EventUiFormatter() {}
 
@@ -88,12 +96,73 @@ public final class EventUiFormatter {
     }
 
     @NonNull
+    public static String getRegistrationStartDateLabel(@NonNull Event event) {
+        long opensMillis = event.getRegistrationOpensMillis();
+        return opensMillis > 0 ? FULL_DATE_FORMAT.format(new Date(opensMillis)) : "TBD";
+    }
+
+    @NonNull
+    public static String getRegistrationEndDateLabel(@NonNull Event event) {
+        long closesMillis = event.getRegistrationClosesMillis();
+        return closesMillis > 0 ? FULL_DATE_FORMAT.format(new Date(closesMillis)) : "TBD";
+    }
+
+    @NonNull
+    public static String getRegistrationEndTimeLabel(@NonNull Event event) {
+        long closesMillis = event.getRegistrationClosesMillis();
+        return closesMillis > 0 ? TIME_FORMAT.format(new Date(closesMillis)) : "TBD";
+    }
+
+    @NonNull
+    public static String getRegistrationStatusLabel(@NonNull Event event, long nowMillis) {
+        long opensMillis = event.getRegistrationOpensMillis();
+        long closesMillis = event.getRegistrationClosesMillis();
+        if (opensMillis <= 0 || closesMillis <= 0) {
+            return "Registration details unavailable";
+        }
+        if (nowMillis < opensMillis) {
+            return "Registration opens on "
+                    + FULL_DATE_FORMAT.format(new Date(opensMillis))
+                    + " @ "
+                    + REGISTRATION_TIME_FORMAT.format(new Date(opensMillis));
+        }
+        if (nowMillis < closesMillis) {
+            return "Registration closes at "
+                    + FULL_DATE_FORMAT.format(new Date(closesMillis))
+                    + " @ "
+                    + REGISTRATION_TIME_FORMAT.format(new Date(closesMillis));
+        }
+        return "Registration closed";
+    }
+
+    @NonNull
+    public static String getTimeRangeLabel(@NonNull Event event) {
+        long startMillis = event.getStartTimeMillis();
+        long endMillis = event.getEndTimeMillis();
+        if (startMillis <= 0) {
+            return "Time TBD";
+        }
+        if (endMillis <= startMillis) {
+            return getStartTimeLabel(event);
+        }
+
+        Date startDate = new Date(startMillis);
+        Date endDate = new Date(endMillis);
+        String startMeridiem = MERIDIEM_FORMAT.format(startDate);
+        String endMeridiem = MERIDIEM_FORMAT.format(endDate);
+        if (startMeridiem.equals(endMeridiem)) {
+            return SHORT_TIME_FORMAT.format(startDate) + " - " + TIME_FORMAT.format(endDate);
+        }
+        return TIME_FORMAT.format(startDate) + " - " + TIME_FORMAT.format(endDate);
+    }
+
+    @NonNull
     public static String getScheduleLabel(@NonNull Event event) {
         long startMillis = event.getStartTimeMillis();
         if (startMillis <= 0) {
             return getDateLabel(event);
         }
-        return getDateLabel(event) + " | " + getStartTimeLabel(event);
+        return getDateLabel(event) + " | " + getTimeRangeLabel(event);
     }
 
     @NonNull
