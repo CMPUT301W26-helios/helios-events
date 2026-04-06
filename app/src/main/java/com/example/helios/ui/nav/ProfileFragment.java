@@ -8,8 +8,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.PickVisualMediaRequest;
@@ -20,19 +20,29 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.helios.HeliosApplication;
 import com.example.helios.R;
+import com.example.helios.model.Event;
 import com.example.helios.model.UserProfile;
+import com.example.helios.model.WaitingListEntry;
+import com.example.helios.model.WaitingListStatus;
 import com.example.helios.service.AccessibilityPreferences;
+import com.example.helios.service.EntrantEventService;
+import com.example.helios.service.EventService;
 import com.example.helios.service.HeliosUiPreferences;
 import com.example.helios.service.ProfileService;
+import com.example.helios.ui.ProfileEventHistoryAdapter;
 import com.example.helios.ui.ThemedActivity;
 import com.example.helios.ui.LauncherActivity;
 import com.example.helios.ui.ProfileSetupActivity;
 import com.example.helios.ui.common.HeliosChipFactory;
 import com.example.helios.ui.common.HeliosImageUploader;
+import com.example.helios.ui.event.EventDetailsBottomSheet;
+import com.example.helios.ui.event.EventUiFormatter;
 import com.example.helios.ui.theme.HeliosFontOption;
 import com.example.helios.ui.theme.HeliosThemeManager;
 import com.example.helios.ui.theme.HeliosThemeOption;
@@ -44,6 +54,12 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Fragment that displays the user's profile information.
@@ -51,10 +67,13 @@ import java.util.UUID;
  * and access the admin panel if they have administrative privileges.
  */
 public class ProfileFragment extends Fragment {
+    private static final String EVENT_DETAILS_TAG = "profile_event_details";
     private static final String NOTIFICATIONS_ON_EMOJI = "\uD83D\uDD14";
     private static final String NOTIFICATIONS_OFF_EMOJI = "\uD83D\uDD15";
 
     private ProfileService profileService;
+    private EventService eventService;
+    private EntrantEventService entrantEventService;
 
     private TextView tvName;
     private TextView tvEmail;
@@ -80,6 +99,14 @@ public class ProfileFragment extends Fragment {
     private HeliosUiPreferences uiPreferences;
     private HeliosThemeManager themeManager;
     private TextView tvHeaderIconSummary;
+    private TextView tvCurrentHistoryEmpty;
+    private TextView tvPastHistoryEmpty;
+    private RecyclerView rvCurrentHistory;
+    private RecyclerView rvPastHistory;
+    private ProfileEventHistoryAdapter currentHistoryAdapter;
+    private ProfileEventHistoryAdapter pastHistoryAdapter;
+    private int eventHistoryLoadVersion = 0;
+    private boolean skipNextResumeReload = true;
 
     private boolean notificationsCurrentlyEnabled = true;
     @Nullable private String profileImageUrl;
@@ -109,6 +136,8 @@ public class ProfileFragment extends Fragment {
         }
 
         profileService = HeliosApplication.from(requireContext()).getProfileService();
+        eventService = HeliosApplication.from(requireContext()).getEventService();
+        entrantEventService = HeliosApplication.from(requireContext()).getEntrantEventService();
         tvName = view.findViewById(R.id.tv_name);
         tvEmail = view.findViewById(R.id.tv_email);
         tvPhone = view.findViewById(R.id.tv_phone);
@@ -133,6 +162,10 @@ public class ProfileFragment extends Fragment {
         switchHeaderHeliosIcon = view.findViewById(R.id.switchHeaderHeliosIcon);
         switchSignInBanner = view.findViewById(R.id.switchSignInBanner);
         tvHeaderIconSummary = view.findViewById(R.id.tv_header_icon_summary);
+        tvCurrentHistoryEmpty = view.findViewById(R.id.tv_current_history_empty);
+        tvPastHistoryEmpty = view.findViewById(R.id.tv_past_history_empty);
+        rvCurrentHistory = view.findViewById(R.id.rv_current_history);
+        rvPastHistory = view.findViewById(R.id.rv_past_history);
         accessibilityPreferences = HeliosApplication.from(requireContext()).getAccessibilityPreferences();
         uiPreferences = HeliosApplication.from(requireContext()).getUiPreferences();
         themeManager = HeliosApplication.from(requireContext()).getThemeManager();
@@ -158,19 +191,31 @@ public class ProfileFragment extends Fragment {
         bindHeaderIconPreference();
         bindThemeOptions();
         bindFontOptions();
+        setupEventHistory();
+        getParentFragmentManager().setFragmentResultListener(
+                EventDetailsBottomSheet.RESULT_INVITATION_RESPONSE,
+                getViewLifecycleOwner(),
+                (requestKey, bundle) -> loadEventHistory()
+        );
 
 
         loadProfileSafe();
+        loadEventHistory();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        if (skipNextResumeReload) {
+            skipNextResumeReload = false;
+            return;
+        }
         bindAccessibilityPreferences();
         bindHeaderIconPreference();
         bindThemeOptions();
         bindFontOptions();
         loadProfileSafe();
+        loadEventHistory();
     }
 
     // ── Delete ────────────────────────────────────────────────────────────────
@@ -455,6 +500,319 @@ public class ProfileFragment extends Fragment {
     private void openAdminPanel() {
         NavController navController = NavHostFragment.findNavController(this);
         navController.navigate(R.id.adminFragment);
+    }
+
+    private void setupEventHistory() {
+        if (rvCurrentHistory == null || rvPastHistory == null) {
+            return;
+        }
+
+        currentHistoryAdapter = new ProfileEventHistoryAdapter(this::openHistoryEventDetails);
+        pastHistoryAdapter = new ProfileEventHistoryAdapter(this::openHistoryEventDetails);
+
+        rvCurrentHistory.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvCurrentHistory.setAdapter(currentHistoryAdapter);
+
+        rvPastHistory.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvPastHistory.setAdapter(pastHistoryAdapter);
+    }
+
+    private void loadEventHistory() {
+        Context ctx = getContext();
+        if (ctx == null || entrantEventService == null || eventService == null) {
+            return;
+        }
+
+        final int requestVersion = ++eventHistoryLoadVersion;
+        entrantEventService.getCurrentUserWaitlistEntries(ctx, entries -> {
+            if (!isHistoryRequestActive(requestVersion)) {
+                return;
+            }
+            if (entries == null || entries.isEmpty()) {
+                bindEventHistory(Collections.emptyList(), Collections.emptyList());
+                return;
+            }
+
+            eventService.getAllEvents(events -> {
+                if (!isHistoryRequestActive(requestVersion)) {
+                    return;
+                }
+
+                Map<String, Event> eventsById = new HashMap<>();
+                if (events != null) {
+                    for (Event event : events) {
+                        if (event != null && event.getEventId() != null) {
+                            eventsById.put(event.getEventId(), event);
+                        }
+                    }
+                }
+
+                long nowMillis = System.currentTimeMillis();
+                List<ProfileEventHistoryAdapter.HistoryItem> currentItems =
+                        buildHistoryItems(entries, eventsById, true, nowMillis);
+                List<ProfileEventHistoryAdapter.HistoryItem> pastItems =
+                        buildHistoryItems(entries, eventsById, false, nowMillis);
+                bindEventHistory(currentItems, pastItems);
+            }, error -> {
+                if (!isHistoryRequestActive(requestVersion) || getContext() == null) {
+                    return;
+                }
+                Toast.makeText(
+                        getContext(),
+                        "Failed to load event history: " + error.getMessage(),
+                        Toast.LENGTH_LONG
+                ).show();
+            });
+        }, error -> {
+            if (!isHistoryRequestActive(requestVersion) || getContext() == null) {
+                return;
+            }
+            Toast.makeText(
+                    getContext(),
+                    "Failed to load event history: " + error.getMessage(),
+                    Toast.LENGTH_LONG
+            ).show();
+        });
+    }
+
+    private boolean isHistoryRequestActive(int requestVersion) {
+        return isAdded() && getView() != null && requestVersion == eventHistoryLoadVersion;
+    }
+
+    private void bindEventHistory(
+            @NonNull List<ProfileEventHistoryAdapter.HistoryItem> currentItems,
+            @NonNull List<ProfileEventHistoryAdapter.HistoryItem> pastItems
+    ) {
+        if (currentHistoryAdapter != null) {
+            currentHistoryAdapter.replaceItems(currentItems);
+        }
+        if (pastHistoryAdapter != null) {
+            pastHistoryAdapter.replaceItems(pastItems);
+        }
+
+        if (tvCurrentHistoryEmpty != null) {
+            tvCurrentHistoryEmpty.setVisibility(currentItems.isEmpty() ? View.VISIBLE : View.GONE);
+        }
+        if (rvCurrentHistory != null) {
+            rvCurrentHistory.setVisibility(currentItems.isEmpty() ? View.GONE : View.VISIBLE);
+        }
+        if (tvPastHistoryEmpty != null) {
+            tvPastHistoryEmpty.setVisibility(pastItems.isEmpty() ? View.VISIBLE : View.GONE);
+        }
+        if (rvPastHistory != null) {
+            rvPastHistory.setVisibility(pastItems.isEmpty() ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    @NonNull
+    private List<ProfileEventHistoryAdapter.HistoryItem> buildHistoryItems(
+            @NonNull List<WaitingListEntry> entries,
+            @NonNull Map<String, Event> eventsById,
+            boolean currentList,
+            long nowMillis
+    ) {
+        List<ProfileEventHistoryRow> rows = new ArrayList<>();
+        for (WaitingListEntry entry : entries) {
+            if (entry == null || entry.getStatus() == null) {
+                continue;
+            }
+
+            Event event = null;
+            if (entry.getEventId() != null) {
+                event = eventsById.get(entry.getEventId());
+            }
+
+            if (shouldShowInCurrentList(entry, event, nowMillis) != currentList) {
+                continue;
+            }
+
+            rows.add(buildHistoryRow(entry, event));
+        }
+
+        Comparator<ProfileEventHistoryRow> comparator = currentList
+                ? Comparator.comparingLong(ProfileEventHistoryRow::getSortTimeMillis)
+                : (left, right) -> Long.compare(right.getSortTimeMillis(), left.getSortTimeMillis());
+        Collections.sort(rows, comparator.thenComparing(ProfileEventHistoryRow::getStableId));
+
+        List<ProfileEventHistoryAdapter.HistoryItem> items = new ArrayList<>();
+        for (ProfileEventHistoryRow row : rows) {
+            items.add(row.toItem());
+        }
+        return items;
+    }
+
+    private boolean shouldShowInCurrentList(
+            @NonNull WaitingListEntry entry,
+            @Nullable Event event,
+            long nowMillis
+    ) {
+        WaitingListStatus status = entry.getStatus();
+        if (status == WaitingListStatus.WAITING
+                || status == WaitingListStatus.INVITED
+                || status == WaitingListStatus.ACCEPTED) {
+            return event != null && isEventCurrentOrUpcoming(event, nowMillis);
+        }
+        return false;
+    }
+
+    private boolean isEventCurrentOrUpcoming(@NonNull Event event, long nowMillis) {
+        long endTimeMillis = event.getEndTimeMillis();
+        if (endTimeMillis > 0) {
+            return endTimeMillis >= nowMillis;
+        }
+        long startTimeMillis = event.getStartTimeMillis();
+        return startTimeMillis <= 0 || startTimeMillis >= nowMillis;
+    }
+
+    @NonNull
+    private ProfileEventHistoryRow buildHistoryRow(
+            @NonNull WaitingListEntry entry,
+            @Nullable Event event
+    ) {
+        WaitingListStatus status = entry.getStatus();
+        String eventId = entry.getEventId();
+        String stableId = eventId != null
+                ? eventId
+                : "missing_" + status.name() + "_" + getHistoryTimestamp(entry, event);
+        String title = event != null ? EventUiFormatter.getTitle(event) : "Removed Event";
+        String schedule = event != null
+                ? EventUiFormatter.getScheduleLabel(event)
+                : "This event is no longer available.";
+        String subtext = getStatusLabel(status) + " | " + schedule;
+        boolean clickable = event != null && eventId != null && !eventId.trim().isEmpty();
+        return new ProfileEventHistoryRow(
+                stableId,
+                eventId,
+                title,
+                subtext,
+                status,
+                clickable,
+                getSortTime(entry, event)
+        );
+    }
+
+    private long getSortTime(@NonNull WaitingListEntry entry, @Nullable Event event) {
+        long historyTimestamp = getHistoryTimestamp(entry, event);
+        if (event == null) {
+            return historyTimestamp;
+        }
+
+        WaitingListStatus status = entry.getStatus();
+        if (status == WaitingListStatus.WAITING
+                || status == WaitingListStatus.INVITED
+                || status == WaitingListStatus.ACCEPTED) {
+            long startTimeMillis = event.getStartTimeMillis();
+            if (startTimeMillis > 0) {
+                return startTimeMillis;
+            }
+        }
+        long endTimeMillis = event.getEndTimeMillis();
+        return endTimeMillis > 0 ? endTimeMillis : historyTimestamp;
+    }
+
+    private long getHistoryTimestamp(@NonNull WaitingListEntry entry, @Nullable Event event) {
+        long respondedAtMillis = entry.getRespondedAtMillis();
+        if (respondedAtMillis > 0) {
+            return respondedAtMillis;
+        }
+        long invitedAtMillis = entry.getInvitedAtMillis();
+        if (invitedAtMillis > 0) {
+            return invitedAtMillis;
+        }
+        long joinedAtMillis = entry.getJoinedAtMillis();
+        if (joinedAtMillis > 0) {
+            return joinedAtMillis;
+        }
+        if (event != null && event.getEndTimeMillis() > 0) {
+            return event.getEndTimeMillis();
+        }
+        if (event != null && event.getStartTimeMillis() > 0) {
+            return event.getStartTimeMillis();
+        }
+        return 0L;
+    }
+
+    @NonNull
+    private String getStatusLabel(@NonNull WaitingListStatus status) {
+        switch (status) {
+            case WAITING:
+                return "Joined waiting list";
+            case INVITED:
+                return "Invitation pending";
+            case ACCEPTED:
+                return "Invitation accepted";
+            case DECLINED:
+                return "Invitation declined";
+            case CANCELLED:
+                return "Registration cancelled";
+            case NOT_SELECTED:
+            default:
+                return "Not selected";
+        }
+    }
+
+    private void openHistoryEventDetails(@NonNull ProfileEventHistoryAdapter.HistoryItem item) {
+        String eventId = item.getEventId();
+        if (eventId == null || eventId.trim().isEmpty() || !isAdded()) {
+            return;
+        }
+
+        Fragment existing = getParentFragmentManager().findFragmentByTag(EVENT_DETAILS_TAG);
+        if (existing instanceof EventDetailsBottomSheet) {
+            ((EventDetailsBottomSheet) existing).dismissAllowingStateLoss();
+        }
+
+        EventDetailsBottomSheet.newInstance(eventId)
+                .show(getParentFragmentManager(), EVENT_DETAILS_TAG);
+    }
+
+    private static final class ProfileEventHistoryRow {
+        @NonNull private final String stableId;
+        @Nullable private final String eventId;
+        @NonNull private final String title;
+        @NonNull private final String subtext;
+        @NonNull private final WaitingListStatus status;
+        private final boolean clickable;
+        private final long sortTimeMillis;
+
+        private ProfileEventHistoryRow(
+                @NonNull String stableId,
+                @Nullable String eventId,
+                @NonNull String title,
+                @NonNull String subtext,
+                @NonNull WaitingListStatus status,
+                boolean clickable,
+                long sortTimeMillis
+        ) {
+            this.stableId = stableId;
+            this.eventId = eventId;
+            this.title = title;
+            this.subtext = subtext;
+            this.status = status;
+            this.clickable = clickable;
+            this.sortTimeMillis = sortTimeMillis;
+        }
+
+        @NonNull
+        private String getStableId() {
+            return stableId;
+        }
+
+        private long getSortTimeMillis() {
+            return sortTimeMillis;
+        }
+
+        @NonNull
+        private ProfileEventHistoryAdapter.HistoryItem toItem() {
+            return new ProfileEventHistoryAdapter.HistoryItem(
+                    stableId,
+                    eventId,
+                    title,
+                    subtext,
+                    status,
+                    clickable
+            );
+        }
     }
 
     // ── Profile loading ───────────────────────────────────────────────────────
