@@ -1,5 +1,7 @@
 package com.example.helios.ui.nav;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -8,17 +10,25 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.content.FileProvider;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.example.helios.HeliosApplication;
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.model.WaitingListEntry;
@@ -28,14 +38,19 @@ import com.example.helios.service.LotteryService;
 import com.example.helios.service.OrganizerNotificationService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.service.WaitingListService;
+import com.example.helios.ui.common.EventNavArgs;
+import com.example.helios.ui.event.EventUiFormatter;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,24 +65,25 @@ public class OrganizerViewEntrantsFragment extends Fragment {
 
     private String eventId;
     private Event event;
-    private final EventService eventService = new EventService();
-    private final LotteryService lotteryService = new LotteryService();
-    private final WaitingListService waitingListService = new WaitingListService();
-    private final ProfileService profileService = new ProfileService();
+    private EventService eventService;
+    private LotteryService lotteryService;
+    private WaitingListService waitingListService;
+    private ProfileService profileService;
 
     private final List<WaitingListEntry> allEntries = new ArrayList<>();
     private final List<EntrantDisplayModel> displayList = new ArrayList<>();
+    private final Map<String, String> entrantNames = new HashMap<>();
+    private final Map<String, String> entrantImageUrls = new HashMap<>();
     private EntrantAdapter adapter;
     private boolean removeEntrantMode = false;
 
-    private TextView tvDrawIndicator, tvListHeader, tvInfoStats;
+    private TextView tvDrawIndicator, tvListHeader, tvInfoStats, tvHeaderTitle, tvHeaderSubtitle;
     private View llFilters, layoutDrawControls, layoutDeclinedActions, layoutInvitedActions;
     private EditText etSearch;
     private EditText etDrawCount;
-    private MaterialButton btnRemoveEntrant;
+    private MaterialButton btnDraw, btnRemoveEntrant;
     private ChipGroup cgStatus;
-    private final OrganizerNotificationService organizerNotificationService =
-            new OrganizerNotificationService();
+    private OrganizerNotificationService organizerNotificationService;
 
     /**
      * Default constructor for OrganizerViewEntrantsFragment.
@@ -79,9 +95,13 @@ public class OrganizerViewEntrantsFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            eventId = getArguments().getString("arg_event_id");
-        }
+        HeliosApplication application = HeliosApplication.from(requireContext());
+        eventService = application.getEventService();
+        lotteryService = application.getLotteryService();
+        waitingListService = application.getWaitingListService();
+        profileService = application.getProfileService();
+        organizerNotificationService = application.getOrganizerNotificationService();
+        eventId = EventNavArgs.getEventId(getArguments());
     }
 
     @Override
@@ -100,6 +120,8 @@ public class OrganizerViewEntrantsFragment extends Fragment {
      * @param view The fragment's root view.
      */
     private void initViews(View view) {
+        tvHeaderTitle = view.findViewById(R.id.submenu_title);
+        tvHeaderSubtitle = view.findViewById(R.id.submenu_subtitle);
         tvDrawIndicator = view.findViewById(R.id.tv_draw_indicator);
         tvListHeader = view.findViewById(R.id.tv_list_header);
         tvInfoStats = view.findViewById(R.id.tv_info_stats);
@@ -109,8 +131,11 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         layoutInvitedActions = view.findViewById(R.id.layout_invited_actions);
         etSearch = view.findViewById(R.id.et_search);
         etDrawCount = view.findViewById(R.id.et_draw_count);
+        btnDraw = view.findViewById(R.id.btn_draw);
         btnRemoveEntrant = view.findViewById(R.id.btn_remove_entrant);
         cgStatus = view.findViewById(R.id.cg_status);
+        tvHeaderTitle.setText("Manage Entrants");
+        tvHeaderSubtitle.setText("Review invited entrants, the replacement pool, and cancelled responses.");
         updateRemoveEntrantButtonState();
     }
 
@@ -132,7 +157,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
      * @param view The fragment's root view.
      */
     private void setupListeners(View view) {
-        view.findViewById(R.id.btn_back).setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
+        view.findViewById(R.id.submenu_back_button).setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
 
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -143,10 +168,11 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         cgStatus.setOnCheckedStateChangeListener((group, checkedIds) -> updateDisplayList());
 
         view.findViewById(R.id.btn_draw).setOnClickListener(v -> performDraw());
-        
+
         view.findViewById(R.id.btn_delete_declined).setOnClickListener(v -> deleteSelectedDeclined());
         view.findViewById(R.id.btn_redraw_replacement).setOnClickListener(v -> redrawReplacements());
         btnRemoveEntrant.setOnClickListener(v -> toggleRemoveEntrantMode());
+        view.findViewById(R.id.btn_export).setOnClickListener(v -> exportFinalList());
     }
 
     /**
@@ -157,6 +183,13 @@ public class OrganizerViewEntrantsFragment extends Fragment {
 
         eventService.getEventById(eventId, loadedEvent -> {
             this.event = loadedEvent;
+            if (loadedEvent != null) {
+                tvHeaderSubtitle.setText(
+                        EventUiFormatter.getTitle(loadedEvent)
+                                + " | "
+                                + EventUiFormatter.getScheduleLabel(loadedEvent)
+                );
+            }
             refreshEntries();
         }, e -> toast("Failed to load event"));
     }
@@ -168,6 +201,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         waitingListService.getEntriesForEvent(eventId, entries -> {
             allEntries.clear();
             allEntries.addAll(entries);
+            prefetchEntrantNames(entries);
             updateDrawCountDisplay();
             updateUiState();
             updateDisplayList();
@@ -181,11 +215,13 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         boolean drawn = event != null && event.isDrawHappened();
         boolean statusViewEnabled = isStatusViewEnabled();
         tvDrawIndicator.setVisibility(drawn ? View.VISIBLE : View.GONE);
+        tvDrawIndicator.setText(drawn ? "Draw completed" : "Draw pending");
         llFilters.setVisibility(statusViewEnabled ? View.VISIBLE : View.GONE);
-        tvListHeader.setText(statusViewEnabled ? "Entrant Status" : "Waiting List");
+        tvListHeader.setText(statusViewEnabled ? "Selected entrants" : "Waiting list");
         layoutDrawControls.setVisibility(View.VISIBLE);
         layoutInvitedActions.setVisibility(View.GONE);
-        
+        btnDraw.setText(drawn ? "Update Draw" : "Run Draw");
+
         if (statusViewEnabled && cgStatus.getCheckedChipId() == View.NO_ID) {
             cgStatus.check(getDefaultStatusChipId());
         }
@@ -206,7 +242,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
 
         List<WaitingListEntry> filtered = allEntries.stream().filter(entry -> {
             if (!statusViewEnabled) return entry.getStatus() == WaitingListStatus.WAITING;
-            
+
             if (selectedChipId == R.id.chip_invited) 
                 return entry.getStatus() == WaitingListStatus.INVITED || entry.getStatus() == WaitingListStatus.ACCEPTED;
             if (selectedChipId == R.id.chip_waitlisted)
@@ -214,9 +250,11 @@ public class OrganizerViewEntrantsFragment extends Fragment {
                         || entry.getStatus() == WaitingListStatus.WAITING;
             if (selectedChipId == R.id.chip_declined)
                 return entry.getStatus() == WaitingListStatus.DECLINED || entry.getStatus() == WaitingListStatus.CANCELLED;
-            
+
             return false;
-        }).collect(Collectors.toList());
+        }).filter(entry -> matchesSearch(entry, query)).collect(Collectors.toList());
+
+        updateHeaderForSelection(statusViewEnabled, selectedChipId);
 
         layoutDeclinedActions.setVisibility(
                 statusViewEnabled && selectedChipId == R.id.chip_declined ? View.VISIBLE : View.GONE
@@ -230,36 +268,103 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         }
         updateRemoveEntrantButtonState();
 
-        // Update stats
         if (invitedFilter) {
             long confirmed = filtered.stream().filter(e -> e.getStatus() == WaitingListStatus.ACCEPTED).count();
-            tvInfoStats.setText(confirmed + "/" + filtered.size() + " people confirmed");
+            tvInfoStats.setText(confirmed + " of " + filtered.size() + " selected entrants have accepted");
             tvInfoStats.setVisibility(View.VISIBLE);
         } else if (statusViewEnabled && selectedChipId == R.id.chip_waitlisted) {
-            tvInfoStats.setText(filtered.size() + " people");
+            tvInfoStats.setText(filtered.size() + " entrants remain in the replacement pool");
             tvInfoStats.setVisibility(View.VISIBLE);
         } else if (statusViewEnabled && selectedChipId == R.id.chip_declined) {
-            tvInfoStats.setText("Select entrants to delete or redraw");
+            tvInfoStats.setText("Select cancelled or declined entrants, then delete them or draw replacements.");
             tvInfoStats.setVisibility(View.VISIBLE);
         } else {
-            tvInfoStats.setVisibility(View.GONE);
+            tvInfoStats.setText(filtered.size() + " entrants are still waiting for the first draw");
+            tvInfoStats.setVisibility(View.VISIBLE);
         }
 
-        // Fetch names and populate displayList
         for (WaitingListEntry entry : filtered) {
-            EntrantDisplayModel model = new EntrantDisplayModel(entry);
-            displayList.add(model);
-            profileService.getUserProfile(entry.getEntrantUid(), profile -> {
-                if (profile != null) {
-                    model.name = profile.getName();
-                    adapter.notifyDataSetChanged();
+            displayList.add(new EntrantDisplayModel(
+                    entry,
+                    getDisplayName(entry),
+                    getProfileImageUrl(entry)
+            ));
+        }
+        adapter.replaceEntries(displayList);
+    }
+
+    private void prefetchEntrantNames(@NonNull List<WaitingListEntry> entries) {
+        for (WaitingListEntry entry : entries) {
+            if (entry == null) {
+                continue;
+            }
+            String entrantUid = entry.getEntrantUid();
+            if (entrantUid == null || entrantUid.trim().isEmpty() || entrantNames.containsKey(entrantUid)) {
+                continue;
+            }
+            profileService.getUserProfile(entrantUid, profile -> {
+                String resolvedName = profile != null
+                        && profile.getName() != null
+                        && !profile.getName().trim().isEmpty()
+                        ? profile.getName().trim()
+                        : "Unknown Entrant";
+                entrantNames.put(entrantUid, resolvedName);
+                entrantImageUrls.put(entrantUid, normalize(profile != null ? profile.getProfileImageUrl() : null));
+                if (isAdded()) {
+                    updateDisplayList();
                 }
             }, e -> {
-                model.name = "Unknown Entrant";
-                adapter.notifyDataSetChanged();
+                entrantNames.put(entrantUid, "Unknown Entrant");
+                entrantImageUrls.put(entrantUid, null);
+                if (isAdded()) {
+                    updateDisplayList();
+                }
             });
         }
-        adapter.notifyDataSetChanged();
+    }
+
+    @NonNull
+    private String getDisplayName(@NonNull WaitingListEntry entry) {
+        String entrantUid = entry.getEntrantUid();
+        if (entrantUid == null || entrantUid.trim().isEmpty()) {
+            return "Unknown Entrant";
+        }
+        String cachedName = entrantNames.get(entrantUid);
+        return cachedName != null ? cachedName : "Loading...";
+    }
+
+    @Nullable
+    private String getProfileImageUrl(@NonNull WaitingListEntry entry) {
+        String entrantUid = entry.getEntrantUid();
+        if (!hasText(entrantUid)) {
+            return null;
+        }
+        return entrantImageUrls.get(entrantUid);
+    }
+
+    private boolean matchesSearch(@NonNull WaitingListEntry entry, @NonNull String query) {
+        if (query.isEmpty()) {
+            return true;
+        }
+        String name = getDisplayName(entry).toLowerCase(Locale.CANADA);
+        String uid = entry.getEntrantUid() == null ? "" : entry.getEntrantUid().toLowerCase(Locale.CANADA);
+        return name.contains(query) || uid.contains(query);
+    }
+
+    private void updateHeaderForSelection(boolean statusViewEnabled, int selectedChipId) {
+        if (!statusViewEnabled) {
+            tvListHeader.setText("Waiting list");
+            return;
+        }
+        if (selectedChipId == R.id.chip_invited) {
+            tvListHeader.setText("Selected entrants");
+        } else if (selectedChipId == R.id.chip_waitlisted) {
+            tvListHeader.setText("Replacement pool");
+        } else if (selectedChipId == R.id.chip_declined) {
+            tvListHeader.setText("Cancelled and declined");
+        } else {
+            tvListHeader.setText("Entrants");
+        }
     }
 
     /**
@@ -359,20 +464,25 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         Collections.shuffle(waitlisted);
         int toInvite = Math.min(additionalNeeded, waitlisted.size());
         List<WaitingListEntry> updates = new ArrayList<>();
+        long now = System.currentTimeMillis();
         for (int i = 0; i < toInvite; i++) {
             WaitingListEntry entry = waitlisted.get(i);
             entry.setStatus(WaitingListStatus.INVITED);
+            entry.setInvitedAtMillis(now);
+            entry.setStatusReason("Selected in organizer draw update");
             updates.add(entry);
         }
 
-        updateEntries(updates, () -> {
-            if (toInvite < additionalNeeded) {
-                toast("Only " + toInvite + " additional entrants were available");
-            } else {
-                toast("Draw updated. Added " + toInvite + " entrants");
-            }
-            refreshEntries();
-        });
+        profileService.ensureSignedIn(firebaseUser ->
+                        updateEntries(updates, () -> notifyReplacementInvites(
+                                firebaseUser.getUid(),
+                                updates,
+                                toInvite,
+                                additionalNeeded,
+                                "Draw updated"
+                        )),
+                error -> toast("Auth failed: " + error.getMessage())
+        );
     }
 
     /**
@@ -393,6 +503,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         for (int i = 0; i < toUninvite; i++) {
             WaitingListEntry entry = selectedEntrants.get(i);
             entry.setStatus(WaitingListStatus.NOT_SELECTED);
+            entry.setStatusReason("Moved back to replacement pool by organizer");
             updates.add(entry);
         }
 
@@ -490,7 +601,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
     private void toggleRemoveEntrantMode() {
         removeEntrantMode = !removeEntrantMode;
         updateRemoveEntrantButtonState();
-        adapter.notifyDataSetChanged();
+        adapter.notifyItemRangeChanged(0, adapter.getItemCount());
     }
 
     /**
@@ -498,7 +609,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
      */
     private void updateRemoveEntrantButtonState() {
         if (btnRemoveEntrant == null) return;
-        btnRemoveEntrant.setText(removeEntrantMode ? "Done" : "Remove Entrant");
+        btnRemoveEntrant.setText(removeEntrantMode ? "Done Cancelling" : "Cancel Entrants");
     }
 
     /**
@@ -550,52 +661,262 @@ public class OrganizerViewEntrantsFragment extends Fragment {
      * Deletes all entrants currently selected via checkboxes (typically in the Declined tab).
      */
     private void deleteSelectedDeclined() {
-        Set<String> selectedUids = adapter.getSelectedUids();
+        Set<String> selectedUids = new HashSet<>(adapter.getSelectedUids());
         if (selectedUids.isEmpty()) {
             toast("No entrants selected");
             return;
         }
+        AtomicInteger pending = new AtomicInteger(selectedUids.size());
+        AtomicBoolean hadFailure = new AtomicBoolean(false);
         for (String uid : selectedUids) {
-            waitingListService.removeEntry(eventId, uid, unused -> {}, e -> toast("Failed to delete entrant"));
+            waitingListService.removeEntry(eventId, uid, unused -> {
+                if (pending.decrementAndGet() == 0) {
+                    toast(hadFailure.get() ? "Deleted selected entrants with some failures" : "Deleted selected entrants");
+                    refreshEntries();
+                }
+            }, e -> {
+                hadFailure.set(true);
+                if (pending.decrementAndGet() == 0) {
+                    toast("Deleted selected entrants with some failures");
+                    refreshEntries();
+                }
+            });
         }
-        toast("Deleted selected entrants");
-        refreshEntries();
     }
 
     /**
      * Replaces selected declined/cancelled entrants with new ones drawn randomly from the waitlist.
      */
     private void redrawReplacements() {
-        Set<String> selectedUids = adapter.getSelectedUids();
+        Set<String> selectedUids = new HashSet<>(adapter.getSelectedUids());
         if (selectedUids.isEmpty()) {
             toast("No entrants selected");
             return;
         }
-        
+
+        if (event == null) {
+            toast("Event not loaded");
+            return;
+        }
+
         List<WaitingListEntry> waitlisted = allEntries.stream()
-                .filter(e -> e.getStatus() == WaitingListStatus.NOT_SELECTED)
+                .filter(this::isWaitlistStatus)
+                .filter(e -> e.getEntrantUid() != null && !selectedUids.contains(e.getEntrantUid()))
                 .collect(Collectors.toList());
-        
+
         if (waitlisted.isEmpty()) {
-            toast("No waitlisted entrants available for replacement");
+            toast("No entrants are available in the replacement pool");
             return;
         }
 
         Collections.shuffle(waitlisted);
         int toRedraw = Math.min(selectedUids.size(), waitlisted.size());
-        
+        List<WaitingListEntry> replacements = new ArrayList<>();
+        long now = System.currentTimeMillis();
         for (int i = 0; i < toRedraw; i++) {
             WaitingListEntry entry = waitlisted.get(i);
             entry.setStatus(WaitingListStatus.INVITED);
-            waitingListService.updateEntry(eventId, entry, unused -> {}, e -> toast("Failed to redraw replacement"));
+            entry.setInvitedAtMillis(now);
+            entry.setStatusReason("Replacement draw after cancellation or decline");
+            replacements.add(entry);
         }
-        
-        toast("Redraw completed for " + toRedraw + " entrants");
-        refreshEntries();
+
+        profileService.ensureSignedIn(firebaseUser ->
+                        updateEntries(replacements, () -> notifyReplacementInvites(
+                                firebaseUser.getUid(),
+                                replacements,
+                                toRedraw,
+                                selectedUids.size(),
+                                "Replacement draw completed"
+                        )),
+                error -> toast("Auth failed: " + error.getMessage())
+        );
+    }
+
+    private void exportFinalList() {
+        List<EntrantDisplayModel> accepted = new ArrayList<>();
+        for (EntrantDisplayModel model : displayList) {
+            WaitingListEntry e = model.entry;
+            if (e != null && (e.getStatus() == WaitingListStatus.ACCEPTED
+                    || e.getStatus() == WaitingListStatus.INVITED)) {
+                accepted.add(model);
+            }
+        }
+        if (accepted.isEmpty()) {
+            // fall back to all accepted across all entries, not just current filter
+            for (EntrantDisplayModel model : new ArrayList<>(allEntries.stream()
+                    .filter(e -> e != null && (e.getStatus() == WaitingListStatus.ACCEPTED
+                            || e.getStatus() == WaitingListStatus.INVITED))
+                    .map(e -> new EntrantDisplayModel(
+                            e,
+                            getDisplayName(e),
+                            getProfileImageUrl(e)
+                    ))
+                    .collect(Collectors.toList()))) {
+                accepted.add(model);
+            }
+        }
+
+        if (accepted.isEmpty()) {
+            toast("No accepted entrants to export yet");
+            return;
+        }
+
+        StringBuilder csv = new StringBuilder("Name,Status,UID\n");
+        for (EntrantDisplayModel model : accepted) {
+            String name = model.name != null ? model.name.replace(",", " ") : "Unknown";
+            String status = model.entry.getStatus() != null ? model.entry.getStatus().name() : "";
+            String uid = model.entry.getEntrantUid() != null ? model.entry.getEntrantUid() : "";
+            csv.append('"').append(name).append('"').append(',')
+               .append(status).append(',')
+               .append(uid).append('\n');
+        }
+
+        try {
+            File cacheDir = requireContext().getCacheDir();
+            String eventTitle = event != null && event.getTitle() != null
+                    ? event.getTitle().replaceAll("[^a-zA-Z0-9]", "_") : "event";
+            File csvFile = new File(cacheDir, "enrolled_" + eventTitle + ".csv");
+            FileWriter writer = new FileWriter(csvFile);
+            writer.write(csv.toString());
+            writer.flush();
+            writer.close();
+
+            Uri uri = FileProvider.getUriForFile(
+                    requireContext(),
+                    requireContext().getPackageName() + ".fileprovider",
+                    csvFile
+            );
+
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/csv");
+            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Enrolled list – " + (event != null ? event.getTitle() : "event"));
+            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivity(Intent.createChooser(shareIntent, "Export enrolled list"));
+
+        } catch (IOException e) {
+            toast("Export failed: " + e.getMessage());
+        }
     }
 
     private void toast(String msg) {
         if (isAdded()) Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+    }
+
+    private void notifyReplacementInvites(
+            @NonNull String organizerUid,
+            @NonNull List<WaitingListEntry> replacements,
+            int invitedCount,
+            int requestedCount,
+            @NonNull String actionLabel
+    ) {
+        if (event == null || replacements.isEmpty()) {
+            finishReplacementInviteFlow(actionLabel, invitedCount, requestedCount, false);
+            return;
+        }
+
+        AtomicInteger pending = new AtomicInteger(replacements.size());
+        AtomicBoolean hadFailure = new AtomicBoolean(false);
+        for (WaitingListEntry replacement : replacements) {
+            organizerNotificationService.notifyReplacementInvite(
+                    organizerUid,
+                    event,
+                    replacement.getEntrantUid(),
+                    result -> {
+                        if (pending.decrementAndGet() == 0) {
+                            finishReplacementInviteFlow(actionLabel, invitedCount, requestedCount, hadFailure.get());
+                        }
+                    },
+                    error -> {
+                        hadFailure.set(true);
+                        if (pending.decrementAndGet() == 0) {
+                            finishReplacementInviteFlow(actionLabel, invitedCount, requestedCount, true);
+                        }
+                    }
+            );
+        }
+    }
+
+    private void finishReplacementInviteFlow(
+            @NonNull String actionLabel,
+            int invitedCount,
+            int requestedCount,
+            boolean notificationFailure
+    ) {
+        StringBuilder message = new StringBuilder(actionLabel);
+        message.append(". Invited ");
+        message.append(invitedCount);
+        message.append(invitedCount == 1 ? " entrant" : " entrants");
+        if (requestedCount > invitedCount) {
+            message.append(". Only ");
+            message.append(invitedCount);
+            message.append(" of ");
+            message.append(requestedCount);
+            message.append(" requested spots were available");
+        }
+        if (notificationFailure) {
+            message.append(". Some notifications failed");
+        }
+        toast(message.toString());
+        refreshEntries();
+    }
+
+    @NonNull
+    private String buildEntryMeta(@NonNull WaitingListEntry entry) {
+        String reason = entry.getStatusReason();
+        if (reason != null && !reason.trim().isEmpty()) {
+            return reason.trim();
+        }
+        switch (entry.getStatus()) {
+            case ACCEPTED:
+                return "Accepted invitation";
+            case INVITED:
+                return "Invitation sent";
+            case WAITING:
+                return "Waiting for the first draw";
+            case NOT_SELECTED:
+                return "Available for replacement draw";
+            case DECLINED:
+                return "Declined invitation";
+            case CANCELLED:
+                return "Cancelled or removed";
+            default:
+                return "";
+        }
+    }
+
+    @Nullable
+    private String normalize(@Nullable String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private boolean hasText(@Nullable String value) {
+        return value != null && !value.trim().isEmpty();
+    }
+
+    @NonNull
+    private String getStatusLabel(@NonNull WaitingListEntry entry) {
+        switch (entry.getStatus()) {
+            case ACCEPTED:
+                return "Accepted";
+            case INVITED:
+                return "Invited";
+            case WAITING:
+                return "Waiting";
+            case NOT_SELECTED:
+                return "Pool";
+            case DECLINED:
+                return "Declined";
+            case CANCELLED:
+                return "Cancelled";
+            default:
+                return "Entrant";
+        }
     }
 
     /**
@@ -603,18 +924,30 @@ public class OrganizerViewEntrantsFragment extends Fragment {
      */
     private static class EntrantDisplayModel {
         WaitingListEntry entry;
-        String name = "Loading...";
-        EntrantDisplayModel(WaitingListEntry entry) { this.entry = entry; }
+        String name;
+        @Nullable String profileImageUrl;
+
+        EntrantDisplayModel(
+                @NonNull WaitingListEntry entry,
+                @NonNull String name,
+                @Nullable String profileImageUrl
+        ) {
+            this.entry = entry;
+            this.name = name;
+            this.profileImageUrl = profileImageUrl;
+        }
     }
 
     /**
      * RecyclerView adapter for the entrant list.
      */
     private class EntrantAdapter extends RecyclerView.Adapter<EntrantAdapter.ViewHolder> {
-        private final List<EntrantDisplayModel> list;
+        private final List<EntrantDisplayModel> list = new ArrayList<>();
         private final Set<String> selectedUids = new HashSet<>();
 
-        EntrantAdapter(List<EntrantDisplayModel> list) { this.list = list; }
+        EntrantAdapter(List<EntrantDisplayModel> list) {
+            replaceEntries(list);
+        }
 
         @NonNull @Override public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_organizer_entrant, parent, false));
@@ -623,7 +956,11 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         @Override public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             EntrantDisplayModel model = list.get(position);
             holder.tvName.setText(model.name);
-            
+            holder.tvMeta.setText(buildEntryMeta(model.entry));
+            holder.tvMeta.setVisibility(holder.tvMeta.getText().length() > 0 ? View.VISIBLE : View.GONE);
+            holder.tvStatus.setText(getStatusLabel(model.entry));
+            bindEntrantAvatar(holder.ivAvatar, model.profileImageUrl);
+
             boolean isDeclinedView = cgStatus.getCheckedChipId() == R.id.chip_declined;
             holder.checkbox.setVisibility(isDeclinedView ? View.VISIBLE : View.GONE);
             holder.checkbox.setOnCheckedChangeListener(null);
@@ -634,27 +971,32 @@ public class OrganizerViewEntrantsFragment extends Fragment {
             });
 
             boolean isInvitedView = cgStatus.getCheckedChipId() == R.id.chip_invited;
-            if (isInvitedView) {
-                holder.ivStatus.setVisibility(View.VISIBLE);
-                if (model.entry.getStatus() == WaitingListStatus.INVITED) {
-                    holder.ivStatus.setImageResource(android.R.drawable.ic_menu_recent_history); // Clock
-                } else if (model.entry.getStatus() == WaitingListStatus.ACCEPTED) {
-                    holder.ivStatus.setImageResource(android.R.drawable.checkbox_on_background); // Check
-                }
-            } else {
-                holder.ivStatus.setVisibility(View.GONE);
-            }
-
             holder.itemView.setOnClickListener(null);
             holder.itemView.setClickable(false);
+            holder.itemView.setAlpha(1f);
 
             if (isInvitedView && removeEntrantMode) {
                 holder.itemView.setClickable(true);
+                holder.itemView.setAlpha(0.82f);
                 holder.itemView.setOnClickListener(v -> removeEntrant(model));
             }
         }
 
         @Override public int getItemCount() { return list.size(); }
+
+        void replaceEntries(@NonNull List<EntrantDisplayModel> updatedEntries) {
+            List<EntrantDisplayModel> previous = new ArrayList<>(list);
+            List<EntrantDisplayModel> next = new ArrayList<>(updatedEntries);
+            Set<String> visibleUids = next.stream()
+                    .map(model -> model.entry.getEntrantUid())
+                    .filter(uid -> uid != null && !uid.trim().isEmpty())
+                    .collect(Collectors.toSet());
+            selectedUids.retainAll(visibleUids);
+            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new EntrantDiff(previous, next));
+            list.clear();
+            list.addAll(next);
+            diffResult.dispatchUpdatesTo(this);
+        }
 
         /**
          * @return The set of UIDs of entrants currently selected via checkboxes.
@@ -665,15 +1007,81 @@ public class OrganizerViewEntrantsFragment extends Fragment {
          * ViewHolder for entrant items.
          */
         class ViewHolder extends RecyclerView.ViewHolder {
+            ShapeableImageView ivAvatar;
             TextView tvName;
+            TextView tvMeta;
+            TextView tvStatus;
             CheckBox checkbox;
-            ImageView ivStatus;
             ViewHolder(View v) {
                 super(v);
+                ivAvatar = v.findViewById(R.id.iv_entrant_icon);
                 tvName = v.findViewById(R.id.tv_entrant_name);
+                tvMeta = v.findViewById(R.id.tv_entrant_meta);
+                tvStatus = v.findViewById(R.id.tv_status_indicator);
                 checkbox = v.findViewById(R.id.checkbox_entrant);
-                ivStatus = v.findViewById(R.id.iv_status_indicator);
             }
         }
+
+        private final class EntrantDiff extends DiffUtil.Callback {
+            private final List<EntrantDisplayModel> oldItems;
+            private final List<EntrantDisplayModel> newItems;
+
+            private EntrantDiff(
+                    @NonNull List<EntrantDisplayModel> oldItems,
+                    @NonNull List<EntrantDisplayModel> newItems
+            ) {
+                this.oldItems = oldItems;
+                this.newItems = newItems;
+            }
+
+            @Override
+            public int getOldListSize() {
+                return oldItems.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return newItems.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                String oldUid = oldItems.get(oldItemPosition).entry.getEntrantUid();
+                String newUid = newItems.get(newItemPosition).entry.getEntrantUid();
+                return oldUid != null && oldUid.equals(newUid);
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                EntrantDisplayModel oldItem = oldItems.get(oldItemPosition);
+                EntrantDisplayModel newItem = newItems.get(newItemPosition);
+                return equalsNullable(oldItem.name, newItem.name)
+                        && equalsNullable(oldItem.profileImageUrl, newItem.profileImageUrl)
+                        && oldItem.entry.getStatus() == newItem.entry.getStatus()
+                        && equalsNullable(oldItem.entry.getStatusReason(), newItem.entry.getStatusReason());
+            }
+
+            private boolean equalsNullable(@Nullable String left, @Nullable String right) {
+                return left == null ? right == null : left.equals(right);
+            }
+        }
+    }
+
+    private void bindEntrantAvatar(
+            @NonNull ShapeableImageView imageView,
+            @Nullable String imageUrl
+    ) {
+        Glide.with(imageView).clear(imageView);
+        imageView.setImageTintList(null);
+        if (!hasText(imageUrl)) {
+            imageView.setImageResource(R.drawable.ic_avatar_person_placeholder);
+            return;
+        }
+        Glide.with(imageView)
+                .load(imageUrl)
+                .placeholder(R.drawable.ic_avatar_person_placeholder)
+                .error(R.drawable.ic_avatar_person_placeholder)
+                .circleCrop()
+                .into(imageView);
     }
 }

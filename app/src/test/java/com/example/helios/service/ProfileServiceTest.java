@@ -3,7 +3,9 @@ package com.example.helios.service;
 import android.content.Context;
 
 import com.example.helios.auth.AuthDeviceService;
+import com.example.helios.data.EventRepository;
 import com.example.helios.data.FirebaseRepository;
+import com.example.helios.data.UserRepository;
 import com.example.helios.model.UserProfile;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -36,10 +38,19 @@ public class ProfileServiceTest {
 
     private ProfileService createService(
             AuthDeviceService authDeviceService,
+            UserRepository userRepository,
+            EventRepository eventRepository,
+            ProfileService.InstallationIdSource installationIdSource
+    ) {
+        return new ProfileService(authDeviceService, userRepository, eventRepository, installationIdSource);
+    }
+
+    private ProfileService createService(
+            AuthDeviceService authDeviceService,
             FirebaseRepository repository,
             ProfileService.InstallationIdSource installationIdSource
     ) {
-        return new ProfileService(authDeviceService, repository, installationIdSource);
+        return new ProfileService(authDeviceService, repository, repository, installationIdSource);
     }
 
     private FirebaseUser mockUser(String uid) {
@@ -60,7 +71,8 @@ public class ProfileServiceTest {
     public void requiresProfileCompletion_returnsTrueWhenNameMissing() {
         ProfileService service = createService(
                 mock(AuthDeviceService.class),
-                mock(FirebaseRepository.class),
+                mock(UserRepository.class),
+                mock(EventRepository.class),
                 context -> "inst"
         );
         UserProfile profile = new UserProfile("uid", null, "a@b.com", null, "user", true, "inst");
@@ -72,7 +84,8 @@ public class ProfileServiceTest {
     public void requiresProfileCompletion_returnsTrueWhenEmailMissing() {
         ProfileService service = createService(
                 mock(AuthDeviceService.class),
-                mock(FirebaseRepository.class),
+                mock(UserRepository.class),
+                mock(EventRepository.class),
                 context -> "inst"
         );
         UserProfile profile = new UserProfile("uid", "Alice", null, null, "user", true, "inst");
@@ -84,7 +97,8 @@ public class ProfileServiceTest {
     public void requiresProfileCompletion_returnsFalseWhenNameAndEmailPresent() {
         ProfileService service = createService(
                 mock(AuthDeviceService.class),
-                mock(FirebaseRepository.class),
+                mock(UserRepository.class),
+                mock(EventRepository.class),
                 context -> "inst"
         );
         UserProfile profile = new UserProfile("uid", "Alice", "a@b.com", null, "user", true, "inst");
@@ -238,6 +252,52 @@ public class ProfileServiceTest {
     }
 
     @Test
+    public void bootstrapCurrentUser_repairsMalformedExistingProfile() {
+        AuthDeviceService auth = mock(AuthDeviceService.class);
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+        FirebaseUser user = mockUser("uid-repair");
+        stubSignedInUser(auth, user);
+
+        UserProfile existing = new UserProfile();
+        existing.setName("Avery");
+        existing.setEmail("avery@example.com");
+
+        doAnswer(invocation -> {
+            OnSuccessListener<Boolean> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(false);
+            return null;
+        }).when(repository).isAdminInstallation(eq("inst-repair"), any(), any());
+
+        doAnswer(invocation -> {
+            OnSuccessListener<UserProfile> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(existing);
+            return null;
+        }).when(repository).getUser(eq("uid-repair"), any(), any());
+
+        doAnswer(invocation -> {
+            OnSuccessListener<Void> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(repository).updateUser(eq(existing), any(), any());
+
+        ProfileService service = createService(auth, repository, ctx -> "inst-repair");
+        AtomicReference<ProfileService.BootstrapResult> result = new AtomicReference<>();
+
+        service.bootstrapCurrentUser(
+                mock(Context.class),
+                result::set,
+                e -> fail("Unexpected failure: " + e.getMessage())
+        );
+
+        assertEquals("uid-repair", existing.getUid());
+        assertEquals("user", existing.getRole());
+        assertEquals("inst-repair", existing.getInstallationId());
+        assertSame(existing, result.get().getProfile());
+        assertFalse(result.get().isNewUser());
+        verify(repository).updateUser(eq(existing), any(), any());
+    }
+
+    @Test
     public void bootstrapCurrentUser_forwardsAuthFailure() {
         AuthDeviceService auth = mock(AuthDeviceService.class);
         FirebaseRepository repository = mock(FirebaseRepository.class);
@@ -330,6 +390,49 @@ public class ProfileServiceTest {
         assertEquals("Alice", bootstrapped.getName());
         assertEquals("alice@example.com", bootstrapped.getEmail());
         assertEquals("780-555-1111", bootstrapped.getPhone());
+        verify(repository).updateUser(eq(bootstrapped), any(), any());
+    }
+
+    @Test
+    public void updateCurrentProfilePhoto_updatesPhotoUrlAndPersistsProfile() {
+        AuthDeviceService auth = mock(AuthDeviceService.class);
+        FirebaseRepository repository = mock(FirebaseRepository.class);
+        ProfileService service = spy(createService(auth, repository, ctx -> "inst"));
+        Context context = mock(Context.class);
+
+        UserProfile bootstrapped = new UserProfile(
+                "uid-photo",
+                "Alice",
+                "alice@example.com",
+                null,
+                "user",
+                true,
+                "inst"
+        );
+
+        doAnswer(invocation -> {
+            OnSuccessListener<ProfileService.BootstrapResult> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(new ProfileService.BootstrapResult(bootstrapped, false));
+            return null;
+        }).when(service).bootstrapCurrentUser(eq(context), any(), any());
+
+        doAnswer(invocation -> {
+            OnSuccessListener<Void> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(repository).updateUser(eq(bootstrapped), any(), any());
+
+        AtomicReference<UserProfile> result = new AtomicReference<>();
+
+        service.updateCurrentProfilePhoto(
+                context,
+                "https://example.com/profile.png",
+                result::set,
+                e -> fail("Unexpected failure: " + e.getMessage())
+        );
+
+        assertSame(bootstrapped, result.get());
+        assertEquals("https://example.com/profile.png", bootstrapped.getProfileImageUrl());
         verify(repository).updateUser(eq(bootstrapped), any(), any());
     }
 
@@ -437,6 +540,12 @@ public class ProfileServiceTest {
             OnSuccessListener<Void> onSuccess = invocation.getArgument(1);
             onSuccess.onSuccess(null);
             return null;
+        }).when(repository).deleteEventsByOrganizer(eq("uid-delete"), any(), any());
+
+        doAnswer(invocation -> {
+            OnSuccessListener<Void> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(null);
+            return null;
         }).when(repository).deleteUser(eq("uid-delete"), any(), any());
 
         ProfileService service = createService(auth, repository, ctx -> "inst");
@@ -449,6 +558,7 @@ public class ProfileServiceTest {
         );
 
         assertTrue(successCalled.get());
+        verify(repository).deleteEventsByOrganizer(eq("uid-delete"), any(), any());
         verify(repository).deleteUser(eq("uid-delete"), any(), any());
     }
 
@@ -458,6 +568,12 @@ public class ProfileServiceTest {
         FirebaseRepository repository = mock(FirebaseRepository.class);
         FirebaseUser user = mockUser("uid-current-delete");
         stubSignedInUser(auth, user);
+
+        doAnswer(invocation -> {
+            OnSuccessListener<Void> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(repository).deleteEventsByOrganizer(eq("uid-current-delete"), any(), any());
 
         doAnswer(invocation -> {
             OnSuccessListener<Void> onSuccess = invocation.getArgument(1);
@@ -475,6 +591,7 @@ public class ProfileServiceTest {
         );
 
         assertTrue(successCalled.get());
+        verify(repository).deleteEventsByOrganizer(eq("uid-current-delete"), any(), any());
         verify(repository).deleteUser(eq("uid-current-delete"), any(), any());
     }
 

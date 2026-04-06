@@ -1,9 +1,13 @@
 package com.example.helios.service;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
-import com.example.helios.data.FirebaseRepository;
+import com.example.helios.data.ImageRepository;
 import com.example.helios.model.Event;
+import com.example.helios.model.ImageAsset;
+import com.example.helios.ui.common.HeliosImageUploader;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
@@ -12,21 +16,16 @@ import java.util.List;
 /**
  * Service for admin-side image management.
  *
- * Role: thin service layer for listing events that have poster images and
- * removing a poster from an event. Posters are stored as local URIs on the
- * Event document (posterImageId field) — there is no separate image collection
- * or Firebase Storage bucket involved.
+ * Role: thin service layer for listing events with poster images and
+ * coordinating Firebase Storage cleanup with image metadata updates.
  */
 public class ImageService {
 
-    private final FirebaseRepository repository;
+    private final Context applicationContext;
+    private final ImageRepository repository;
 
-    public ImageService() {
-        this(new FirebaseRepository());
-    }
-
-    // Package-private test seam
-    ImageService(@NonNull FirebaseRepository repository) {
+    public ImageService(@NonNull Context context, @NonNull ImageRepository repository) {
+        this.applicationContext = context.getApplicationContext();
         this.repository = repository;
     }
 
@@ -41,6 +40,30 @@ public class ImageService {
             @NonNull OnFailureListener onFailure
     ) {
         repository.getEventsWithPosters(onSuccess, onFailure);
+    }
+
+    public void saveImageAsset(
+            @NonNull ImageAsset imageAsset,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.saveImageAsset(imageAsset, onSuccess, onFailure);
+    }
+
+    public void getImageAssetForEvent(
+            @NonNull String eventId,
+            @NonNull OnSuccessListener<ImageAsset> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.getImageAssetForEvent(eventId, onSuccess, onFailure);
+    }
+
+    public void deleteImageAsset(
+            @NonNull String imageId,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.deleteImageAsset(imageId, onSuccess, onFailure);
     }
 
     /**
@@ -60,6 +83,38 @@ public class ImageService {
             onFailure.onFailure(new IllegalArgumentException("eventId must not be empty."));
             return;
         }
-        repository.removeEventPoster(eventId, onSuccess, onFailure);
+        repository.getImageAssetForEvent(eventId, imageAsset -> {
+            if (imageAsset == null || imageAsset.getStoragePath() == null
+                    || imageAsset.getStoragePath().trim().isEmpty()) {
+                repository.removeEventPoster(eventId, onSuccess, onFailure);
+                return;
+            }
+
+            HeliosImageUploader.deleteFromStorage(
+                    applicationContext,
+                    imageAsset.getStoragePath(),
+                    () -> deleteImageRecordAndClearPoster(eventId, imageAsset, onSuccess, onFailure),
+                    onFailure
+            );
+        }, onFailure);
+    }
+
+    private void deleteImageRecordAndClearPoster(
+            @NonNull String eventId,
+            @NonNull ImageAsset imageAsset,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        String imageId = imageAsset.getImageId();
+        if (imageId == null || imageId.trim().isEmpty()) {
+            repository.removeEventPoster(eventId, onSuccess, onFailure);
+            return;
+        }
+
+        repository.deleteImageAsset(
+                imageId,
+                unused -> repository.removeEventPoster(eventId, onSuccess, onFailure),
+                onFailure
+        );
     }
 }

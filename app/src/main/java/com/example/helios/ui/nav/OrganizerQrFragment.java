@@ -1,7 +1,17 @@
 package com.example.helios.ui.nav;
 
+import android.Manifest;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,13 +20,17 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.helios.HeliosApplication;
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
@@ -26,6 +40,9 @@ import com.google.android.material.button.MaterialButton;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * Fragment that displays the QR code for an event.
@@ -39,8 +56,8 @@ public class OrganizerQrFragment extends Fragment {
         VIEW_EXISTING
     }
 
-    private final EventService eventService = new EventService();
-    private final ProfileService profileService = new ProfileService();
+    private EventService eventService;
+    private ProfileService profileService;
 
     private Mode mode = Mode.CREATE;
 
@@ -59,6 +76,23 @@ public class OrganizerQrFragment extends Fragment {
 
     // Field so saveEvent() can update the QR image after save
     private ImageView qrImage;
+    @Nullable private Bitmap currentQrBitmap;
+    @Nullable private String currentQrValue;
+    @Nullable private MaterialButton copyQrValueButton;
+    @Nullable private MaterialButton saveQrImageButton;
+    @Nullable private View qrUtilityActions;
+
+    private final ActivityResultLauncher<String> storagePermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (!isAdded()) return;
+                if (granted) {
+                    saveCurrentQrImage();
+                } else {
+                    Toast.makeText(requireContext(),
+                            "Storage permission is required to save QR images on this Android version.",
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
 
     /**
      * Default constructor for OrganizerQrFragment.
@@ -70,6 +104,9 @@ public class OrganizerQrFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        HeliosApplication application = HeliosApplication.from(requireContext());
+        eventService = application.getEventService();
+        profileService = application.getProfileService();
         Bundle args = getArguments();
         if (args != null && args.containsKey("arg_event_id")
                 && !TextUtils.isEmpty(args.getString("arg_event_id"))) {
@@ -118,7 +155,9 @@ public class OrganizerQrFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        TextView headerTitle = view.findViewById(R.id.tv_qr_title);
+        MaterialButton headerBackButton = view.findViewById(R.id.submenu_back_button);
+        TextView headerTitle = view.findViewById(R.id.submenu_title);
+        TextView headerSubtitle = view.findViewById(R.id.submenu_subtitle);
         TextView labelView = view.findViewById(R.id.tv_generated_qr_label);
         qrImage = view.findViewById(R.id.image_qr_preview);
         View bottomActions = view.findViewById(R.id.layout_qr_bottom_actions);
@@ -126,14 +165,32 @@ public class OrganizerQrFragment extends Fragment {
         View inlineActions = view.findViewById(R.id.layout_qr_inline_actions);
         View cardView = view.findViewById(R.id.cv_qr_box);
         View innerLayout = view.findViewById(R.id.layout_qr_card_inner);
+        qrUtilityActions = view.findViewById(R.id.layout_qr_utility_actions);
 
         MaterialButton cancelButton = view.findViewById(R.id.button_qr_cancel_back);
         MaterialButton confirmButton = view.findViewById(R.id.button_confirm_create_event);
         MaterialButton viewModeBackButton = view.findViewById(R.id.button_qr_back_view);
+        copyQrValueButton = view.findViewById(R.id.button_copy_qr_value);
+        saveQrImageButton = view.findViewById(R.id.button_save_qr_image);
+        headerBackButton.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
+
+        if (copyQrValueButton != null) {
+            copyQrValueButton.setOnClickListener(v -> copyQrValueToClipboard());
+            copyQrValueButton.setEnabled(false);
+        }
+        if (saveQrImageButton != null) {
+            saveQrImageButton.setOnClickListener(v -> saveQrImageRequested());
+            saveQrImageButton.setEnabled(false);
+        }
 
         if (mode == Mode.CREATE) {
             if (headerTitle != null) {
-                headerTitle.setText("QR Code\nand Preview");
+                headerTitle.setText("Create Event QR");
+            }
+            if (headerSubtitle != null) {
+                headerSubtitle.setText(title.isEmpty()
+                        ? "Generate and confirm the promotional QR before finishing setup."
+                        : "Generate and confirm the promotional QR for " + title + ".");
             }
             labelView.setText("Generated QR for: " + (title.isEmpty() ? "New Event" : title));
 
@@ -142,6 +199,7 @@ public class OrganizerQrFragment extends Fragment {
 
             if (bottomActions != null) bottomActions.setVisibility(View.VISIBLE);
             if (viewModeBackButton != null) viewModeBackButton.setVisibility(View.GONE);
+            if (qrUtilityActions != null) qrUtilityActions.setVisibility(View.GONE);
 
             cancelButton.setOnClickListener(v ->
                     NavHostFragment.findNavController(this).navigateUp());
@@ -149,12 +207,13 @@ public class OrganizerQrFragment extends Fragment {
             confirmButton.setOnClickListener(v -> saveEvent());
 
         } else {
-            if (headerTitle != null) headerTitle.setText("QR Code");
+            if (headerTitle != null) headerTitle.setText("Event QR Code");
+            if (headerSubtitle != null) headerSubtitle.setText("Preview, copy, or save the event's promotional QR.");
             labelView.setText("Generated QR:");
 
             if (bottomActions != null) bottomActions.setVisibility(View.GONE);
             if (previewEventButton != null) previewEventButton.setVisibility(View.GONE);
-            if (inlineActions != null) inlineActions.setVisibility(View.GONE);
+            if (qrUtilityActions != null) qrUtilityActions.setVisibility(View.VISIBLE);
 
             if (viewModeBackButton != null) {
                 viewModeBackButton.setVisibility(View.VISIBLE);
@@ -182,7 +241,13 @@ public class OrganizerQrFragment extends Fragment {
             if (view instanceof ConstraintLayout) {
                 ConstraintSet set = new ConstraintSet();
                 set.clone((ConstraintLayout) view);
-                set.clear(R.id.cv_qr_box, ConstraintSet.BOTTOM);
+                set.connect(
+                        R.id.cv_qr_box,
+                        ConstraintSet.BOTTOM,
+                        R.id.button_qr_back_view,
+                        ConstraintSet.TOP,
+                        getResources().getDimensionPixelSize(R.dimen.helios_screen_padding)
+                );
                 set.applyTo((ConstraintLayout) view);
             }
 
@@ -208,8 +273,7 @@ public class OrganizerQrFragment extends Fragment {
                             "This event has no stored QR value.", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                Bitmap bmp = generateQrBitmap(qrValue, 512);
-                if (bmp != null) qrImage.setImageBitmap(bmp);
+                showQrValue(qrValue);
             }, error -> {
                 if (!isAdded()) return;
                 Toast.makeText(requireContext(),
@@ -261,7 +325,7 @@ public class OrganizerQrFragment extends Fragment {
                     uid, posterUri,
                     null, // qrCodeValue set after save
                     interests,
-                    false,
+                    0,
                     isPrivateEvent
             );
 
@@ -272,8 +336,7 @@ public class OrganizerQrFragment extends Fragment {
                 eventService.saveEvent(event, unused2 -> {
                     if (!isAdded()) return;
                     // Generate and show the real QR with the eventId
-                    Bitmap bmp = generateQrBitmap(event.getEventId(), 512);
-                    if (bmp != null && qrImage != null) qrImage.setImageBitmap(bmp);
+                    showQrValue(event.getEventId());
 
                     Toast.makeText(requireContext(),
                             "Event created: " + event.getTitle(), Toast.LENGTH_SHORT).show();
@@ -297,6 +360,139 @@ public class OrganizerQrFragment extends Fragment {
             Toast.makeText(requireContext(),
                     "Auth failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
         });
+    }
+
+    private void showQrValue(@NonNull String qrValue) {
+        Bitmap bmp = generateQrBitmap(qrValue, 512);
+        currentQrValue = qrValue;
+        currentQrBitmap = bmp;
+        if (bmp != null && qrImage != null) {
+            qrImage.setImageBitmap(bmp);
+        }
+        updateQrUtilityButtons(bmp != null && !qrValue.trim().isEmpty());
+    }
+
+    private void updateQrUtilityButtons(boolean enabled) {
+        if (copyQrValueButton != null) {
+            copyQrValueButton.setEnabled(enabled);
+        }
+        if (saveQrImageButton != null) {
+            saveQrImageButton.setEnabled(enabled);
+        }
+    }
+
+    private void copyQrValueToClipboard() {
+        if (currentQrValue == null || currentQrValue.trim().isEmpty()) {
+            Toast.makeText(requireContext(),
+                    "No QR code value to copy yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ClipboardManager clipboardManager =
+                (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboardManager == null) {
+            Toast.makeText(requireContext(),
+                    "Clipboard service unavailable.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        clipboardManager.setPrimaryClip(
+                ClipData.newPlainText("Helios QR Code", currentQrValue)
+        );
+        Toast.makeText(requireContext(),
+                "QR code copied to clipboard.", Toast.LENGTH_SHORT).show();
+    }
+
+    private void saveQrImageRequested() {
+        if (currentQrBitmap == null) {
+            Toast.makeText(requireContext(),
+                    "No QR image to save yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                && ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            storagePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            return;
+        }
+        saveCurrentQrImage();
+    }
+
+    private void saveCurrentQrImage() {
+        if (currentQrBitmap == null) {
+            Toast.makeText(requireContext(),
+                    "No QR image to save yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String displayName = buildQrImageFileName();
+        try {
+            Uri savedUri = saveBitmapToMediaStore(currentQrBitmap, displayName);
+            if (savedUri == null) {
+                Toast.makeText(requireContext(),
+                        "Failed to save QR image.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            Toast.makeText(requireContext(),
+                    "QR image saved to Pictures/Helios.",
+                    Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            Toast.makeText(requireContext(),
+                    "Failed to save QR image: " + e.getMessage(),
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Nullable
+    private Uri saveBitmapToMediaStore(@NonNull Bitmap bitmap, @NonNull String displayName)
+            throws IOException {
+        ContentResolver resolver = requireContext().getContentResolver();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, displayName);
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+            values.put(MediaStore.Images.Media.RELATIVE_PATH,
+                    Environment.DIRECTORY_PICTURES + "/Helios");
+            values.put(MediaStore.Images.Media.IS_PENDING, 1);
+
+            Uri uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            if (uri == null) return null;
+
+            try (OutputStream outputStream = resolver.openOutputStream(uri)) {
+                if (outputStream == null || !bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)) {
+                    resolver.delete(uri, null, null);
+                    return null;
+                }
+            } catch (IOException e) {
+                resolver.delete(uri, null, null);
+                throw e;
+            }
+
+            values.clear();
+            values.put(MediaStore.Images.Media.IS_PENDING, 0);
+            resolver.update(uri, values, null, null);
+            return uri;
+        }
+
+        String url = MediaStore.Images.Media.insertImage(
+                resolver,
+                bitmap,
+                displayName,
+                "Helios event QR code"
+        );
+        return TextUtils.isEmpty(url) ? null : Uri.parse(url);
+    }
+
+    @NonNull
+    private String buildQrImageFileName() {
+        String baseName = !TextUtils.isEmpty(title)
+                ? title
+                : (!TextUtils.isEmpty(eventIdForView) ? eventIdForView : "event");
+        String normalized = baseName.replaceAll("[^A-Za-z0-9]+", "_")
+                .replaceAll("^_+|_+$", "");
+        if (normalized.isEmpty()) {
+            normalized = "event";
+        }
+        return "helios_qr_" + normalized + ".png";
     }
 
     /**

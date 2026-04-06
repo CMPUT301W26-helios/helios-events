@@ -1,6 +1,5 @@
 package com.example.helios.ui.nav;
 
-import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -13,12 +12,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.helios.HeliosApplication;
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.model.UserProfile;
@@ -26,6 +26,9 @@ import com.example.helios.service.EventService;
 import com.example.helios.service.OrganizerNotificationService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.service.WaitingListService;
+import com.example.helios.ui.common.EventNavArgs;
+import com.example.helios.ui.common.HeliosText;
+import com.example.helios.ui.common.HeliosUi;
 import com.google.android.material.button.MaterialButton;
 
 import java.util.ArrayList;
@@ -50,14 +53,12 @@ public class EventUserPickerFragment extends Fragment {
         REMOVE
     }
 
-    private static final String ARG_EVENT_ID = "arg_event_id";
     private static final String ARG_MODE = "arg_mode";
 
-    private final EventService eventService = new EventService();
-    private final OrganizerNotificationService organizerNotificationService =
-            new OrganizerNotificationService();
-    private final ProfileService profileService = new ProfileService();
-    private final WaitingListService waitingListService = new WaitingListService();
+    private EventService eventService;
+    private OrganizerNotificationService organizerNotificationService;
+    private ProfileService profileService;
+    private WaitingListService waitingListService;
 
     @Nullable private String eventId;
     @Nullable private Mode mode;
@@ -81,9 +82,14 @@ public class EventUserPickerFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        HeliosApplication application = HeliosApplication.from(requireContext());
+        eventService = application.getEventService();
+        organizerNotificationService = application.getOrganizerNotificationService();
+        profileService = application.getProfileService();
+        waitingListService = application.getWaitingListService();
         Bundle args = getArguments();
         if (args != null) {
-            eventId = args.getString(ARG_EVENT_ID);
+            eventId = EventNavArgs.getEventId(args);
             String rawMode = args.getString(ARG_MODE, Mode.INVITE_PRIVATE.name());
             try {
                 mode = Mode.valueOf(rawMode);
@@ -103,8 +109,9 @@ public class EventUserPickerFragment extends Fragment {
             return;
         }
 
-        titleView = view.findViewById(R.id.tv_user_picker_title);
-        subtitleView = view.findViewById(R.id.tv_user_picker_subtitle);
+        MaterialButton backButton = view.findViewById(R.id.submenu_back_button);
+        titleView = view.findViewById(R.id.submenu_title);
+        subtitleView = view.findViewById(R.id.submenu_subtitle);
         searchInput = view.findViewById(R.id.et_user_picker_search);
         emptyView = view.findViewById(R.id.tv_user_picker_empty);
         RecyclerView recyclerView = view.findViewById(R.id.rv_user_picker_users);
@@ -119,6 +126,7 @@ public class EventUserPickerFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
         recyclerView.setAdapter(adapter);
 
+        backButton.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
         doneButton.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
         searchInput.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -136,8 +144,10 @@ public class EventUserPickerFragment extends Fragment {
         if (titleView == null || subtitleView == null || searchInput == null) return;
         if (mode == Mode.ASSIGN_CO_ORGANIZER) {
             titleView.setText("Assign Co-organizer");
+            subtitleView.setText("Search by name, email, or phone to manage co-organizer access.");
         } else {
             titleView.setText("Invite Entrants");
+            subtitleView.setText("Search by name, email, or phone to invite users to the private event pool.");
         }
     }
 
@@ -204,7 +214,7 @@ public class EventUserPickerFragment extends Fragment {
                 filteredUsers.add(user);
             }
         }
-        adapter.notifyDataSetChanged();
+        adapter.replaceUsers(filteredUsers);
         emptyView.setVisibility(filteredUsers.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
@@ -262,7 +272,7 @@ public class EventUserPickerFragment extends Fragment {
 
         eventService.saveEvent(loadedEvent, unused -> {
             if (!isAdded()) return;
-            adapter.notifyDataSetChanged();
+            adapter.notifyItemRangeChanged(0, adapter.getItemCount());
             sendCoOrganizerInviteNotification(user);
         }, e -> toast("Invite failed: " + e.getMessage()));
     }
@@ -311,7 +321,7 @@ public class EventUserPickerFragment extends Fragment {
 
         eventService.saveEvent(loadedEvent, unused -> {
             if (!isAdded()) return;
-            adapter.notifyDataSetChanged();
+            adapter.notifyItemRangeChanged(0, adapter.getItemCount());
             toast("Cancelled invite for " + nonEmptyOr(user.getName(), user.getUid()) + ".");
         }, e -> toast("Cancel failed: " + e.getMessage()));
     }
@@ -333,25 +343,22 @@ public class EventUserPickerFragment extends Fragment {
 
         eventService.saveEvent(loadedEvent, unused -> {
             if (!isAdded()) return;
-            adapter.notifyDataSetChanged();
+            adapter.notifyItemRangeChanged(0, adapter.getItemCount());
             toast("Removed co-organizer: " + nonEmptyOr(user.getName(), user.getUid()));
         }, e -> toast("Remove failed: " + e.getMessage()));
     }
 
     private String safeLower(@Nullable String value) {
-        return value == null ? "" : value.toLowerCase(Locale.CANADA);
+        return HeliosText.safeLower(value);
     }
 
     @NonNull
     private String nonEmptyOr(@Nullable String value, @NonNull String fallback) {
-        if (value == null) return fallback;
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? fallback : trimmed;
+        return HeliosText.nonEmptyOr(value, fallback);
     }
 
     private void toast(@NonNull String msg) {
-        if (!isAdded()) return;
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+        HeliosUi.toast(this, msg);
     }
 
     private static class UserAdapter extends RecyclerView.Adapter<UserAdapter.VH> {
@@ -426,21 +433,45 @@ public class EventUserPickerFragment extends Fragment {
 
         private void applyInviteButtonStyle(@NonNull MaterialButton button) {
             button.setText("Invite");
-            button.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(button.getContext(), R.color.helios_button_primary)));
-            button.setTextColor(ContextCompat.getColor(button.getContext(), R.color.helios_text_primary));
+            button.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelLarge);
+            button.setBackgroundTintList(null);
+            button.setTextColor(com.google.android.material.color.MaterialColors.getColor(
+                    button,
+                    com.google.android.material.R.attr.colorOnPrimaryContainer
+            ));
+            button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                    com.google.android.material.color.MaterialColors.getColor(
+                            button,
+                            com.google.android.material.R.attr.colorPrimaryContainer
+                    )));
         }
 
         private void applyDestructiveButtonStyle(@NonNull MaterialButton button, @NonNull String label) {
             button.setText(label);
-            button.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(button.getContext(), R.color.helios_danger)));
-            button.setTextColor(ContextCompat.getColor(button.getContext(), R.color.helios_surface));
+            button.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_LabelLarge);
+            button.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                    com.google.android.material.color.MaterialColors.getColor(
+                            button,
+                            com.google.android.material.R.attr.colorErrorContainer
+                    )));
+            button.setTextColor(com.google.android.material.color.MaterialColors.getColor(
+                    button,
+                    com.google.android.material.R.attr.colorOnErrorContainer
+            ));
         }
 
         @Override
         public int getItemCount() {
             return users.size();
+        }
+
+        void replaceUsers(@NonNull List<UserProfile> updatedUsers) {
+            List<UserProfile> previous = new ArrayList<>(users);
+            List<UserProfile> next = new ArrayList<>(updatedUsers);
+            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new UserDiff(previous, next));
+            users.clear();
+            users.addAll(next);
+            diffResult.dispatchUpdatesTo(this);
         }
 
         static class VH extends RecyclerView.ViewHolder {
@@ -453,6 +484,48 @@ public class EventUserPickerFragment extends Fragment {
                 nameView = itemView.findViewById(R.id.tv_invite_user_name);
                 contactView = itemView.findViewById(R.id.tv_invite_user_contact);
                 actionButton = itemView.findViewById(R.id.btn_invite_user);
+            }
+        }
+
+        private static final class UserDiff extends DiffUtil.Callback {
+            private final List<UserProfile> oldItems;
+            private final List<UserProfile> newItems;
+
+            private UserDiff(@NonNull List<UserProfile> oldItems, @NonNull List<UserProfile> newItems) {
+                this.oldItems = oldItems;
+                this.newItems = newItems;
+            }
+
+            @Override
+            public int getOldListSize() {
+                return oldItems.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return newItems.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                UserProfile oldItem = oldItems.get(oldItemPosition);
+                UserProfile newItem = newItems.get(newItemPosition);
+                String oldUid = oldItem.getUid();
+                String newUid = newItem.getUid();
+                return oldUid != null && oldUid.equals(newUid);
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                UserProfile oldItem = oldItems.get(oldItemPosition);
+                UserProfile newItem = newItems.get(newItemPosition);
+                return equalsNullable(oldItem.getName(), newItem.getName())
+                        && equalsNullable(oldItem.getEmail(), newItem.getEmail())
+                        && equalsNullable(oldItem.getPhone(), newItem.getPhone());
+            }
+
+            private boolean equalsNullable(@Nullable String left, @Nullable String right) {
+                return left == null ? right == null : left.equals(right);
             }
         }
     }

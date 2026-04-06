@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "38925526488",
-    "project_id": "helios-testdb",
-    "storage_bucket": "helios-testdb.firebasestorage.app"
+    "project_number": "280605994423",
+    "project_id": "helios-db-ed694",
+    "storage_bucket": "helios-db-ed694.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:38925526488:android:7e1a022c755c098389fead",
+        "mobilesdk_app_id": "1:280605994423:android:a15b919e18b67875150c32",
         "android_client_info": {
           "package_name": "com.example.helios"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCoEiBKm9VubzI1dZcvEOpKTrxQIYnwYfY"
+          "current_key": "AIzaSyArGAwiNjFQhDxARiGooc-152Yl4stVglE"
         }
       ],
       "services": {

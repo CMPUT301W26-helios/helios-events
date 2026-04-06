@@ -1,5 +1,7 @@
 package com.example.helios.model;
 
+import androidx.annotation.Nullable;
+
 import java.util.List;
 /**
  * Represents an event that entrants may join through the lottery-based waiting list flow.
@@ -24,6 +26,8 @@ public class Event {
 
     private String locationName;
     private String address;
+    @Nullable private GeoPoint geofenceCenter;
+    @Nullable private Integer geofenceRadiusMeters;
 
     // epoch millis for simplicity (Firestore also supports Timestamp, but millis is easiest)
     private long startTimeMillis;
@@ -45,8 +49,10 @@ public class Event {
     private String qrCodeValue;    // optional (nullable) - could be eventId embedded
 
     private List<String> interests;
-  
-    private boolean drawHappened; // Track if the lottery draw has occurred
+
+    private int drawCount;
+    @Deprecated // Retained for Firestore backwards compatibility — use drawCount instead.
+    private boolean drawHappened;
     private boolean privateEvent;
     private List<String> coOrganizerUids;
     private List<String> pendingCoOrganizerUids;
@@ -77,13 +83,14 @@ public class Event {
      * @param posterImageId            ID of the poster image (optional).
      * @param qrCodeValue              Value encoded in the QR code (optional).
      * @param interests                List of interests associated with the event.
-     * @param drawHappened             Boolean denoting whether a draw has already occurred for this event
-     * TODO: update drawHappened to instead store positive integer number of draws instead, for phased invites/inviting entrants after some canceled
+     * @param drawCount                Number of completed draws for this event.
+     * @param privateEvent             Whether the event is private.
      */
     public Event(String eventId, String title, String description, String locationName, String address,
                  long startTimeMillis, long endTimeMillis, long registrationOpensMillis, long registrationClosesMillis,
                  int capacity, int sampleSize, Integer waitlistLimit, boolean geolocationRequired,
-                 String lotteryGuidelines, String organizerUid, String posterImageId, String qrCodeValue,List<String> interests, boolean drawHappened, boolean privateEvent) {
+                 String lotteryGuidelines, String organizerUid, String posterImageId, String qrCodeValue,
+                 List<String> interests, int drawCount, boolean privateEvent) {
         this.eventId = eventId;
         this.title = title;
         this.description = description;
@@ -104,6 +111,7 @@ public class Event {
         this.posterImageId = posterImageId;
         this.qrCodeValue = qrCodeValue;
         this.interests = interests;
+        this.drawCount = drawCount;
         this.drawHappened = false;
         this.privateEvent = privateEvent;
     }
@@ -157,6 +165,34 @@ public class Event {
      * @param address The physical address of the event.
      */
     public void setAddress(String address) { this.address = address; }
+
+    @Nullable
+    public GeoPoint getGeofenceCenter() { return geofenceCenter; }
+
+    public void setGeofenceCenter(@Nullable GeoPoint geofenceCenter) {
+        this.geofenceCenter = geofenceCenter;
+    }
+
+    public void setGeofenceCenter(double latitude, double longitude) {
+        this.geofenceCenter = new GeoPoint(latitude, longitude);
+    }
+
+    @Nullable
+    public Integer getGeofenceRadiusMeters() { return geofenceRadiusMeters; }
+
+    public void setGeofenceRadiusMeters(@Nullable Integer geofenceRadiusMeters) {
+        this.geofenceRadiusMeters = geofenceRadiusMeters;
+    }
+
+    public boolean hasGeofenceCenter() {
+        return geofenceCenter != null;
+    }
+
+    public boolean hasGeofence() {
+        return geofenceCenter != null
+                && geofenceRadiusMeters != null
+                && geofenceRadiusMeters > 0;
+    }
 
     /**
      * @return Start time in epoch milliseconds.
@@ -291,7 +327,17 @@ public class Event {
     /**
      * @return True if the lottery draw has occurred, false otherwise.
      */
-    public boolean isDrawHappened() { return drawHappened; }
+    public boolean isDrawHappened() { return drawCount > 0 || drawHappened; }
+
+    /**
+     * @return Number of completed draws for this event.
+     */
+    public int getDrawCount() { return drawCount; }
+
+    /**
+     * @param drawCount Number of completed draws for this event.
+     */
+    public void setDrawCount(int drawCount) { this.drawCount = drawCount; }
 
     /**
      * @param drawHappened Whether the lottery draw has occurred.

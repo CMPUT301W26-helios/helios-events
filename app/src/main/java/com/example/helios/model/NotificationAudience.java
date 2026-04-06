@@ -7,7 +7,9 @@ package com.example.helios.model;
  * a group such as waiting, selected, or cancelled entrants.
  */
 public enum NotificationAudience {
-    /** Notification addressed to a single specific recipient. */
+    /** Legacy single-recipient audience retained for test and Firestore backwards compatibility. */
+    INDIVIDUAL,
+    /** Notification addressed to all entrants currently on the waiting list. */
     WAITING,
     /** Notification addressed to entrants selected/invited for the event. */
     SELECTED,

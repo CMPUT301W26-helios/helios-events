@@ -3,35 +3,34 @@ package com.example.helios.service;
 import androidx.annotation.NonNull;
 
 import com.example.helios.data.FirebaseRepository;
+import com.example.helios.data.WaitingListRepository;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 /**
  * Service for organizer-side waiting-list retrieval, update, and removal actions.
  *
  * Role: control/service layer for waiting-list management.
  * Issues: validation is minimal and most operations delegate directly to the repository.
- * 
+ *
  * Alt Description:
  * Service class that provides business logic for managing event waiting lists.
- * It interacts with the {@link FirebaseRepository} to perform operations on waiting list entries.
+ * It interacts with the {@link WaitingListRepository} to perform operations on waiting list entries.
  */
 public class WaitingListService {
 
-    private final FirebaseRepository repository;
+    private final WaitingListRepository repository;
 
-    /**
-     * Initializes the WaitingListService with a new FirebaseRepository instance.
-     */
     public WaitingListService() {
         this(new FirebaseRepository());
     }
 
-    // Package-private test seam
-    WaitingListService(@NonNull FirebaseRepository repository) {
+    public WaitingListService(@NonNull WaitingListRepository repository) {
         this.repository = repository;
     }
 
@@ -88,6 +87,44 @@ public class WaitingListService {
             @NonNull OnFailureListener onFailure
     ) {
         repository.deleteWaitingListEntry(eventId, entrantUid, onSuccess, onFailure);
+    }
+
+    /**
+     * Automatically invites one replacement entrant from the NOT_SELECTED pool.
+     * Used to trigger a replacement draw when a winner declines their invitation.
+     *
+     * @param eventId   The unique identifier for the event.
+     * @param onSuccess Callback called with true if a replacement was invited, false if pool is empty.
+     * @param onFailure Callback for failed operation.
+     */
+    public void autoInviteReplacement(
+            @NonNull String eventId,
+            @NonNull OnSuccessListener<Boolean> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.getAllWaitingListEntries(eventId, entries -> {
+            List<WaitingListEntry> notSelected = new ArrayList<>();
+            for (WaitingListEntry entry : entries) {
+                if (entry != null && entry.getStatus() == WaitingListStatus.NOT_SELECTED) {
+                    notSelected.add(entry);
+                }
+            }
+            if (notSelected.isEmpty()) {
+                onSuccess.onSuccess(false);
+                return;
+            }
+            Collections.shuffle(notSelected);
+            WaitingListEntry replacement = notSelected.get(0);
+            long now = System.currentTimeMillis();
+            replacement.setStatus(WaitingListStatus.INVITED);
+            replacement.setInvitedAtMillis(now);
+            replacement.setStatusReason("Replacement draw after decline");
+            repository.upsertWaitingListEntry(
+                    eventId, replacement.getEntrantUid(), replacement,
+                    unused -> onSuccess.onSuccess(true),
+                    onFailure
+            );
+        }, onFailure);
     }
 
     public void inviteEntrantToWaitingList(

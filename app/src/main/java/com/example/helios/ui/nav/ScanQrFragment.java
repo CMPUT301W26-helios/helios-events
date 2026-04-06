@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -23,6 +24,7 @@ import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.example.helios.HeliosApplication;
 import com.example.helios.R;
 import com.example.helios.service.EventService;
 import com.example.helios.ui.event.EventDetailsBottomSheet;
@@ -48,7 +50,7 @@ public class ScanQrFragment extends Fragment {
     private PreviewView viewFinder;
     private ExecutorService cameraExecutor;
     private ProcessCameraProvider cameraProvider;
-    private final EventService eventService = new EventService();
+    private EventService eventService;
 
     /**
      * Default constructor for ScanQrFragment.
@@ -60,6 +62,7 @@ public class ScanQrFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        eventService = HeliosApplication.from(requireContext()).getEventService();
 
         pickImageLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -94,6 +97,11 @@ public class ScanQrFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        TextView tvHeaderTitle = view.findViewById(R.id.tvScreenTitle);
+        if (tvHeaderTitle != null) {
+            tvHeaderTitle.setText("Scan QR Code");
+        }
 
         viewFinder = view.findViewById(R.id.view_finder);
 

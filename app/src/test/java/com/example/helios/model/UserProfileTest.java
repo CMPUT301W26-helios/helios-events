@@ -81,4 +81,26 @@ public class UserProfileTest {
         profile.setName("Morgana Le Fay");
         assertEquals("Morgana Le Fay", profile.getDisplayNameOrFallback());
     }
+
+    @Test
+    public void setFcmToken_trimsValueAndNormalizesBlankToNull() {
+        UserProfile profile = new UserProfile();
+
+        profile.setFcmToken("  token-123  ");
+        assertEquals("token-123", profile.getFcmToken());
+
+        profile.setFcmToken("   ");
+        assertNull(profile.getFcmToken());
+    }
+
+    @Test
+    public void setProfileImageUrl_trimsValueAndNormalizesBlankToNull() {
+        UserProfile profile = new UserProfile();
+
+        profile.setProfileImageUrl("  https://example.com/avatar.png  ");
+        assertEquals("https://example.com/avatar.png", profile.getProfileImageUrl());
+
+        profile.setProfileImageUrl("   ");
+        assertNull(profile.getProfileImageUrl());
+    }
 }

@@ -11,10 +11,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.helios.HeliosApplication;
 import com.example.helios.R;
-import com.example.helios.data.FirebaseRepository;
+import com.example.helios.data.NotificationRepository;
 import com.example.helios.model.NotificationRecord;
 import com.example.helios.service.ProfileService;
+import com.example.helios.ui.MainActivity;
 import com.example.helios.ui.NotificationAdapter;
 
 import java.util.ArrayList;
@@ -22,8 +24,8 @@ import java.util.List;
 
 public class NotificationsFragment extends Fragment {
 
-    private final ProfileService profileService = new ProfileService();
-    private final FirebaseRepository repository = new FirebaseRepository();
+    private ProfileService profileService;
+    private NotificationRepository notificationRepository;
 
     private RecyclerView rvNotifications;
     private TextView tvNoNotifications;
@@ -34,10 +36,18 @@ public class NotificationsFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        TextView tvHeaderTitle = view.findViewById(R.id.tvScreenTitle);
+        if (tvHeaderTitle != null) {
+            tvHeaderTitle.setText("Notifications");
+        }
+
+        HeliosApplication application = HeliosApplication.from(requireContext());
+        profileService = application.getProfileService();
+        notificationRepository = application.getNotificationRepository();
         rvNotifications = view.findViewById(R.id.rv_notifications);
         tvNoNotifications = view.findViewById(R.id.tv_no_notifications);
 
-        adapter = new NotificationAdapter(notifications);
+        adapter = new NotificationAdapter(notifications, this::openNotificationTarget);
         rvNotifications.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvNotifications.setAdapter(adapter);
 
@@ -55,11 +65,11 @@ public class NotificationsFragment extends Fragment {
 
         profileService.ensureSignedIn(firebaseUser -> {
             String uid = firebaseUser.getUid();
-            repository.getNotificationsForUser(uid, records -> {
+            notificationRepository.getNotificationsForUser(uid, records -> {
                 if (!isAdded()) return;
                 notifications.clear();
                 notifications.addAll(records);
-                adapter.notifyDataSetChanged();
+                adapter.replaceNotifications(notifications);
                 tvNoNotifications.setVisibility(
                         notifications.isEmpty() ? View.VISIBLE : View.GONE);
             }, e -> {
@@ -71,5 +81,14 @@ public class NotificationsFragment extends Fragment {
             if (!isAdded() || getContext() == null) return;
             Toast.makeText(getContext(), "Not signed in.", Toast.LENGTH_SHORT).show();
         });
+    }
+
+    private void openNotificationTarget(@NonNull NotificationRecord record) {
+        if (!isAdded()) {
+            return;
+        }
+        if (requireActivity() instanceof MainActivity) {
+            ((MainActivity) requireActivity()).openNotificationTarget(record.getEventId());
+        }
     }
 }

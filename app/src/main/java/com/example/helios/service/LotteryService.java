@@ -3,6 +3,8 @@ package com.example.helios.service;
 import androidx.annotation.NonNull;
 
 import com.example.helios.data.FirebaseRepository;
+import com.example.helios.data.EventRepository;
+import com.example.helios.data.WaitingListRepository;
 import com.example.helios.model.Event;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
@@ -12,20 +14,30 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class LotteryService {
     static final String NO_PEOPLE_IN_EVENT_MESSAGE = "There are no people in this event";
 
-    private final FirebaseRepository repository;
+    private final WaitingListRepository waitingListRepository;
+    private final EventRepository eventRepository;
     private final OrganizerNotificationService organizerNotificationService;
 
     public LotteryService() {
-
-        this(new FirebaseRepository(), new OrganizerNotificationService());
+        this(new FirebaseRepository());
     }
 
-    LotteryService(@NonNull FirebaseRepository repository, @NonNull OrganizerNotificationService organizerNotificationService) {
-        this.repository = repository;
+    public LotteryService(@NonNull FirebaseRepository repository) {
+        this(repository, repository, new OrganizerNotificationService(repository));
+    }
+
+    public LotteryService(
+            @NonNull WaitingListRepository waitingListRepository,
+            @NonNull EventRepository eventRepository,
+            @NonNull OrganizerNotificationService organizerNotificationService
+    ) {
+        this.waitingListRepository = waitingListRepository;
+        this.eventRepository = eventRepository;
         this.organizerNotificationService = organizerNotificationService;
     }
 
@@ -49,7 +61,7 @@ public class LotteryService {
         String eventId = event.getEventId();
         int sampleSize = Math.max(0, targetCount);
 
-        repository.getAllWaitingListEntries(eventId, entries -> {
+        waitingListRepository.getAllWaitingListEntries(eventId, entries -> {
             List<WaitingListEntry> waiting = new ArrayList<>();
             for (WaitingListEntry e : entries) {
                 if (e != null && e.getStatus() == WaitingListStatus.WAITING) {
@@ -80,15 +92,14 @@ public class LotteryService {
             List<WaitingListEntry> notifiedWinners = Collections.synchronizedList(new ArrayList<>());
             List<WaitingListEntry> notifiedLosers = Collections.synchronizedList(new ArrayList<>());
 
-            int[] pending = {winners.size() + losers.size()};
-            if (pending[0] == 0) {
+            AtomicInteger pending = new AtomicInteger(winners.size() + losers.size());
+            if (pending.get() == 0) {
                 finalizeEventAndNotify(organizerUid, event, notifiedWinners, notifiedLosers, onSuccess, onFailure);
                 return;
             }
 
             Runnable checkDone = () -> {
-                pending[0]--;
-                if (pending[0] == 0) {
+                if (pending.decrementAndGet() == 0) {
                     finalizeEventAndNotify(organizerUid, event, notifiedWinners, notifiedLosers, onSuccess, onFailure);
                 }
             };
@@ -98,7 +109,7 @@ public class LotteryService {
                 winner.setInvitedAtMillis(now);
                 winner.setStatusReason("Selected in draw");
 
-                repository.upsertWaitingListEntry(eventId, winner.getEntrantUid(), winner,
+                waitingListRepository.upsertWaitingListEntry(eventId, winner.getEntrantUid(), winner,
                         unused -> {
                             notifiedWinners.add(winner);
                             checkDone.run();
@@ -110,7 +121,7 @@ public class LotteryService {
                 loser.setStatus(WaitingListStatus.NOT_SELECTED);
                 loser.setStatusReason("Not selected in current draw");
 
-                repository.upsertWaitingListEntry(eventId, loser.getEntrantUid(), loser,
+                waitingListRepository.upsertWaitingListEntry(eventId, loser.getEntrantUid(), loser,
                         unused -> {
                             notifiedLosers.add(loser);
                             checkDone.run();
@@ -130,8 +141,8 @@ public class LotteryService {
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        event.setDrawHappened(true);
-        repository.saveEvent(event, unused ->
+        event.setDrawCount(event.getDrawCount() + 1);
+        eventRepository.saveEvent(event, unused ->
                         organizerNotificationService.notifyDrawResults(
                                 organizerUid,
                                 event,

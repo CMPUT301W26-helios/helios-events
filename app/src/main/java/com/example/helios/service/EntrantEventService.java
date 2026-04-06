@@ -3,8 +3,11 @@ package com.example.helios.service;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.example.helios.data.FirebaseRepository;
+import com.example.helios.data.EventRepository;
+import com.example.helios.data.WaitingListRepository;
 import com.example.helios.model.Event;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
@@ -23,38 +26,50 @@ import com.google.firebase.auth.FirebaseUser;
  */
 public class EntrantEventService {
 
-    private final FirebaseRepository repository;
+    private final WaitingListRepository waitingListRepository;
+    private final EventRepository eventRepository;
     private final ProfileService profileService;
 
     public EntrantEventService() {
-        this(new FirebaseRepository(), new ProfileService());
+        this(new FirebaseRepository());
     }
 
-    // Package-private test seam
-    EntrantEventService(
-            @NonNull FirebaseRepository repository,
+    public EntrantEventService(@NonNull FirebaseRepository repository) {
+        this(repository, repository, new ProfileService(repository));
+    }
+
+    public EntrantEventService(@NonNull FirebaseRepository repository, @NonNull ProfileService profileService) {
+        this(repository, repository, profileService);
+    }
+
+    public EntrantEventService(
+            @NonNull WaitingListRepository waitingListRepository,
+            @NonNull EventRepository eventRepository,
             @NonNull ProfileService profileService
     ) {
-        this.repository = repository;
+        this.waitingListRepository = waitingListRepository;
+        this.eventRepository = eventRepository;
         this.profileService = profileService;
     }
 
     /**
      * Adds the current user to the waiting list for a specific event.
      *
-     * @param context   The application context.
      * @param eventId   The unique identifier for the event.
+     * @param latitude  Optional latitude captured when the event requires geolocation.
+     * @param longitude Optional longitude captured when the event requires geolocation.
      * @param onSuccess Callback for successful operation.
      * @param onFailure Callback for failed operation.
      */
     public void joinWaitingList(
-            @NonNull Context context,
             @NonNull String eventId,
+            @Nullable Double latitude,
+            @Nullable Double longitude,
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
         profileService.ensureSignedIn(
-                firebaseUser -> doJoin(eventId, firebaseUser, onSuccess, onFailure),
+                firebaseUser -> doJoin(eventId, latitude, longitude, firebaseUser, onSuccess, onFailure),
                 onFailure
         );
     }
@@ -65,7 +80,7 @@ public class EntrantEventService {
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        repository.upsertWaitingListEntry(
+        waitingListRepository.upsertWaitingListEntry(
                 eventId, entry.getEntrantUid(), entry, onSuccess, onFailure);
     }
 
@@ -104,7 +119,7 @@ public class EntrantEventService {
             @NonNull OnFailureListener onFailure
     ) {
         profileService.ensureSignedIn(
-                firebaseUser -> repository.getWaitingListEntry(eventId, firebaseUser.getUid(), onSuccess, onFailure),
+                firebaseUser -> waitingListRepository.getWaitingListEntry(eventId, firebaseUser.getUid(), onSuccess, onFailure),
                 onFailure
         );
     }
@@ -122,7 +137,7 @@ public class EntrantEventService {
             @NonNull OnFailureListener onFailure
     ) {
         profileService.ensureSignedIn(
-                firebaseUser -> repository.getWaitlistEntriesForUser(firebaseUser.getUid(), onSuccess, onFailure),
+                firebaseUser -> waitingListRepository.getWaitlistEntriesForUser(firebaseUser.getUid(), onSuccess, onFailure),
                 onFailure
         );
     }
@@ -140,7 +155,7 @@ public class EntrantEventService {
             @NonNull OnSuccessListener<Integer> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        repository.getAllWaitingListEntries(eventId, entries -> {
+        waitingListRepository.getAllWaitingListEntries(eventId, entries -> {
             int count = 0;
             for (WaitingListEntry entry : entries) {
                 if (entry == null || entry.getStatus() == null) continue;
@@ -158,6 +173,8 @@ public class EntrantEventService {
 
     private void doJoin(
             @NonNull String eventId,
+            @Nullable Double latitude,
+            @Nullable Double longitude,
             @NonNull FirebaseUser firebaseUser,
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
@@ -165,7 +182,7 @@ public class EntrantEventService {
         String uid = firebaseUser.getUid();
         long now = System.currentTimeMillis();
 
-        repository.getEventById(eventId, event -> {
+        eventRepository.getEventById(eventId, event -> {
             if (event == null) {
                 onFailure.onFailure(new IllegalArgumentException("Event not found."));
                 return;
@@ -174,8 +191,27 @@ public class EntrantEventService {
                 onFailure.onFailure(new SecurityException("Organizers/co-organizers cannot join the entrant pool for this event."));
                 return;
             }
+            if (event.isGeolocationRequired() && (latitude == null || longitude == null)) {
+                onFailure.onFailure(new IllegalStateException("This event requires location access to join."));
+                return;
+            }
+            if (event.isGeolocationRequired() && event.hasGeofence() && latitude != null && longitude != null) {
+                Double distanceMeters = calculateDistanceMeters(
+                        latitude,
+                        longitude,
+                        event.getGeofenceCenter().getLatitude(),
+                        event.getGeofenceCenter().getLongitude()
+                );
+                Integer radiusMeters = event.getGeofenceRadiusMeters();
+                if (distanceMeters != null && radiusMeters != null && distanceMeters > radiusMeters) {
+                    onFailure.onFailure(new IllegalStateException(
+                            "You must be within " + radiusMeters + " meters of the event location to join."
+                    ));
+                    return;
+                }
+            }
 
-            repository.getWaitingListEntry(eventId, uid, existing -> {
+            waitingListRepository.getWaitingListEntry(eventId, uid, existing -> {
                 if (existing != null
                         && existing.getStatus() != null
                         && existing.getStatus() != WaitingListStatus.CANCELLED
@@ -185,15 +221,62 @@ public class EntrantEventService {
                     return;
                 }
 
-                WaitingListEntry entry = new WaitingListEntry();
-                entry.setEventId(eventId);
-                entry.setEntrantUid(uid);
-                entry.setStatus(WaitingListStatus.WAITING);
-                entry.setJoinedAtMillis(now);
-
-                repository.upsertWaitingListEntry(eventId, uid, entry, onSuccess, onFailure);
+                Integer waitlistLimit = event.getWaitlistLimit();
+                if (waitlistLimit != null && waitlistLimit > 0) {
+                    waitingListRepository.getWaitingEntriesCount(eventId, WaitingListStatus.WAITING, count -> {
+                        if (count >= waitlistLimit) {
+                            onFailure.onFailure(new IllegalStateException("The waiting list for this event is full."));
+                        } else {
+                            proceedWithJoin(eventId, uid, now, latitude, longitude, onSuccess, onFailure);
+                        }
+                    }, onFailure);
+                } else {
+                    proceedWithJoin(eventId, uid, now, latitude, longitude, onSuccess, onFailure);
+                }
             }, onFailure);
         }, onFailure);
+    }
+
+    private void proceedWithJoin(
+            @NonNull String eventId,
+            @NonNull String uid,
+            long now,
+            @Nullable Double latitude,
+            @Nullable Double longitude,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        WaitingListEntry entry = new WaitingListEntry();
+        entry.setEventId(eventId);
+        entry.setEntrantUid(uid);
+        entry.setStatus(WaitingListStatus.WAITING);
+        entry.setJoinedAtMillis(now);
+        if (latitude != null && longitude != null) {
+            entry.setJoinLatitude(latitude);
+            entry.setJoinLongitude(longitude);
+        }
+
+        waitingListRepository.upsertWaitingListEntry(eventId, uid, entry, onSuccess, onFailure);
+    }
+
+    @Nullable
+    static Double calculateDistanceMeters(
+            double startLatitude,
+            double startLongitude,
+            double endLatitude,
+            double endLongitude
+    ) {
+        double earthRadiusMeters = 6_371_000d;
+        double startLatitudeRadians = Math.toRadians(startLatitude);
+        double endLatitudeRadians = Math.toRadians(endLatitude);
+        double deltaLatitudeRadians = Math.toRadians(endLatitude - startLatitude);
+        double deltaLongitudeRadians = Math.toRadians(endLongitude - startLongitude);
+
+        double haversine = Math.sin(deltaLatitudeRadians / 2d) * Math.sin(deltaLatitudeRadians / 2d)
+                + Math.cos(startLatitudeRadians) * Math.cos(endLatitudeRadians)
+                * Math.sin(deltaLongitudeRadians / 2d) * Math.sin(deltaLongitudeRadians / 2d);
+        double arc = 2d * Math.atan2(Math.sqrt(haversine), Math.sqrt(1d - haversine));
+        return earthRadiusMeters * arc;
     }
 
     private void doLeave(
@@ -204,14 +287,14 @@ public class EntrantEventService {
     ) {
         String uid = firebaseUser.getUid();
 
-        repository.getWaitingListEntry(eventId, uid, existing -> {
+        waitingListRepository.getWaitingListEntry(eventId, uid, existing -> {
             if (existing == null) {
                 onSuccess.onSuccess(null);
                 return;
             }
 
             existing.setStatus(WaitingListStatus.CANCELLED);
-            repository.updateWaitingListEntry(eventId, uid, existing, onSuccess, onFailure);
+            waitingListRepository.updateWaitingListEntry(eventId, uid, existing, onSuccess, onFailure);
         }, onFailure);
     }
 }

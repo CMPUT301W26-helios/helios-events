@@ -12,7 +12,7 @@ public class EventTest {
     private final List<String> interests = Arrays.asList("Tag1", "Tag2");
 
     @Test
-    public void constructor_setsAllFields_andDefaultsDrawToFalse() {
+    public void constructor_setsAllFields_andUsesProvidedDrawCount() {
         Event event = new Event(
                 "event-1001",
                 "Beginner Swim Lessons",
@@ -32,6 +32,7 @@ public class EventTest {
                 "poster-900",
                 "helios://event/event-1001",
                 interests,
+                2,
                 true
         );
 
@@ -40,6 +41,8 @@ public class EventTest {
         assertEquals("Six-week evening swim program for beginners.", event.getDescription());
         assertEquals("Sports Centre", event.getLocationName());
         assertEquals("420 Fake Street NW, Edmonton, AB", event.getAddress());
+        assertNull(event.getGeofenceCenter());
+        assertNull(event.getGeofenceRadiusMeters());
         assertEquals(1743472800000L, event.getStartTimeMillis());
         assertEquals(1743476400000L, event.getEndTimeMillis());
         assertEquals(1740787200000L, event.getRegistrationOpensMillis());
@@ -53,10 +56,8 @@ public class EventTest {
         assertEquals("poster-900", event.getPosterImageId());
         assertEquals("helios://event/event-1001", event.getQrCodeValue());
         assertEquals(interests, event.getInterests());
-
-        // Constructor currently ignores the passed drawHappened argument
-        // and always sets drawHappened to false.
-        assertFalse(event.isDrawHappened());
+        assertEquals(2, event.getDrawCount());
+        assertTrue(event.isDrawHappened());
     }
 
     @Test
@@ -68,6 +69,8 @@ public class EventTest {
         assertNull(event.getDescription());
         assertNull(event.getLocationName());
         assertNull(event.getAddress());
+        assertNull(event.getGeofenceCenter());
+        assertNull(event.getGeofenceRadiusMeters());
         assertEquals(0L, event.getStartTimeMillis());
         assertEquals(0L, event.getEndTimeMillis());
         assertEquals(0L, event.getRegistrationOpensMillis());
@@ -81,6 +84,7 @@ public class EventTest {
         assertNull(event.getPosterImageId());
         assertNull(event.getQrCodeValue());
         assertNull(event.getInterests());
+        assertEquals(0, event.getDrawCount());
         assertFalse(event.isDrawHappened());
     }
 
@@ -94,6 +98,8 @@ public class EventTest {
         event.setDescription("Learn how to dance (for beginners!)");
         event.setLocationName("Downtown Community Centre");
         event.setAddress("420 Fake Street NW, Edmonton, AB");
+        event.setGeofenceCenter(53.5461, -113.4938);
+        event.setGeofenceRadiusMeters(250);
         event.setStartTimeMillis(1751328000000L);
         event.setEndTimeMillis(1751335200000L);
         event.setRegistrationOpensMillis(1750118400000L);
@@ -107,13 +113,18 @@ public class EventTest {
         event.setPosterImageId(null);
         event.setQrCodeValue("qr://dance-lessons");
         event.setInterests(updatedInterests);
-        event.setDrawHappened(true);
+        event.setDrawCount(3);
 
         assertEquals("event-2002", event.getEventId());
         assertEquals("Dance Lessons", event.getTitle());
         assertEquals("Learn how to dance (for beginners!)", event.getDescription());
         assertEquals("Downtown Community Centre", event.getLocationName());
         assertEquals("420 Fake Street NW, Edmonton, AB", event.getAddress());
+        assertNotNull(event.getGeofenceCenter());
+        assertEquals(53.5461, event.getGeofenceCenter().getLatitude(), 0.0001);
+        assertEquals(-113.4938, event.getGeofenceCenter().getLongitude(), 0.0001);
+        assertEquals(Integer.valueOf(250), event.getGeofenceRadiusMeters());
+        assertTrue(event.hasGeofence());
         assertEquals(1751328000000L, event.getStartTimeMillis());
         assertEquals(1751335200000L, event.getEndTimeMillis());
         assertEquals(1750118400000L, event.getRegistrationOpensMillis());
@@ -127,6 +138,7 @@ public class EventTest {
         assertNull(event.getPosterImageId());
         assertEquals("qr://dance-lessons", event.getQrCodeValue());
         assertEquals(updatedInterests, event.getInterests());
+        assertEquals(3, event.getDrawCount());
         assertTrue(event.isDrawHappened());
     }
 
@@ -153,7 +165,17 @@ public class EventTest {
     }
 
     @Test
-    public void constructor_ignoresPassedDrawHappenedValue_andStillSetsFalse() {
+    public void legacyDrawHappenedFlag_stillMarksEventAsDrawn() {
+        Event event = new Event();
+
+        event.setDrawHappened(true);
+
+        assertEquals(0, event.getDrawCount());
+        assertTrue(event.isDrawHappened());
+    }
+
+    @Test
+    public void constructor_reportsDrawnWhenDrawCountIsPositive() {
         Event event = new Event(
                 "event-3003",
                 "Yoga Class",
@@ -173,9 +195,27 @@ public class EventTest {
                 null,
                 null,
                 Arrays.asList("Wellness", "Fitness"),
+                1,
                 true
         );
 
-        assertFalse(event.isDrawHappened());
+        assertEquals(1, event.getDrawCount());
+        assertTrue(event.isDrawHappened());
+    }
+
+    @Test
+    public void hasGeofence_requiresCenterAndPositiveRadius() {
+        Event event = new Event();
+
+        assertFalse(event.hasGeofence());
+
+        event.setGeofenceCenter(53.5461, -113.4938);
+        assertFalse(event.hasGeofence());
+
+        event.setGeofenceRadiusMeters(0);
+        assertFalse(event.hasGeofence());
+
+        event.setGeofenceRadiusMeters(150);
+        assertTrue(event.hasGeofence());
     }
 }

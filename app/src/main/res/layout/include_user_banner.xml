@@ -19,7 +19,7 @@
         android:singleLine="true"
         android:ellipsize="end"
         android:text="Signed in as: ..."
-        android:textColor="@color/helios_text_primary"
+        android:textColor="?attr/colorOnSurface"
         android:textStyle="bold"
         android:textSize="14sp" />
 
@@ -28,13 +28,13 @@
         android:layout_height="16dp"
         android:layout_marginStart="10dp"
         android:layout_marginEnd="10dp"
-        android:background="@color/helios_border" />
+        android:background="?attr/colorOutline" />
 
     <TextView
         android:id="@+id/user_banner_role"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="user"
-        android:textColor="@color/helios_text_primary"
+        android:textColor="?attr/colorOnSurface"
         android:textSize="12sp" />
 </LinearLayout>

@@ -4,154 +4,527 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4FAF6"
-    android:paddingBottom="8dp">
+    android:background="?attr/colorSurface">
 
-    <!-- Header row: logo + title aligned -->
-    <ImageView
-        android:id="@+id/helios_brand_logo"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:contentDescription="Helios logo"
-        android:src="@android:drawable/ic_menu_today"
+    <include
+        android:id="@+id/include_header"
+        layout="@layout/include_main_header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tv_title"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_discovery_filters"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="16dp"
-        android:fontFamily="sans-serif-black"
-        android:text="Event List"
-        android:textColor="#1A1C1E"
-        android:textSize="32sp"
-        android:maxLines="1"
-        android:ellipsize="end"
-        app:layout_constraintStart_toEndOf="@id/helios_brand_logo"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/helios_brand_logo"
-        app:layout_constraintBottom_toBottomOf="@id/helios_brand_logo" />
-
-    <!-- Search Bar Row -->
-    <LinearLayout
-        android:id="@+id/ll_search_row"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
-        android:paddingHorizontal="24dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        app:layout_constraintTop_toBottomOf="@id/tv_title">
-
-        <EditText
-            android:id="@+id/et_search"
-            android:layout_width="0dp"
-            android:layout_height="54dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_search_bar"
-            android:drawableEnd="@android:drawable/ic_menu_search"
-            android:hint="Search for Event"
-            android:paddingHorizontal="20dp"
-            android:textColor="#1A1C1E"
-            android:textColorHint="#44474E" />
-
-        <ImageButton
-            android:id="@+id/btn_filter"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
-            android:layout_marginStart="12dp"
-            android:background="@drawable/bg_search_bar"
-            android:src="@android:drawable/ic_menu_manage"
-            app:tint="#1A1C1E" />
-    </LinearLayout>
-
-    <!-- Date Filters Visual State -->
-    <LinearLayout
-        android:id="@+id/ll_date_filters"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/ll_search_row">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Between: "
-            android:textColor="#44474E" />
-
-        <TextView
-            android:id="@+id/tv_filter_start_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_filter_chip"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="6dp"
-            tools:text="March 1, 2025" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="8dp"
-            android:text="-" />
-
-        <TextView
-            android:id="@+id/tv_filter_end_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_filter_chip"
-            android:paddingHorizontal="12dp"
-            android:paddingVertical="6dp"
-            tools:text="Apr 1, 2025" />
-
-        <ImageView
-            android:id="@+id/btn_clear_date_filter"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginStart="8dp"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            app:tint="#44474E" />
-    </LinearLayout>
-
-    <!-- Interest Chips Visual State -->
-    <LinearLayout
-        android:id="@+id/ll_interest_filters"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="10dp"
-        android:orientation="horizontal"
-        android:paddingHorizontal="24dp"
-        android:visibility="gone"
-        app:layout_constraintTop_toBottomOf="@id/ll_date_filters">
+        android:layout_marginEnd="16dp"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="2dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/include_header"
+        app:strokeColor="?attr/colorOutlineVariant"
+        app:strokeWidth="1dp">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Interests: "
-            android:textColor="#44474E" />
+            android:orientation="vertical"
+            android:paddingStart="8dp"
+            android:paddingTop="2dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="6dp">
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/cg_filter_display"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp" />
-    </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-    <!-- Event List -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_events"
-        android:layout_width="match_parent"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:boxBackgroundColor="@android:color/transparent"
+                    app:boxBackgroundMode="none"
+                    app:boxStrokeWidth="0dp"
+                    app:boxStrokeWidthFocused="0dp"
+                    app:hintEnabled="false"
+                    app:startIconDrawable="@drawable/ic_search"
+                    app:startIconTint="?attr/colorOnSurfaceVariant">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_search"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:ellipsize="end"
+                        android:hint="Search for events"
+                        android:importantForAutofill="no"
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:minHeight="0dp"
+                        android:paddingStart="0dp"
+                        android:paddingTop="10dp"
+                        android:paddingEnd="4dp"
+                        android:paddingBottom="10dp"
+                        android:singleLine="true"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/colorOnSurfaceVariant"
+                        android:textSize="14sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_filter"
+                    style="@style/Widget.Helios.Button.Secondary.Compact"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:minWidth="0dp"
+                    android:text="Filters"
+                    android:textColor="?attr/colorOnSurface"
+                    app:icon="@drawable/ic_filter_list"
+                    app:iconGravity="textStart"
+                    app:iconPadding="6dp"
+                    app:iconTint="?attr/colorOnSurface" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_filter_menu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fadeScrollbars="false"
+                    android:overScrollMode="ifContentScrolls"
+                    android:scrollbarStyle="insideInset"
+                    android:scrollbars="horizontal">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/cg_event_visibility"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipSpacingHorizontal="6dp"
+                        app:singleLine="true"
+                        app:singleSelection="true">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_visibility_all"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:checked="true"
+                            android:text="All"
+                            android:textSize="12sp"
+                            app:checkedIconVisible="false"
+                            app:chipMinHeight="34dp"
+                            app:ensureMinTouchTargetSize="false" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_visibility_public"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Public"
+                            android:textSize="12sp"
+                            app:checkedIconVisible="false"
+                            app:chipMinHeight="34dp"
+                            app:ensureMinTouchTargetSize="false" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_visibility_private"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Private"
+                            android:textSize="12sp"
+                            app:checkedIconVisible="false"
+                            app:chipMinHeight="34dp"
+                            app:ensureMinTouchTargetSize="false" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip_visibility_joined"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="My Events"
+                            android:textSize="12sp"
+                            app:checkedIconVisible="false"
+                            app:chipMinHeight="34dp"
+                            app:ensureMinTouchTargetSize="false" />
+                    </com.google.android.material.chip.ChipGroup>
+                </HorizontalScrollView>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Availability"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:fadeScrollbars="false"
+                        android:overScrollMode="ifContentScrolls"
+                        android:scrollbarStyle="insideInset"
+                        android:scrollbars="horizontal">
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/cg_registration_availability"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:chipSpacingHorizontal="6dp"
+                            app:singleLine="true"
+                            app:singleSelection="true">
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_availability_all"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="true"
+                                android:text="Any time"
+                                android:textSize="12sp"
+                                app:checkedIconVisible="false"
+                                app:chipMinHeight="34dp"
+                                app:ensureMinTouchTargetSize="false" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_availability_open"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Open now"
+                                android:textSize="12sp"
+                                app:checkedIconVisible="false"
+                                app:chipMinHeight="34dp"
+                                app:ensureMinTouchTargetSize="false" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_availability_upcoming"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Opening soon"
+                                android:textSize="12sp"
+                                app:checkedIconVisible="false"
+                                app:chipMinHeight="34dp"
+                                app:ensureMinTouchTargetSize="false" />
+                        </com.google.android.material.chip.ChipGroup>
+                    </HorizontalScrollView>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Capacity"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:fadeScrollbars="false"
+                        android:overScrollMode="ifContentScrolls"
+                        android:scrollbarStyle="insideInset"
+                        android:scrollbars="horizontal">
+
+                        <com.google.android.material.chip.ChipGroup
+                            android:id="@+id/cg_capacity_filters"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:chipSpacingHorizontal="6dp"
+                            app:singleLine="true"
+                            app:singleSelection="true">
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_capacity_all"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="true"
+                                android:text="Any setup"
+                                android:textSize="12sp"
+                                app:checkedIconVisible="false"
+                                app:chipMinHeight="34dp"
+                                app:ensureMinTouchTargetSize="false" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_capacity_limited"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Limited spots"
+                                android:textSize="12sp"
+                                app:checkedIconVisible="false"
+                                app:chipMinHeight="34dp"
+                                app:ensureMinTouchTargetSize="false" />
+
+                            <com.google.android.material.chip.Chip
+                                android:id="@+id/chip_capacity_waitlist"
+                                style="@style/Widget.Material3.Chip.Filter"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Waitlist cap"
+                                android:textSize="12sp"
+                                app:checkedIconVisible="false"
+                                app:chipMinHeight="34dp"
+                                app:ensureMinTouchTargetSize="false" />
+                        </com.google.android.material.chip.ChipGroup>
+                    </HorizontalScrollView>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Tags"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_tag_suggestions_toggle"
+                        style="@style/Widget.Helios.Button.Secondary.Compact"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="0dp"
+                        android:text="Suggestions" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_all_tags"
+                        style="@style/Widget.Helios.Button.Secondary.Compact"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:minWidth="0dp"
+                        android:text="Browse tags" />
+                </LinearLayout>
+
+                <HorizontalScrollView
+                    android:id="@+id/ll_interest_filters"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:fadeScrollbars="false"
+                    android:scrollbarStyle="insideInset"
+                    android:scrollbars="horizontal"
+                    android:visibility="gone">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/cg_filter_display"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:chipSpacingHorizontal="6dp"
+                        app:singleLine="true" />
+                </HorizontalScrollView>
+
+                <LinearLayout
+                    android:id="@+id/layout_suggested_tags_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/layout_hot_tags"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Hot tags"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fadeScrollbars="false"
+                            android:scrollbarStyle="insideInset"
+                            android:scrollbars="horizontal">
+
+                            <com.google.android.material.chip.ChipGroup
+                                android:id="@+id/cg_interest_preview"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:chipSpacingHorizontal="6dp"
+                                app:singleLine="true" />
+                        </HorizontalScrollView>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/layout_popular_tags"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Popular tags"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <HorizontalScrollView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fadeScrollbars="false"
+                            android:scrollbarStyle="insideInset"
+                            android:scrollbars="horizontal">
+
+                            <com.google.android.material.chip.ChipGroup
+                                android:id="@+id/cg_popular_preview"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:chipSpacingHorizontal="6dp"
+                                app:singleLine="true" />
+                        </HorizontalScrollView>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layout_date_filters"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Date"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_filter_start_date"
+                            style="@style/Widget.Helios.Button.Secondary.Compact"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Start date" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_filter_end_date"
+                            style="@style/Widget.Helios.Button.Secondary.Compact"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:text="End date" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_clear_date_filter"
+                            style="@style/Widget.Material3.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:minWidth="0dp"
+                            android:text="Clear"
+                            android:textSize="12sp"
+                            android:visibility="gone" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:id="@+id/layout_results_panel"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
-        app:layout_constraintTop_toBottomOf="@id/ll_interest_filters"
+        android:background="@drawable/bg_events_results_panel"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
-        tools:listitem="@layout/item_event" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/card_discovery_filters">
+
+        <TextView
+            android:id="@+id/tv_results_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="20dp"
+            android:paddingTop="2dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="12dp"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            tools:text="Showing XX events | XX private invites" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?attr/colorOutline" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_events"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="?attr/colorSurface"
+            android:clipToPadding="false"
+            android:fadeScrollbars="false"
+            android:paddingTop="4dp"
+            android:paddingBottom="112dp"
+            android:scrollbarStyle="insideInset"
+            android:scrollbars="vertical"
+            tools:listitem="@layout/item_event" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

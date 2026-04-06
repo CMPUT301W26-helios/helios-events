@@ -8,21 +8,27 @@ import com.example.helios.model.EventComment;
 import com.example.helios.model.NotificationRecord;
 import com.example.helios.model.UserProfile;
 import com.example.helios.model.WaitingListEntry;
+import com.example.helios.model.WaitingListStatus;
 import com.example.helios.model.ImageAsset;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,14 +42,33 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Outstanding issues: validation rules are intentionally minimal, several methods are direct pass-throughs,
  * and the class directly constructs FirebaseFirestore which limits testability.
  */
-public class FirebaseRepository {
+public class FirebaseRepository
+        implements UserRepository, EventRepository, WaitingListRepository,
+                   NotificationRepository, CommentRepository, ImageRepository {
+    private static final String USERS_COLLECTION = "users";
+    private static final String EVENTS_COLLECTION = "events";
+    private static final String WAITING_LIST_COLLECTION = "waiting_list";
+    private static final String COMMENTS_COLLECTION = "comments";
+    private static final String NOTIFICATIONS_COLLECTION = "notifications";
+    private static final String IMAGES_COLLECTION = "images";
+    private static final String ADMIN_DEVICES_COLLECTION = "admin_devices";
+
     private final FirebaseFirestore db;
 
     /**
-     * Initializes the FirebaseRepository with a Firestore instance.
+     * Initializes the FirebaseRepository with the default Firestore instance.
      */
     public FirebaseRepository() {
-        this.db = FirebaseFirestore.getInstance();
+        this(FirebaseFirestore.getInstance());
+    }
+
+    /**
+     * Initializes the FirebaseRepository with a provided Firestore instance.
+     *
+     * @param db The Firestore instance to use.
+     */
+    public FirebaseRepository(@NonNull FirebaseFirestore db) {
+        this.db = db;
     }
 
     // USERS SECTION:
@@ -55,6 +80,7 @@ public class FirebaseRepository {
      * @param onSuccess Callback for successful operation.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void saveUser(
             @NonNull UserProfile user,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -65,7 +91,7 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("users")
+        users()
                 .document(user.getUid())
                 .set(user)
                 .addOnSuccessListener(onSuccess)
@@ -79,12 +105,23 @@ public class FirebaseRepository {
      * @param onSuccess Callback for successful operation.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void updateUser(
             @NonNull UserProfile user,
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        saveUser(user, onSuccess, onFailure);
+        if (!isValidUser(user)) {
+            onFailure.onFailure(new IllegalArgumentException("Invalid user profile."));
+            return;
+        }
+        // Use merge so server-written fields (e.g. fcmToken set via saveFcmToken) are not
+        // overwritten if this UserProfile object was loaded before those fields were set.
+        users()
+                .document(user.getUid())
+                .set(user, SetOptions.merge())
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
     }
 
     /**
@@ -94,6 +131,7 @@ public class FirebaseRepository {
      * @param onSuccess Callback receiving the UserProfile (null if not found).
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void getUser(
             @NonNull String uid,
             @NonNull OnSuccessListener<UserProfile> onSuccess,
@@ -104,16 +142,36 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("users")
+        users()
                 .document(uid)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    UserProfile user = null;
-                    if (snapshot.exists()) {
-                        user = snapshot.toObject(UserProfile.class);
-                    }
-                    onSuccess.onSuccess(user);
+                    onSuccess.onSuccess(snapshot.exists()
+                            ? snapshot.toObject(UserProfile.class)
+                            : null);
                 })
+                .addOnFailureListener(onFailure);
+    }
+
+    @Override
+    public void saveFcmToken(
+            @NonNull String uid,
+            @Nullable String token,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("fcmToken", token);
+
+        users()
+                .document(uid)
+                .set(updates, SetOptions.merge())
+                .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
 
@@ -124,6 +182,7 @@ public class FirebaseRepository {
      * @param onSuccess Callback for successful operation.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void deleteUser(
             @NonNull String uid,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -134,7 +193,7 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("users")
+        users()
                 .document(uid)
                 .delete()
                 .addOnSuccessListener(onSuccess)
@@ -148,6 +207,7 @@ public class FirebaseRepository {
      * @param onSuccess Callback for successful operation.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void muteNotifications(
             @NonNull String uid,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -158,7 +218,7 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("users")
+        users()
                 .document(uid)
                 .update("notificationsEnabled", false)
                 .addOnSuccessListener(onSuccess)
@@ -172,6 +232,7 @@ public class FirebaseRepository {
      * @param onSuccess      Callback receiving true if the device is an enabled admin.
      * @param onFailure      Callback for failed operation.
      */
+    @Override
     public void isAdminInstallation(
             @NonNull String installationId,
             @NonNull OnSuccessListener<Boolean> onSuccess,
@@ -182,7 +243,7 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("admin_devices")
+        adminDevices()
                 .document(installationId)
                 .get()
                 .addOnSuccessListener(snapshot -> {
@@ -200,22 +261,20 @@ public class FirebaseRepository {
      * @param onSuccess Callback receiving a list of all events.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void getAllEvents(
             @NonNull OnSuccessListener<List<Event>> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
         // Querying all events. Filtering for 'privateEvent' should be handled by the UI
         // depending on the context (e.g., browsing vs. managing).
-        db.collection("events")
+        events()
                 .orderBy("startTimeMillis")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     List<Event> events = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : querySnapshot) {
-                        Event event = doc.toObject(Event.class);
-                        if (event.getEventId() == null || event.getEventId().trim().isEmpty()) {
-                            event.setEventId(doc.getId());
-                        }
+                        Event event = hydrate(doc, Event.class, new EventIdSetter());
                         events.add(event);
                     }
                     onSuccess.onSuccess(events);
@@ -230,6 +289,7 @@ public class FirebaseRepository {
      * @param onSuccess Callback receiving the event (null if not found).
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void getEventById(
             @NonNull String eventId,
             @NonNull OnSuccessListener<Event> onSuccess,
@@ -240,18 +300,13 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("events")
+        events()
                 .document(eventId)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    Event event = null;
-                    if (snapshot.exists()) {
-                        event = snapshot.toObject(Event.class);
-                        if (event != null && (event.getEventId() == null || event.getEventId().trim().isEmpty())) {
-                            event.setEventId(snapshot.getId());
-                        }
-                    }
-                    onSuccess.onSuccess(event);
+                    onSuccess.onSuccess(snapshot.exists()
+                            ? hydrate(snapshot, Event.class, new EventIdSetter())
+                            : null);
                 })
                 .addOnFailureListener(onFailure);
     }
@@ -264,6 +319,7 @@ public class FirebaseRepository {
      * @param onSuccess Callback for successful operation.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void saveEvent(
             @NonNull Event event,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -276,22 +332,17 @@ public class FirebaseRepository {
 
         // If eventId is set, use it; otherwise create a new doc id
         if (isNonEmpty(event.getEventId())) {
-            db.collection("events")
+            events()
                     .document(event.getEventId())
                     .set(event)
                     .addOnSuccessListener(onSuccess)
                     .addOnFailureListener(onFailure);
         } else {
-            db.collection("events")
-                    .add(event)
-                    .addOnSuccessListener(ref -> {
-                        // write back the generated id for consistency
-                        event.setEventId(ref.getId());
-                        // update stored doc to include eventId if desired
-                        ref.set(event)
-                                .addOnSuccessListener(onSuccess)
-                                .addOnFailureListener(onFailure);
-                    })
+            // Generate the ID client-side so we can embed it before the single write.
+            DocumentReference ref = events().document();
+            event.setEventId(ref.getId());
+            ref.set(event)
+                    .addOnSuccessListener(onSuccess)
                     .addOnFailureListener(onFailure);
         }
     }
@@ -303,6 +354,7 @@ public class FirebaseRepository {
      * @param onSuccess Callback for successful operation.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void deleteEvent(
             @NonNull String eventId,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -313,20 +365,12 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("events")
+        events()
                 .document(eventId)
                 .delete()
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
-
-    // deleteEventsByOrganizer is from Anthropic, Claude, 2026-03-14
-    // Prompted to implement functionality in FirebaseRepository.java
-    // such that events created by a given organizer (determined by UID)
-    // are deleted.
-    //
-    // This is so that, when an admin removes a user, that user's events (if any exist)
-    // are also removed from the database
 
     /**
      * Deletes all events whose organizerUid matches the given UID.
@@ -338,6 +382,7 @@ public class FirebaseRepository {
      * @param onSuccess    Callback invoked when all events have been deleted.
      * @param onFailure    Callback invoked if the query or any deletion fails.
      */
+    @Override
     public void deleteEventsByOrganizer(
             @NonNull String organizerUid,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -348,7 +393,7 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("events")
+        events()
                 .whereEqualTo("organizerUid", organizerUid)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
@@ -363,22 +408,20 @@ public class FirebaseRepository {
                     }
 
                     // Delete each event document, counting completions.
-                    int[] remaining = {docs.size()};
-                    boolean[] failed = {false};
+                    AtomicInteger remaining = new AtomicInteger(docs.size());
+                    AtomicBoolean failed = new AtomicBoolean(false);
 
                     for (QueryDocumentSnapshot doc : docs) {
                         doc.getReference()
                                 .delete()
                                 .addOnSuccessListener(unused -> {
-                                    if (failed[0]) return;
-                                    remaining[0]--;
-                                    if (remaining[0] == 0) {
+                                    if (failed.get()) return;
+                                    if (remaining.decrementAndGet() == 0) {
                                         onSuccess.onSuccess(null);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
-                                    if (!failed[0]) {
-                                        failed[0] = true;
+                                    if (failed.compareAndSet(false, true)) {
                                         onFailure.onFailure(e);
                                     }
                                 });
@@ -393,11 +436,12 @@ public class FirebaseRepository {
      * @param onSuccess Callback receiving a list of all user profiles.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void getAllUsers(
             @NonNull OnSuccessListener<List<UserProfile>> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        db.collection("users")
+        users()
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     List<UserProfile> users = new ArrayList<>();
@@ -420,6 +464,7 @@ public class FirebaseRepository {
      * @param onSuccess  Callback receiving the WaitingListEntry (null if not found).
      * @param onFailure  Callback for failed operation.
      */
+    @Override
     public void getWaitingListEntry(
             @NonNull String eventId,
             @NonNull String entrantUid,
@@ -431,9 +476,7 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("events")
-                .document(eventId)
-                .collection("waiting_list")
+        waitingList(eventId)
                 .document(entrantUid)
                 .get()
                 .addOnSuccessListener(snapshot -> {
@@ -455,6 +498,7 @@ public class FirebaseRepository {
      * @param onSuccess  Callback for successful operation.
      * @param onFailure  Callback for failed operation.
      */
+    @Override
     public void upsertWaitingListEntry(
             @NonNull String eventId,
             @NonNull String entrantUid,
@@ -467,9 +511,7 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("events")
-                .document(eventId)
-                .collection("waiting_list")
+        waitingList(eventId)
                 .document(entrantUid)
                 .set(entry)
                 .addOnSuccessListener(onSuccess)
@@ -483,6 +525,7 @@ public class FirebaseRepository {
      * @param onSuccess Callback receiving a list of all waiting list entries.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void getAllWaitingListEntries(
             @NonNull String eventId,
             @NonNull OnSuccessListener<List<WaitingListEntry>> onSuccess,
@@ -493,9 +536,7 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("events")
-                .document(eventId)
-                .collection("waiting_list")
+        waitingList(eventId)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     List<WaitingListEntry> entries = new ArrayList<>();
@@ -517,6 +558,7 @@ public class FirebaseRepository {
      * @param onSuccess  Callback for successful operation.
      * @param onFailure  Callback for failed operation.
      */
+    @Override
     public void updateWaitingListEntry(
             @NonNull String eventId,
             @NonNull String entrantUid,
@@ -524,7 +566,16 @@ public class FirebaseRepository {
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        upsertWaitingListEntry(eventId, entrantUid, entry, onSuccess, onFailure);
+        if (!isNonEmpty(eventId) || !isNonEmpty(entrantUid)) {
+            onFailure.onFailure(new IllegalArgumentException("eventId and entrantUid must not be empty."));
+            return;
+        }
+        // Use merge to avoid replacing server-added fields not present in the local object.
+        waitingList(eventId)
+                .document(entrantUid)
+                .set(entry, SetOptions.merge())
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
     }
 
     /**
@@ -535,6 +586,7 @@ public class FirebaseRepository {
      * @param onSuccess  Callback for successful operation.
      * @param onFailure  Callback for failed operation.
      */
+    @Override
     public void deleteWaitingListEntry(
             @NonNull String eventId,
             @NonNull String entrantUid,
@@ -546,16 +598,34 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("events")
-                .document(eventId)
-                .collection("waiting_list")
+        waitingList(eventId)
                 .document(entrantUid)
                 .delete()
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
+    @Override
+    public void getWaitingEntriesCount(
+            @NonNull String eventId,
+            @NonNull WaitingListStatus status,
+            @NonNull OnSuccessListener<Integer> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(eventId)) {
+            onFailure.onFailure(new IllegalArgumentException("eventId must not be empty."));
+            return;
+        }
+
+        waitingList(eventId)
+                .whereEqualTo("status", status.name())
+                .get()
+                .addOnSuccessListener(querySnapshot -> onSuccess.onSuccess(querySnapshot.size()))
+                .addOnFailureListener(onFailure);
+    }
+
 // NOTIFICATIONS SECTION:
 
+    @Override
     public void saveNotification(
             @NonNull NotificationRecord record,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -565,13 +635,14 @@ public class FirebaseRepository {
             onFailure.onFailure(new IllegalArgumentException("notificationId must not be empty."));
             return;
         }
-        db.collection("notifications")
+        notifications()
                 .document(record.getNotificationId())
                 .set(record)
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
 
+    @Override
     public void saveNotificationsBatch(
             @NonNull List<NotificationRecord> records,
             @NonNull OnSuccessListener<Void> onSuccess,
@@ -588,7 +659,7 @@ public class FirebaseRepository {
                 onFailure.onFailure(new IllegalArgumentException("All notification records must have IDs."));
                 return;
             }
-            DocumentReference ref = db.collection("notifications")
+            DocumentReference ref = notifications()
                     .document(record.getNotificationId());
             batch.set(ref, record);
         }
@@ -599,6 +670,7 @@ public class FirebaseRepository {
     }
 
     // COMMENTS SECTION:
+    @Override
     public void addComment(
             @NonNull String eventId,
             @NonNull EventComment comment,
@@ -610,10 +682,7 @@ public class FirebaseRepository {
             return;
         }
 
-        DocumentReference commentsRef = db.collection("events")
-                .document(eventId)
-                .collection("comments")
-                .document();
+        DocumentReference commentsRef = comments(eventId).document();
 
         comment.setCommentId(commentsRef.getId());
         comment.setEventId(eventId);
@@ -623,6 +692,7 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    @Override
     public void getCommentById(
             @NonNull String eventId,
             @NonNull String commentId,
@@ -634,24 +704,18 @@ public class FirebaseRepository {
             return;
         }
 
-        db.collection("events")
-                .document(eventId)
-                .collection("comments")
+        comments(eventId)
                 .document(commentId)
                 .get()
                 .addOnSuccessListener(snapshot -> {
-                    EventComment comment = null;
-                    if (snapshot.exists()) {
-                        comment = snapshot.toObject(EventComment.class);
-                        if (comment != null && !isNonEmpty(comment.getCommentId())) {
-                            comment.setCommentId(snapshot.getId());
-                        }
-                    }
-                    onSuccess.onSuccess(comment);
+                    onSuccess.onSuccess(snapshot.exists()
+                            ? hydrate(snapshot, EventComment.class, new CommentIdSetter())
+                            : null);
                 })
                 .addOnFailureListener(onFailure);
     }
 
+    @Override
     public void updateComment(
             @NonNull String eventId,
             @NonNull EventComment comment,
@@ -662,15 +726,14 @@ public class FirebaseRepository {
             onFailure.onFailure(new IllegalArgumentException("eventId and commentId must not be empty."));
             return;
         }
-        db.collection("events")
-                .document(eventId)
-                .collection("comments")
+        comments(eventId)
                 .document(comment.getCommentId())
                 .set(comment)
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
 
+    @Override
     public void getTopLevelCommentsOnce(
             @NonNull String eventId,
             @NonNull OnSuccessListener<List<EventComment>> onSuccess,
@@ -680,19 +743,14 @@ public class FirebaseRepository {
             onFailure.onFailure(new IllegalArgumentException("eventId must not be empty."));
             return;
         }
-        db.collection("events")
-                .document(eventId)
-                .collection("comments")
+        comments(eventId)
                 .whereEqualTo("parentCommentId", null)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     List<EventComment> comments = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : querySnapshot) {
-                        EventComment comment = doc.toObject(EventComment.class);
+                        EventComment comment = hydrate(doc, EventComment.class, new CommentIdSetter());
                         if (comment == null) continue;
-                        if (comment.getCommentId() == null || comment.getCommentId().trim().isEmpty()) {
-                            comment.setCommentId(doc.getId());
-                        }
                         comments.add(comment);
                     }
                     onSuccess.onSuccess(comments);
@@ -700,6 +758,62 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    @Override
+    public void getAllComments(
+            @NonNull OnSuccessListener<List<EventComment>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        // Single read using a collectionGroup query across all "comments" subcollections.
+        // Requires a Firestore collectionGroup index: Firebase Console → Firestore → Indexes →
+        // Collection group: "comments", exempt single-field indexes exemption is sufficient
+        // for an unfiltered get(); no composite index is needed.
+        db.collectionGroup(COMMENTS_COLLECTION)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<EventComment> allComments = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        EventComment comment = hydrate(doc, EventComment.class, new CommentIdSetter());
+                        if (comment != null) {
+                            allComments.add(comment);
+                        }
+                    }
+                    allComments.sort((a, b) -> Long.compare(b.getCreatedAtMillis(), a.getCreatedAtMillis()));
+                    onSuccess.onSuccess(allComments);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    @Override
+    public void setPinnedComment(
+            @NonNull String eventId,
+            @NonNull List<EventComment> previousPinned,
+            @NonNull EventComment newComment,
+            @NonNull OnSuccessListener<EventComment> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(eventId)) {
+            onFailure.onFailure(new IllegalArgumentException("eventId must not be empty."));
+            return;
+        }
+
+        DocumentReference newRef = comments(eventId).document();
+        newComment.setCommentId(newRef.getId());
+        newComment.setEventId(eventId);
+
+        WriteBatch batch = db.batch();
+        for (EventComment c : previousPinned) {
+            if (c != null && isNonEmpty(c.getCommentId())) {
+                batch.set(comments(eventId).document(c.getCommentId()), c);
+            }
+        }
+        batch.set(newRef, newComment);
+
+        batch.commit()
+                .addOnSuccessListener(unused -> onSuccess.onSuccess(newComment))
+                .addOnFailureListener(onFailure);
+    }
+
+    @Override
     @NonNull
     public ListenerRegistration subscribeComments(
             @NonNull String eventId,
@@ -707,9 +821,7 @@ public class FirebaseRepository {
             @NonNull OnSuccessListener<List<EventComment>> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        Query query = db.collection("events")
-                .document(eventId)
-                .collection("comments")
+        Query query = comments(eventId)
                 .whereEqualTo("parentCommentId", parentCommentId);
 
         return query.addSnapshotListener((snapshots, error) -> {
@@ -721,11 +833,8 @@ public class FirebaseRepository {
             List<EventComment> comments = new ArrayList<>();
             if (snapshots != null) {
                 for (QueryDocumentSnapshot doc : snapshots) {
-                    EventComment comment = doc.toObject(EventComment.class);
+                    EventComment comment = hydrate(doc, EventComment.class, new CommentIdSetter());
                     if (comment == null) continue;
-                    if (comment.getCommentId() == null || comment.getCommentId().trim().isEmpty()) {
-                        comment.setCommentId(doc.getId());
-                    }
                     comments.add(comment);
                 }
             }
@@ -734,6 +843,7 @@ public class FirebaseRepository {
         });
     }
 
+    @Override
     public void toggleCommentLike(
             @NonNull String eventId,
             @NonNull String commentId,
@@ -747,10 +857,7 @@ public class FirebaseRepository {
             return;
         }
 
-        DocumentReference commentRef = db.collection("events")
-                .document(eventId)
-                .collection("comments")
-                .document(commentId);
+        DocumentReference commentRef = comments(eventId).document(commentId);
         DocumentReference likeRef = commentRef.collection("likes").document(uid);
 
         db.runTransaction(transaction -> {
@@ -773,6 +880,7 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    @Override
     public void getLikeStatesForComments(
             @NonNull String eventId,
             @NonNull String uid,
@@ -825,6 +933,7 @@ public class FirebaseRepository {
         }
     }
 
+    @Override
     public void deleteCommentWithReplies(
             @NonNull String eventId,
             @NonNull String topLevelCommentId,
@@ -854,6 +963,7 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    @Override
     public void deleteSingleCommentWithLikes(
             @NonNull String eventId,
             @NonNull String commentId,
@@ -927,6 +1037,7 @@ public class FirebaseRepository {
         }
     }
 
+    @Override
     public void getNotificationsForUser(
             @NonNull String uid,
             @NonNull OnSuccessListener<List<NotificationRecord>> onSuccess,
@@ -936,10 +1047,49 @@ public class FirebaseRepository {
             onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
             return;
         }
-        db.collection("notifications")
+        notifications()
                 .whereEqualTo("recipientUid", uid)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<NotificationRecord> records = mapNotificationRecords(querySnapshot);
+                    sortNotificationsDescending(records);
+                    onSuccess.onSuccess(records);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    @Override
+    @NonNull
+    public ListenerRegistration subscribeNotificationsForUser(
+            @NonNull String uid,
+            @NonNull OnSuccessListener<List<NotificationRecord>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        Query query = notifications()
+                .whereEqualTo("recipientUid", uid)
+                .limit(100);
+
+        return query.addSnapshotListener((snapshots, error) -> {
+            if (error != null) {
+                onFailure.onFailure(error);
+                return;
+            }
+
+            List<NotificationRecord> records = mapNotificationRecords(snapshots);
+            sortNotificationsDescending(records);
+            onSuccess.onSuccess(records);
+        });
+    }
+
+    @Override
+    public void getAllNotifications(
+            @NonNull OnSuccessListener<List<NotificationRecord>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        notifications()
                 .orderBy("sentAtMillis",
                         com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .limit(500)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     List<NotificationRecord> records = new ArrayList<>();
@@ -951,6 +1101,25 @@ public class FirebaseRepository {
                 .addOnFailureListener(onFailure);
     }
 
+    @Override
+    public void deleteNotification(
+            @NonNull String notificationId,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(notificationId)) {
+            onFailure.onFailure(new IllegalArgumentException("notificationId must not be empty."));
+            return;
+        }
+
+        notifications()
+                .document(notificationId)
+                .delete()
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    @Override
     public void getWaitlistEntriesForUser(
             @NonNull String uid,
             @NonNull OnSuccessListener<List<WaitingListEntry>> onSuccess,
@@ -960,17 +1129,63 @@ public class FirebaseRepository {
             onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
             return;
         }
-        db.collectionGroup("waiting_list")
-                .whereEqualTo("entrantUid", uid)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    List<WaitingListEntry> entries = new ArrayList<>();
-                    for (QueryDocumentSnapshot doc : querySnapshot) {
-                        entries.add(doc.toObject(WaitingListEntry.class));
+        // Avoid collectionGroup queries here so first-run projects do not depend on
+        // manually created Firestore indexes before waiting-list reads can succeed.
+        getAllEvents(events -> {
+            if (events.isEmpty()) {
+                onSuccess.onSuccess(new ArrayList<>());
+                return;
+            }
+
+            List<WaitingListEntry> entries = new ArrayList<>();
+            AtomicInteger remaining = new AtomicInteger(events.size());
+            AtomicBoolean failed = new AtomicBoolean(false);
+
+            for (Event event : events) {
+                if (failed.get()) {
+                    return;
+                }
+
+                String eventId = event != null ? event.getEventId() : null;
+                if (!isNonEmpty(eventId)) {
+                    if (remaining.decrementAndGet() == 0 && !failed.get()) {
+                        sortWaitingListEntriesDescending(entries);
+                        onSuccess.onSuccess(entries);
                     }
-                    onSuccess.onSuccess(entries);
-                })
-                .addOnFailureListener(onFailure);
+                    continue;
+                }
+
+                waitingList(eventId)
+                        .document(uid)
+                        .get()
+                        .addOnSuccessListener(snapshot -> {
+                            if (failed.get()) {
+                                return;
+                            }
+                            if (snapshot.exists()) {
+                                WaitingListEntry entry = snapshot.toObject(WaitingListEntry.class);
+                                if (entry != null) {
+                                    if (!isNonEmpty(entry.getEventId())) {
+                                        entry.setEventId(eventId);
+                                    }
+                                    if (!isNonEmpty(entry.getEntrantUid())) {
+                                        entry.setEntrantUid(uid);
+                                    }
+                                    entries.add(entry);
+                                }
+                            }
+                            if (remaining.decrementAndGet() == 0) {
+                                sortWaitingListEntriesDescending(entries);
+                                onSuccess.onSuccess(entries);
+                            }
+                        })
+                        .addOnFailureListener(error -> {
+                            if (failed.compareAndSet(false, true)) {
+                                onFailure.onFailure(error);
+                            }
+                        });
+            }
+        }, onFailure);
     }
 
     // IMAGE ASSETS SECTION
@@ -981,6 +1196,7 @@ public class FirebaseRepository {
      * @param onSuccess Callback receiving the list of all ImageAssets.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void getEventsWithPosters(
             @NonNull OnSuccessListener<List<Event>> onSuccess,
             @NonNull OnFailureListener onFailure
@@ -996,13 +1212,101 @@ public class FirebaseRepository {
         }, onFailure);
     }
 
+    @Override
     public void removeEventPoster(
             @NonNull String eventId,
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        db.collection("events").document(eventId)
+        events().document(eventId)
                 .update("posterImageId", null)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    @Override
+    public void saveImageAsset(
+            @NonNull ImageAsset imageAsset,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(imageAsset.getOwnerUid())
+                || !isNonEmpty(imageAsset.getEventId())
+                || !isNonEmpty(imageAsset.getStoragePath())) {
+            onFailure.onFailure(new IllegalArgumentException("Invalid image asset."));
+            return;
+        }
+
+        if (isNonEmpty(imageAsset.getImageId())) {
+            images()
+                    .document(imageAsset.getImageId())
+                    .set(imageAsset)
+                    .addOnSuccessListener(onSuccess)
+                    .addOnFailureListener(onFailure);
+            return;
+        }
+
+        images()
+                .add(imageAsset)
+                .addOnSuccessListener(ref -> {
+                    imageAsset.setImageId(ref.getId());
+                    ref.set(imageAsset)
+                            .addOnSuccessListener(onSuccess)
+                            .addOnFailureListener(onFailure);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    @Override
+    public void getImageAssetForEvent(
+            @NonNull String eventId,
+            @NonNull OnSuccessListener<ImageAsset> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(eventId)) {
+            onFailure.onFailure(new IllegalArgumentException("Event ID must not be empty."));
+            return;
+        }
+
+        images()
+                .whereEqualTo("eventId", eventId)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    if (querySnapshot.isEmpty()) {
+                        onSuccess.onSuccess(null);
+                        return;
+                    }
+
+                    ImageAsset latestAsset = null;
+                    for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        ImageAsset candidate = hydrate(document, ImageAsset.class, new ImageIdSetter());
+                        if (candidate == null) {
+                            continue;
+                        }
+                        if (latestAsset == null
+                                || candidate.getUploadedAtMillis() >= latestAsset.getUploadedAtMillis()) {
+                            latestAsset = candidate;
+                        }
+                    }
+                    onSuccess.onSuccess(latestAsset);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    @Override
+    public void deleteImageAsset(
+            @NonNull String imageId,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(imageId)) {
+            onFailure.onFailure(new IllegalArgumentException("Image ID must not be empty."));
+            return;
+        }
+
+        images()
+                .document(imageId)
+                .delete()
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
@@ -1054,12 +1358,12 @@ public class FirebaseRepository {
                 null,
                 null,
                 null,
-                false,
+                0,
                 false
 
         );
 
-        db.collection("events").document("demo_event_1").set(demo)
+        events().document("demo_event_1").set(demo)
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
@@ -1072,6 +1376,7 @@ public class FirebaseRepository {
      * @param onSuccess Callback for successful operation.
      * @param onFailure Callback for failed operation.
      */
+    @Override
     public void setNotificationsMuted(
             @NonNull String uid,
             boolean muted,
@@ -1082,10 +1387,123 @@ public class FirebaseRepository {
             onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
             return;
         }
-        db.collection("users")
+        users()
                 .document(uid)
                 .update("notificationsEnabled", !muted)
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
+    }
+
+    @NonNull
+    private CollectionReference users() {
+        return db.collection(USERS_COLLECTION);
+    }
+
+    @NonNull
+    private CollectionReference events() {
+        return db.collection(EVENTS_COLLECTION);
+    }
+
+    @NonNull
+    private CollectionReference notifications() {
+        return db.collection(NOTIFICATIONS_COLLECTION);
+    }
+
+    @NonNull
+    private CollectionReference images() {
+        return db.collection(IMAGES_COLLECTION);
+    }
+
+    @NonNull
+    private CollectionReference adminDevices() {
+        return db.collection(ADMIN_DEVICES_COLLECTION);
+    }
+
+    @NonNull
+    private CollectionReference waitingList(@NonNull String eventId) {
+        return events().document(eventId).collection(WAITING_LIST_COLLECTION);
+    }
+
+    @NonNull
+    private CollectionReference comments(@NonNull String eventId) {
+        return events().document(eventId).collection(COMMENTS_COLLECTION);
+    }
+
+    @NonNull
+    private List<NotificationRecord> mapNotificationRecords(
+            @Nullable Iterable<QueryDocumentSnapshot> documents
+    ) {
+        List<NotificationRecord> records = new ArrayList<>();
+        if (documents == null) {
+            return records;
+        }
+        for (QueryDocumentSnapshot doc : documents) {
+            NotificationRecord record = doc.toObject(NotificationRecord.class);
+            if (record == null) {
+                continue;
+            }
+            if (!hasText(record.getNotificationId())) {
+                record.setNotificationId(doc.getId());
+            }
+            records.add(record);
+        }
+        return records;
+    }
+
+    private void sortNotificationsDescending(@NonNull List<NotificationRecord> records) {
+        records.sort((left, right) -> Long.compare(right.getSentAtMillis(), left.getSentAtMillis()));
+    }
+
+    private void sortWaitingListEntriesDescending(@NonNull List<WaitingListEntry> entries) {
+        entries.sort((left, right) -> Long.compare(right.getJoinedAtMillis(), left.getJoinedAtMillis()));
+    }
+
+    @Nullable
+    private <T> T hydrate(
+            @NonNull DocumentSnapshot snapshot,
+            @NonNull Class<T> type,
+            @NonNull IdSetter<T> idSetter
+    ) {
+        T value = snapshot.toObject(type);
+        if (value == null) {
+            return null;
+        }
+        idSetter.setIdIfMissing(value, snapshot.getId());
+        return value;
+    }
+
+    private interface IdSetter<T> {
+        void setIdIfMissing(@NonNull T value, @NonNull String id);
+    }
+
+    private static final class EventIdSetter implements IdSetter<Event> {
+        @Override
+        public void setIdIfMissing(@NonNull Event value, @NonNull String id) {
+            if (!hasText(value.getEventId())) {
+                value.setEventId(id);
+            }
+        }
+    }
+
+    private static final class CommentIdSetter implements IdSetter<EventComment> {
+        @Override
+        public void setIdIfMissing(@NonNull EventComment value, @NonNull String id) {
+            if (!hasText(value.getCommentId())) {
+                value.setCommentId(id);
+            }
+        }
+    }
+
+    private static final class ImageIdSetter implements IdSetter<ImageAsset> {
+        @Override
+        public void setIdIfMissing(@NonNull ImageAsset value, @NonNull String id) {
+            if (!hasText(value.getImageId())) {
+                value.setImageId(id);
+            }
+        }
+    }
+
+    private static boolean hasText(@Nullable String value) {
+        return value != null && !value.trim().isEmpty();
     }
 }

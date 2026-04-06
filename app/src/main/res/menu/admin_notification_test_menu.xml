@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_refresh_notification_sandbox"
+        android:title="Refresh sandbox" />
+    <item
+        android:id="@+id/menu_test_waiting_broadcast"
+        android:title="Broadcast to waiting entrants" />
+    <item
+        android:id="@+id/menu_test_selected_broadcast"
+        android:title="Broadcast selected update to this device" />
+    <item
+        android:id="@+id/menu_test_cancelled_broadcast"
+        android:title="Broadcast cancelled update to this device" />
+    <item
+        android:id="@+id/menu_test_draw_selected"
+        android:title="Simulate draw: this device selected" />
+    <item
+        android:id="@+id/menu_test_draw_not_selected"
+        android:title="Simulate draw: this device not selected" />
+    <item
+        android:id="@+id/menu_test_private_invite"
+        android:title="Send private event invite to this device" />
+    <item
+        android:id="@+id/menu_test_coorganizer_invite"
+        android:title="Send co-organizer invite to this device" />
+</menu>

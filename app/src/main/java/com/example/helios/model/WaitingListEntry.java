@@ -1,15 +1,10 @@
 package com.example.helios.model;
+
 /**
  * Represents one entrant's state within a single event waiting list.
  *
  * <p>Role in the application: stores lottery workflow state for waiting, invited, accepted,
- * declined, cancelled, and not-selected entrants.
- *
- * <p>Issues: allowed state transitions are not enforced in this model and are currently
- * handled elsewhere in services or UI code.
- * Alt Description:
- * Represents an entry in the waiting list for a specific event.
- * Tracks the entrant's UID, their status, and when they joined the list.
+ * declined, cancelled, and not-selected entrants. Includes geolocation tracking if applicable.
  */
 public class WaitingListEntry {
     private String eventId;
@@ -20,7 +15,8 @@ public class WaitingListEntry {
     private long respondedAtMillis;
     private long cancelledAtMillis;
     private String statusReason;
-
+    private Double joinLatitude;
+    private Double joinLongitude;
 
     /**
      * Default constructor required for Firestore deserialization.
@@ -82,40 +78,87 @@ public class WaitingListEntry {
      */
     public void setJoinedAtMillis(long joinedAtMillis) { this.joinedAtMillis = joinedAtMillis; }
 
-
+    /**
+     * @return The time the entrant was officially invited from the lottery process.
+     */
     public long getInvitedAtMillis() {
         return invitedAtMillis;
     }
+
+    /**
+     * @param l The time the entrant was officially invited.
+     */
     public void setInvitedAtMillis(long l) {
         this.invitedAtMillis = l;
     }
 
-
-
-
+    /**
+     * @return Optional text reason indicating why a status changed (e.g. system timeout).
+     */
     public String getStatusReason() {
         return statusReason;
     }
+
+    /**
+     * @param statusReason Optional text reason for the status.
+     */
     public void setStatusReason(String statusReason) {
         this.statusReason = statusReason;
     }
 
-
+    /**
+     * @return Time the entrant responded to an invitation (accepted or declined).
+     */
     public long getRespondedAtMillis() {
         return respondedAtMillis;
     }
 
+    /**
+     * @param respondedAtMillis Time the entrant responded.
+     */
     public void setRespondedAtMillis(long respondedAtMillis) {
         this.respondedAtMillis = respondedAtMillis;
     }
 
+    /**
+     * @return Time the entrant was cancelled either by themselves or an organizer.
+     */
     public long getCancelledAtMillis() {
         return cancelledAtMillis;
     }
+
+    /**
+     * @param cancelledAtMillis Time the entrant was cancelled.
+     */
     public void setCancelledAtMillis(long cancelledAtMillis) {
         this.cancelledAtMillis = cancelledAtMillis;
     }
 
+    /**
+     * @return The latitude coordinate recorded from the device when joining.
+     */
+    public Double getJoinLatitude() {
+        return joinLatitude;
+    }
 
+    /**
+     * @param joinLatitude The recorded join latitude coordinate.
+     */
+    public void setJoinLatitude(Double joinLatitude) {
+        this.joinLatitude = joinLatitude;
+    }
 
+    /**
+     * @return The longitude coordinate recorded from the device when joining.
+     */
+    public Double getJoinLongitude() {
+        return joinLongitude;
+    }
+
+    /**
+     * @param joinLongitude The recorded join longitude coordinate.
+     */
+    public void setJoinLongitude(Double joinLongitude) {
+        this.joinLongitude = joinLongitude;
+    }
 }
