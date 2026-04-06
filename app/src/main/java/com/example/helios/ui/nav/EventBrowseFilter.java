@@ -15,21 +15,21 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
-final class EventBrowseFilter {
-    enum VisibilityFilter {
+public final class EventBrowseFilter {
+    public enum VisibilityFilter {
         ALL,
         PUBLIC_ONLY,
         PRIVATE_ONLY,
         JOINED_ONLY
     }
 
-    enum AvailabilityFilter {
+    public enum AvailabilityFilter {
         ALL,
         OPEN_NOW,
         UPCOMING
     }
 
-    enum CapacityFilter {
+    public enum CapacityFilter {
         ALL,
         LIMITED_CAPACITY,
         WAITLIST_LIMITED
@@ -48,66 +48,66 @@ final class EventBrowseFilter {
     private CapacityFilter capacityFilter = CapacityFilter.ALL;
 
     @Nullable
-    Long getStartDateFilter() {
+    public Long getStartDateFilter() {
         return startDateFilter;
     }
 
     @Nullable
-    Long getEndDateFilter() {
+    public Long getEndDateFilter() {
         return endDateFilter;
     }
 
-    void setStartDateFilter(@Nullable Long startDateFilter) {
+    public void setStartDateFilter(@Nullable Long startDateFilter) {
         this.startDateFilter = startDateFilter;
     }
 
-    void setEndDateFilter(@Nullable Long endDateFilter) {
+    public void setEndDateFilter(@Nullable Long endDateFilter) {
         this.endDateFilter = endDateFilter;
     }
 
-    void clearDateRange() {
+    public void clearDateRange() {
         startDateFilter = null;
         endDateFilter = null;
     }
 
     @NonNull
-    VisibilityFilter getVisibilityFilter() {
+    public VisibilityFilter getVisibilityFilter() {
         return visibilityFilter;
     }
 
-    void setVisibilityFilter(@NonNull VisibilityFilter visibilityFilter) {
+    public void setVisibilityFilter(@NonNull VisibilityFilter visibilityFilter) {
         this.visibilityFilter = visibilityFilter;
     }
 
     @NonNull
-    AvailabilityFilter getAvailabilityFilter() {
+    public AvailabilityFilter getAvailabilityFilter() {
         return availabilityFilter;
     }
 
-    void setAvailabilityFilter(@NonNull AvailabilityFilter availabilityFilter) {
+    public void setAvailabilityFilter(@NonNull AvailabilityFilter availabilityFilter) {
         this.availabilityFilter = availabilityFilter;
     }
 
     @NonNull
-    CapacityFilter getCapacityFilter() {
+    public CapacityFilter getCapacityFilter() {
         return capacityFilter;
     }
 
-    void setCapacityFilter(@NonNull CapacityFilter capacityFilter) {
+    public void setCapacityFilter(@NonNull CapacityFilter capacityFilter) {
         this.capacityFilter = capacityFilter;
     }
 
     @NonNull
-    List<String> getSelectedInterests() {
+    public List<String> getSelectedInterests() {
         return selectedInterests;
     }
 
-    void replaceSelectedInterests(@NonNull List<String> interests) {
+    public void replaceSelectedInterests(@NonNull List<String> interests) {
         selectedInterests.clear();
         selectedInterests.addAll(interests);
     }
 
-    boolean isInterestSelected(@NonNull String interest) {
+    public boolean isInterestSelected(@NonNull String interest) {
         for (String selected : selectedInterests) {
             if (selected != null && selected.equalsIgnoreCase(interest)) {
                 return true;
@@ -116,7 +116,7 @@ final class EventBrowseFilter {
         return false;
     }
 
-    void toggleInterestSelection(@NonNull String interest, boolean shouldSelect) {
+    public void toggleInterestSelection(@NonNull String interest, boolean shouldSelect) {
         if (shouldSelect) {
             if (!isInterestSelected(interest)) {
                 selectedInterests.add(interest);
@@ -133,7 +133,7 @@ final class EventBrowseFilter {
     }
 
     @NonNull
-    List<String> collectAvailableInterests(
+    public List<String> collectAvailableInterests(
             @NonNull List<Event> events,
             @Nullable String currentUid,
             @NonNull Map<String, WaitingListStatus> currentUserEntryStatuses
@@ -156,7 +156,7 @@ final class EventBrowseFilter {
     }
 
     @NonNull
-    List<Event> collectDisplayableEvents(
+    public List<Event> collectDisplayableEvents(
             @NonNull List<Event> events,
             @Nullable String currentUid,
             @NonNull Map<String, WaitingListStatus> currentUserEntryStatuses
@@ -171,7 +171,7 @@ final class EventBrowseFilter {
     }
 
     @NonNull
-    Result apply(
+    public Result apply(
             @NonNull List<Event> allEvents,
             @Nullable String currentUid,
             @NonNull Map<String, WaitingListStatus> currentUserEntryStatuses,
@@ -222,7 +222,7 @@ final class EventBrowseFilter {
         return true;
     }
 
-    boolean isJoinedFilter() {
+    public boolean isJoinedFilter() {
         return visibilityFilter == VisibilityFilter.JOINED_ONLY;
     }
 
@@ -364,7 +364,7 @@ final class EventBrowseFilter {
         return leftTitle.compareToIgnoreCase(rightTitle);
     }
 
-    static final class Result {
+    public static final class Result {
         private final List<Event> filteredEvents;
         private final int publicCount;
         private final int privateCount;
@@ -380,15 +380,15 @@ final class EventBrowseFilter {
         }
 
         @NonNull
-        List<Event> getFilteredEvents() {
+        public List<Event> getFilteredEvents() {
             return filteredEvents;
         }
 
-        int getPublicCount() {
+        public int getPublicCount() {
             return publicCount;
         }
 
-        int getPrivateCount() {
+        public int getPrivateCount() {
             return privateCount;
         }
     }

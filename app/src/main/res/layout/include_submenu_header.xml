@@ -55,7 +55,7 @@
         android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="13sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/submenu_title_container"
         app:layout_constraintTop_toBottomOf="@id/submenu_back_button" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

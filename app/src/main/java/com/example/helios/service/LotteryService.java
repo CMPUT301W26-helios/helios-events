@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class LotteryService {
-    static final String NO_PEOPLE_IN_EVENT_MESSAGE = "There are no people in this event";
+    public static final String NO_PEOPLE_IN_EVENT_MESSAGE = "There are no people in this event";
 
     private final WaitingListRepository waitingListRepository;
     private final EventRepository eventRepository;

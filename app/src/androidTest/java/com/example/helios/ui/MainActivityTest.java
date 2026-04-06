@@ -23,30 +23,29 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 public class MainActivityTest {
 
     @Rule
-    public ActivityScenarioRule<MainActivity> activityRule =
-            new ActivityScenarioRule<>(MainActivity.class);
+    public ActivityScenarioRule<MainActivity> activityRule = new ActivityScenarioRule<>(MainActivity.class);
 
     @Test
     public void bottomNavigation_switchesToEventsFragment() {
         // Assert bottom nav exists
-        onView(withId(R.id.nav_view)).check(matches(isDisplayed()));
+        onView(withId(R.id.bottom_nav)).check(matches(isDisplayed()));
 
         // Click on Events menu item
-        onView(withId(R.id.navigation_events)).perform(click());
+        onView(withId(R.id.eventsFragment)).perform(click());
 
         // Assuming fragment container inflates the events fragment map/list
-        onView(withId(R.id.nav_host_fragment_activity_main)).check(matches(isDisplayed()));
+        onView(withId(R.id.nav_host_fragment)).check(matches(isDisplayed()));
     }
 
     @Test
     public void bottomNavigation_switchesToOrganizeFragment() {
-        onView(withId(R.id.navigation_organize)).perform(click());
-        onView(withId(R.id.nav_host_fragment_activity_main)).check(matches(isDisplayed()));
+        onView(withId(R.id.organizeFragment)).perform(click());
+        onView(withId(R.id.nav_host_fragment)).check(matches(isDisplayed()));
     }
 
     @Test
     public void bottomNavigation_switchesToProfileFragment() {
-        onView(withId(R.id.navigation_profile)).perform(click());
-        onView(withId(R.id.nav_host_fragment_activity_main)).check(matches(isDisplayed()));
+        onView(withId(R.id.profileFragment)).perform(click());
+        onView(withId(R.id.nav_host_fragment)).check(matches(isDisplayed()));
     }
 }

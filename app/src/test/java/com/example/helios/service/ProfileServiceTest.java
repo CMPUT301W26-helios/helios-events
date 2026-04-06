@@ -397,10 +397,13 @@ public class ProfileServiceTest {
     public void updateCurrentProfilePhoto_updatesPhotoUrlAndPersistsProfile() {
         AuthDeviceService auth = mock(AuthDeviceService.class);
         FirebaseRepository repository = mock(FirebaseRepository.class);
-        ProfileService service = spy(createService(auth, repository, ctx -> "inst"));
+        FirebaseUser user = mockUser("uid-photo");
+        stubSignedInUser(auth, user);
+
+        ProfileService service = createService(auth, repository, ctx -> "inst");
         Context context = mock(Context.class);
 
-        UserProfile bootstrapped = new UserProfile(
+        UserProfile existing = new UserProfile(
                 "uid-photo",
                 "Alice",
                 "alice@example.com",
@@ -411,16 +414,16 @@ public class ProfileServiceTest {
         );
 
         doAnswer(invocation -> {
-            OnSuccessListener<ProfileService.BootstrapResult> onSuccess = invocation.getArgument(1);
-            onSuccess.onSuccess(new ProfileService.BootstrapResult(bootstrapped, false));
+            OnSuccessListener<UserProfile> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(existing);
             return null;
-        }).when(service).bootstrapCurrentUser(eq(context), any(), any());
+        }).when(repository).getUser(eq("uid-photo"), any(), any());
 
         doAnswer(invocation -> {
             OnSuccessListener<Void> onSuccess = invocation.getArgument(1);
             onSuccess.onSuccess(null);
             return null;
-        }).when(repository).updateUser(eq(bootstrapped), any(), any());
+        }).when(repository).updateUser(eq(existing), any(), any());
 
         AtomicReference<UserProfile> result = new AtomicReference<>();
 
@@ -431,9 +434,9 @@ public class ProfileServiceTest {
                 e -> fail("Unexpected failure: " + e.getMessage())
         );
 
-        assertSame(bootstrapped, result.get());
-        assertEquals("https://example.com/profile.png", bootstrapped.getProfileImageUrl());
-        verify(repository).updateUser(eq(bootstrapped), any(), any());
+        assertSame(existing, result.get());
+        assertEquals("https://example.com/profile.png", existing.getProfileImageUrl());
+        verify(repository).updateUser(eq(existing), any(), any());
     }
 
     @Test

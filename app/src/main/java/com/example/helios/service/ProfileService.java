@@ -29,7 +29,7 @@ public class ProfileService {
      * Result object for the profile bootstrapping process.
      */
     @FunctionalInterface
-    interface InstallationIdSource {
+    public interface InstallationIdSource {
         String getInstallationId(@NonNull Context context);
     }
 
@@ -81,8 +81,8 @@ public class ProfileService {
         this(authDeviceService, userRepository, eventRepository, InstallationIdProvider::getInstallationId);
     }
 
-    // Package-private test seam
-    ProfileService(
+    // Visible for testing
+    public ProfileService(
             @NonNull AuthDeviceService authDeviceService,
             @NonNull UserRepository userRepository,
             @NonNull EventRepository eventRepository,

@@ -382,19 +382,11 @@ public class EntrantEventServiceTest {
             return null;
         }).when(waitingListRepository).getWaitingListEntry(eq("event-limit"), eq("entrant-limit"), any(), any());
 
-        WaitingListEntry waiting = entryWithStatus(WaitingListStatus.WAITING);
-        waiting.setEntrantUid("other-entrant");
-        waiting.setEventId("event-limit");
-
-        WaitingListEntry cancelled = entryWithStatus(WaitingListStatus.CANCELLED);
-        cancelled.setEntrantUid("former-entrant");
-        cancelled.setEventId("event-limit");
-
         doAnswer(invocation -> {
-            OnSuccessListener<List<WaitingListEntry>> onSuccess = invocation.getArgument(1);
-            onSuccess.onSuccess(Arrays.asList(waiting, cancelled));
+            OnSuccessListener<Integer> onSuccess = invocation.getArgument(2);
+            onSuccess.onSuccess(1);
             return null;
-        }).when(waitingListRepository).getAllWaitingListEntries(eq("event-limit"), any(), any());
+        }).when(waitingListRepository).getWaitingEntriesCount(eq("event-limit"), eq(WaitingListStatus.WAITING), any(), any());
 
         EntrantEventService service = new EntrantEventService(waitingListRepository, eventRepository, profileService);
         AtomicReference<Exception> failure = new AtomicReference<>();
@@ -410,7 +402,7 @@ public class EntrantEventServiceTest {
         assertEquals("The waiting list for this event is full.", failure.get().getMessage());
         verify(eventRepository).getEventById(eq("event-limit"), any(), any());
         verify(waitingListRepository).getWaitingListEntry(eq("event-limit"), eq("entrant-limit"), any(), any());
-        verify(waitingListRepository).getAllWaitingListEntries(eq("event-limit"), any(), any());
+        verify(waitingListRepository).getWaitingEntriesCount(eq("event-limit"), eq(WaitingListStatus.WAITING), any(), any());
         verify(waitingListRepository, never()).upsertWaitingListEntry(any(), any(), any(), any(), any());
     }
 
