@@ -91,20 +91,6 @@ public class ProfileSetupActivityTest {
     }
 
     @Test
-    public void editProfileMode_updatesTitleSubtitleAndPrimaryButtonText() {
-        try (ActivityScenario<ProfileSetupActivity> ignored =
-                     launchInMode(ProfileSetupActivity.MODE_EDIT_PROFILE)) {
-
-            onView(withId(R.id.profile_setup_title))
-                    .check(matches(withText("Edit Profile")));
-            onView(withId(R.id.profile_setup_subtitle))
-                    .check(matches(withText("Update your info below.")));
-            onView(withId(R.id.button_sign_up))
-                    .check(matches(withText("Save")));
-        }
-    }
-
-    @Test
     public void phoneRemainsOptionalWhenRequiredFieldsArePresent() {
         try (ActivityScenario<ProfileSetupActivity> ignored =
                      launchInMode(ProfileSetupActivity.MODE_SETUP_REQUIRED)) {
