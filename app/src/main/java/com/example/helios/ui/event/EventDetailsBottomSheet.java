@@ -387,6 +387,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
     private void updateWaitingListButton() {
         if (btnWaitingList == null || hideJoinButton) return;
+        btnWaitingList.setAlpha(1f);
 
         if (currentUserUid != null && loadedEvent != null) {
             if (loadedEvent.isPendingCoOrganizer(currentUserUid)) {
@@ -410,6 +411,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         }
 
         hideActionButtons();
+        boolean registrationClosed = isRegistrationClosed();
 
         if (currentEntry != null && currentEntry.getStatus() == WaitingListStatus.INVITED) {
             btnWaitingList.setVisibility(View.GONE);
@@ -430,6 +432,11 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                 && currentEntry != null
                 && currentEntry.getStatus() == WaitingListStatus.ACCEPTED) {
             btnWaitingList.setText("Leave Private Event");
+            return;
+        } else if (currentEntry != null
+                && currentEntry.getStatus() == WaitingListStatus.ACCEPTED
+                && registrationClosed) {
+            btnWaitingList.setText("Leave Event");
             return;
         } else if (currentEntry != null && currentEntry.getStatus() == WaitingListStatus.ACCEPTED) {
             btnWaitingList.setText("Invitation accepted");
@@ -453,6 +460,10 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
             btnWaitingList.setEnabled(false);
         } else if (isCurrentlyOnWaitingList) {
             btnWaitingList.setText("Leave Waiting List");
+        } else if (registrationClosed) {
+            btnWaitingList.setText("Registration has closed");
+            btnWaitingList.setEnabled(false);
+            btnWaitingList.setAlpha(0.65f);
         } else {
             btnWaitingList.setText("Join Waiting List");
         }
@@ -850,6 +861,12 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
             updateWaitingListButton();
             return;
         }
+        if (!isCurrentlyOnWaitingList
+                && currentEntry == null
+                && isRegistrationClosed()) {
+            updateWaitingListButton();
+            return;
+        }
         if (isCurrentlyOnWaitingList) {
             leaveWaitingList();
         } else {
@@ -882,6 +899,14 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                 && loadedEvent != null
                 && (currentUserUid.equals(loadedEvent.getOrganizerUid())
                 || loadedEvent.isCoOrganizer(currentUserUid));
+    }
+
+    private boolean isRegistrationClosed() {
+        if (loadedEvent == null) {
+            return false;
+        }
+        long closesMillis = loadedEvent.getRegistrationClosesMillis();
+        return closesMillis > 0 && System.currentTimeMillis() >= closesMillis;
     }
 
     @Nullable
