@@ -11,14 +11,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import java.util.List;
 
 /**
- * Service wrapper for event-related repository operations.
- *
- * Role: thin service layer over the repository for event CRUD actions.
- * Issues: currently adds little business logic beyond delegation.
- */
-/**
- * Service class that provides business logic for managing events.
- * It interacts with the {@link EventRepository} to perform CRUD operations on events.
+ * Service for event CRUD operations, delegating to {@link EventRepository}.
  */
 public class EventService {
 

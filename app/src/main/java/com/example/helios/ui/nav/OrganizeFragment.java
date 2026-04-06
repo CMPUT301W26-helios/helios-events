@@ -6,9 +6,9 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -25,26 +25,22 @@ import com.example.helios.service.WaitingListService;
 import com.example.helios.ui.EventAdapter;
 import com.example.helios.ui.common.EventNavArgs;
 import com.example.helios.ui.common.HeliosText;
+import com.example.helios.ui.common.HeliosUi;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Fragment that allows organizers to view and manage their events.
- * It separates events into current and past categories and provides search functionality.
- */
 public class OrganizeFragment extends Fragment {
 
     private EventService eventService;
     private ProfileService profileService;
     private WaitingListService waitingListService;
 
-    private final List<com.example.helios.model.Event> allOrganizerEvents = new ArrayList<>();
-    private final List<com.example.helios.model.Event> currentEvents = new ArrayList<>();
-    private final List<com.example.helios.model.Event> pastEvents = new ArrayList<>();
+    private final List<Event> allOrganizerEvents = new ArrayList<>();
+    private final List<Event> currentEvents = new ArrayList<>();
+    private final List<Event> pastEvents = new ArrayList<>();
 
     private EventAdapter currentAdapter;
     private EventAdapter pastAdapter;
@@ -56,9 +52,13 @@ public class OrganizeFragment extends Fragment {
     private TextView pastEmptyText;
     private Button createEventButton;
 
-    /**
-     * Default constructor for OrganizeFragment.
-     */
+    private View cardCurrentEvents;
+    private View cardPastEvents;
+    private ImageView ivCurrentEventsIcon;
+    private ImageView ivPastEventsIcon;
+    private boolean currentEventsExpanded = true;
+    private boolean pastEventsExpanded = true;
+
     public OrganizeFragment() {
         super(R.layout.fragment_organize);
     }
@@ -114,29 +114,47 @@ public class OrganizeFragment extends Fragment {
             rvPast.setAdapter(pastAdapter);
         }
 
+        cardCurrentEvents = view.findViewById(R.id.card_current_events);
+        cardPastEvents = view.findViewById(R.id.card_past_events);
+        ivCurrentEventsIcon = view.findViewById(R.id.iv_current_events_icon);
+        ivPastEventsIcon = view.findViewById(R.id.iv_past_events_icon);
+
+        LinearLayout llCurrentHeader = view.findViewById(R.id.ll_current_events_header);
+        if (llCurrentHeader != null) {
+            llCurrentHeader.setOnClickListener(v -> toggleSection(true));
+        }
+        LinearLayout llPastHeader = view.findViewById(R.id.ll_past_events_header);
+        if (llPastHeader != null) {
+            llPastHeader.setOnClickListener(v -> toggleSection(false));
+        }
+
         if (searchEditText != null) {
             searchEditText.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
                     applyOrganizerFilter(s == null ? "" : s.toString());
                 }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                }
+                @Override public void afterTextChanged(Editable s) {}
             });
         }
 
         loadOrganizerEvents();
     }
 
-    /**
-     * Loads events created by the current organizer from {@link EventService}.
-     */
+    private void toggleSection(boolean isCurrent) {
+        if (isCurrent) {
+            currentEventsExpanded = !currentEventsExpanded;
+            if (cardCurrentEvents != null) HeliosUi.setVisible(cardCurrentEvents, currentEventsExpanded);
+            if (ivCurrentEventsIcon != null) ivCurrentEventsIcon.setImageResource(
+                    currentEventsExpanded ? R.drawable.ic_expand_less : R.drawable.ic_expand_more);
+        } else {
+            pastEventsExpanded = !pastEventsExpanded;
+            if (cardPastEvents != null) HeliosUi.setVisible(cardPastEvents, pastEventsExpanded);
+            if (ivPastEventsIcon != null) ivPastEventsIcon.setImageResource(
+                    pastEventsExpanded ? R.drawable.ic_expand_less : R.drawable.ic_expand_more);
+        }
+    }
+
     private void loadOrganizerEvents() {
         profileService.ensureSignedIn(firebaseUser -> {
             organizerUid = firebaseUser.getUid();
@@ -158,9 +176,7 @@ public class OrganizeFragment extends Fragment {
                         pastAdapter.replaceEvents(pastEvents);
                     }
                     updateEmptyStates();
-                    Toast.makeText(requireContext(),
-                            "Organizer access is restricted for this profile.",
-                            Toast.LENGTH_LONG).show();
+                    HeliosUi.toastLong(this, "Organizer access is restricted for this profile.");
                     return;
                 }
 
@@ -175,7 +191,7 @@ public class OrganizeFragment extends Fragment {
                     if (!isAdded()) return;
 
                     allOrganizerEvents.clear();
-                    for (com.example.helios.model.Event e : events) {
+                    for (Event e : events) {
                         if (isManagedByCurrentOrganizer(e)) {
                             allOrganizerEvents.add(e);
                         }
@@ -189,37 +205,26 @@ public class OrganizeFragment extends Fragment {
 
                 }, error -> {
                     if (!isAdded()) return;
-                    Toast.makeText(requireContext(),
-                            "Failed to load organizer events: " + error.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                    HeliosUi.toastLong(this, "Failed to load organizer events: " + error.getMessage());
                 });
             }, error -> {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(),
-                        "Failed to load organizer profile: " + error.getMessage(),
-                        Toast.LENGTH_LONG).show();
+                HeliosUi.toastLong(this, "Failed to load organizer profile: " + error.getMessage());
             });
 
         }, error -> {
             if (!isAdded()) return;
-            Toast.makeText(requireContext(),
-                    "Auth failed: " + error.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            HeliosUi.toastLong(this, "Auth failed: " + error.getMessage());
         });
     }
 
-    private boolean isManagedByCurrentOrganizer(@NonNull com.example.helios.model.Event event) {
+    private boolean isManagedByCurrentOrganizer(@NonNull Event event) {
         return organizerUid != null
                 && (organizerUid.equals(event.getOrganizerUid())
                 || event.isCoOrganizer(organizerUid)
                 || event.isPendingCoOrganizer(organizerUid));
     }
 
-    /**
-     * Filters the organizer's events based on a search query and categorizes them into current and past events.
-     *
-     * @param query The search query string.
-     */
     private void applyOrganizerFilter(@NonNull String query) {
         currentEvents.clear();
         pastEvents.clear();
@@ -227,7 +232,7 @@ public class OrganizeFragment extends Fragment {
         String normalizedQuery = query.trim().toLowerCase(Locale.CANADA);
         long now = System.currentTimeMillis();
 
-        for (com.example.helios.model.Event event : allOrganizerEvents) {
+        for (Event event : allOrganizerEvents) {
             if (!matchesQuery(event, normalizedQuery)) {
                 continue;
             }
@@ -258,22 +263,15 @@ public class OrganizeFragment extends Fragment {
         updateEmptyStates();
     }
 
-    /**
-     * Checks if an event matches the search query.
-     *
-     * @param event The event to check.
-     * @param query The normalized search query.
-     * @return True if the event matches the query, false otherwise.
-     */
-    private boolean matchesQuery(com.example.helios.model.Event event, @NonNull String query) {
+    private boolean matchesQuery(Event event, @NonNull String query) {
         if (query.isEmpty()) {
             return true;
         }
 
-        String title = safeLower(event.getTitle());
-        String description = safeLower(event.getDescription());
-        String location = safeLower(event.getLocationName());
-        String address = safeLower(event.getAddress());
+        String title = HeliosText.safeLower(event.getTitle());
+        String description = HeliosText.safeLower(event.getDescription());
+        String location = HeliosText.safeLower(event.getLocationName());
+        String address = HeliosText.safeLower(event.getAddress());
 
         return title.contains(query)
                 || description.contains(query)
@@ -282,82 +280,46 @@ public class OrganizeFragment extends Fragment {
     }
 
     private void sortOrganizerEvents(
-            @NonNull List<com.example.helios.model.Event> events,
+            @NonNull List<Event> events,
             boolean prioritizePendingInvites
     ) {
-        Collections.sort(events, new Comparator<com.example.helios.model.Event>() {
-            @Override
-            public int compare(com.example.helios.model.Event left, com.example.helios.model.Event right) {
-                if (prioritizePendingInvites) {
-                    int inviteComparison = Boolean.compare(
-                            !isPendingInvite(left),
-                            !isPendingInvite(right)
-                    );
-                    if (inviteComparison != 0) {
-                        return inviteComparison;
-                    }
-                }
-
-                long leftStart = left.getStartTimeMillis();
-                long rightStart = right.getStartTimeMillis();
-                if (leftStart <= 0 && rightStart <= 0) {
-                    return compareTitles(left, right);
-                }
-                if (leftStart <= 0) {
-                    return 1;
-                }
-                if (rightStart <= 0) {
-                    return -1;
-                }
-
-                int startComparison = Long.compare(leftStart, rightStart);
-                if (startComparison != 0) {
-                    return startComparison;
-                }
-                return compareTitles(left, right);
+        Collections.sort(events, (left, right) -> {
+            if (prioritizePendingInvites) {
+                int inviteComparison = Boolean.compare(!isPendingInvite(left), !isPendingInvite(right));
+                if (inviteComparison != 0) return inviteComparison;
             }
+            long leftStart = left.getStartTimeMillis();
+            long rightStart = right.getStartTimeMillis();
+            if (leftStart <= 0 && rightStart <= 0) return compareTitles(left, right);
+            if (leftStart <= 0) return 1;
+            if (rightStart <= 0) return -1;
+            int startComparison = Long.compare(leftStart, rightStart);
+            return startComparison != 0 ? startComparison : compareTitles(left, right);
         });
     }
 
-    private boolean isPendingInvite(@NonNull com.example.helios.model.Event event) {
+    private boolean isPendingInvite(@NonNull Event event) {
         return organizerUid != null && event.isPendingCoOrganizer(organizerUid);
     }
 
-    private int compareTitles(
-            @NonNull com.example.helios.model.Event left,
-            @NonNull com.example.helios.model.Event right
-    ) {
+    private int compareTitles(@NonNull Event left, @NonNull Event right) {
         String leftTitle = left.getTitle() == null ? "" : left.getTitle().trim();
         String rightTitle = right.getTitle() == null ? "" : right.getTitle().trim();
         return leftTitle.compareToIgnoreCase(rightTitle);
     }
 
-    /**
-     * Safely converts a string to lowercase.
-     *
-     * @param value The string to convert.
-     * @return The lowercase string, or an empty string if the input was null.
-     */
-    private String safeLower(String value) {
-        return HeliosText.safeLower(value);
-    }
-
-    /**
-     * Updates the visibility of the "empty" text views based on whether the event lists are empty.
-     */
     private void updateEmptyStates() {
         if (currentEmptyText != null) {
-            currentEmptyText.setVisibility(currentEvents.isEmpty() ? View.VISIBLE : View.GONE);
+            HeliosUi.setVisible(currentEmptyText, currentEvents.isEmpty());
         }
         if (pastEmptyText != null) {
-            pastEmptyText.setVisibility(pastEvents.isEmpty() ? View.VISIBLE : View.GONE);
+            HeliosUi.setVisible(pastEmptyText, pastEvents.isEmpty());
         }
     }
 
     private void openManagedEvent(@NonNull Event event) {
         if (event.getEventId() == null || event.getEventId().trim().isEmpty()) {
-            Toast.makeText(requireContext(),
-                    "Missing event id.", Toast.LENGTH_SHORT).show();
+            HeliosUi.toast(this, "Missing event id.");
             return;
         }
         NavHostFragment.findNavController(this)
@@ -369,8 +331,7 @@ public class OrganizeFragment extends Fragment {
 
         List<String> pending = event.getPendingCoOrganizerUids();
         if (pending == null || !pending.remove(organizerUid)) {
-            Toast.makeText(requireContext(),
-                    "Invite no longer exists.", Toast.LENGTH_SHORT).show();
+            HeliosUi.toast(this, "Invite no longer exists.");
             loadOrganizerEvents();
             return;
         }
@@ -388,21 +349,16 @@ public class OrganizeFragment extends Fragment {
             if (!isAdded()) return;
             waitingListService.removeEntry(event.getEventId(), organizerUid, unused2 -> {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(),
-                        "Co-organizer invite accepted!", Toast.LENGTH_SHORT).show();
+                HeliosUi.toast(this, "Co-organizer invite accepted!");
                 loadOrganizerEvents();
             }, error -> {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(),
-                        "Accepted, but could not remove waiting list entry: " + error.getMessage(),
-                        Toast.LENGTH_LONG).show();
+                HeliosUi.toastLong(this, "Accepted, but could not remove waiting list entry: " + error.getMessage());
                 loadOrganizerEvents();
             });
         }, error -> {
             if (!isAdded()) return;
-            Toast.makeText(requireContext(),
-                    "Failed to accept invite: " + error.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            HeliosUi.toastLong(this, "Failed to accept invite: " + error.getMessage());
         });
     }
 
@@ -411,8 +367,7 @@ public class OrganizeFragment extends Fragment {
 
         List<String> pending = event.getPendingCoOrganizerUids();
         if (pending == null || !pending.remove(organizerUid)) {
-            Toast.makeText(requireContext(),
-                    "Invite no longer exists.", Toast.LENGTH_SHORT).show();
+            HeliosUi.toast(this, "Invite no longer exists.");
             loadOrganizerEvents();
             return;
         }
@@ -420,14 +375,11 @@ public class OrganizeFragment extends Fragment {
         event.setPendingCoOrganizerUids(pending);
         eventService.saveEvent(event, unused -> {
             if (!isAdded()) return;
-            Toast.makeText(requireContext(),
-                    "Co-organizer invite declined.", Toast.LENGTH_SHORT).show();
+            HeliosUi.toast(this, "Co-organizer invite declined.");
             loadOrganizerEvents();
         }, error -> {
             if (!isAdded()) return;
-            Toast.makeText(requireContext(),
-                    "Failed to decline invite: " + error.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            HeliosUi.toastLong(this, "Failed to decline invite: " + error.getMessage());
         });
     }
 }

@@ -3,8 +3,6 @@ package com.example.helios.ui.nav;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -18,6 +16,7 @@ import com.example.helios.model.NotificationRecord;
 import com.example.helios.service.ProfileService;
 import com.example.helios.ui.MainActivity;
 import com.example.helios.ui.NotificationAdapter;
+import com.example.helios.ui.common.HeliosUi;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,13 +72,12 @@ public class NotificationsFragment extends Fragment {
                 tvNoNotifications.setVisibility(
                         notifications.isEmpty() ? View.VISIBLE : View.GONE);
             }, e -> {
-                if (!isAdded() || getContext() == null) return;
-                Toast.makeText(getContext(),
-                        "Failed to load notifications.", Toast.LENGTH_SHORT).show();
+                if (!isAdded()) return;
+                HeliosUi.toast(this, "Failed to load notifications.");
             });
         }, e -> {
-            if (!isAdded() || getContext() == null) return;
-            Toast.makeText(getContext(), "Not signed in.", Toast.LENGTH_SHORT).show();
+            if (!isAdded()) return;
+            HeliosUi.toast(this, "Not signed in.");
         });
     }
 

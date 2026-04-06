@@ -6,11 +6,10 @@ import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -282,7 +281,7 @@ public class AdminFragment extends Fragment {
 
     private void setupImageAdapter() {
         imageAdapter = new AdminImageAdapter(displayedImages, image ->
-                new AlertDialog.Builder(requireContext())
+                new MaterialAlertDialogBuilder(requireContext())
                         .setTitle("Delete Image")
                         .setMessage("Permanently remove this image? This cannot be undone.")
                         .setPositiveButton("Delete", (dialog, which) -> deleteImage(image))
@@ -335,21 +334,21 @@ public class AdminFragment extends Fragment {
         updateTabSelection(btnTabComments, currentTab == Tab.COMMENTS);
         updateTabSelection(btnTabGeo, currentTab == Tab.GEO);
 
-        rvUsers.setVisibility(currentTab == Tab.USERS ? View.VISIBLE : View.GONE);
-        rvOrganizers.setVisibility(currentTab == Tab.ORGANIZERS ? View.VISIBLE : View.GONE);
-        rvEvents.setVisibility(currentTab == Tab.EVENTS ? View.VISIBLE : View.GONE);
-        rvImages.setVisibility(currentTab == Tab.IMAGES ? View.VISIBLE : View.GONE);
-        rvNotifications.setVisibility(currentTab == Tab.NOTIFICATIONS ? View.VISIBLE : View.GONE);
-        rvComments.setVisibility(currentTab == Tab.COMMENTS ? View.VISIBLE : View.GONE);
-        layoutGeoTab.setVisibility(currentTab == Tab.GEO ? View.VISIBLE : View.GONE);
-        layoutNotificationsTab.setVisibility(currentTab == Tab.NOTIFICATIONS ? View.VISIBLE : View.GONE);
+        HeliosUi.setVisible(rvUsers, currentTab == Tab.USERS);
+        HeliosUi.setVisible(rvOrganizers, currentTab == Tab.ORGANIZERS);
+        HeliosUi.setVisible(rvEvents, currentTab == Tab.EVENTS);
+        HeliosUi.setVisible(rvImages, currentTab == Tab.IMAGES);
+        HeliosUi.setVisible(rvNotifications, currentTab == Tab.NOTIFICATIONS);
+        HeliosUi.setVisible(rvComments, currentTab == Tab.COMMENTS);
+        HeliosUi.setVisible(layoutGeoTab, currentTab == Tab.GEO);
+        HeliosUi.setVisible(layoutNotificationsTab, currentTab == Tab.NOTIFICATIONS);
 
-        tvNoUsers.setVisibility(currentTab == Tab.USERS && displayedUsers.isEmpty() ? View.VISIBLE : View.GONE);
-        tvNoOrganizers.setVisibility(currentTab == Tab.ORGANIZERS && displayedOrganizers.isEmpty() ? View.VISIBLE : View.GONE);
-        tvNoEvents.setVisibility(currentTab == Tab.EVENTS && displayedEvents.isEmpty() ? View.VISIBLE : View.GONE);
-        tvNoImages.setVisibility(currentTab == Tab.IMAGES && displayedImages.isEmpty() ? View.VISIBLE : View.GONE);
-        tvNoNotifications.setVisibility(currentTab == Tab.NOTIFICATIONS && displayedNotifications.isEmpty() ? View.VISIBLE : View.GONE);
-        tvNoComments.setVisibility(currentTab == Tab.COMMENTS && displayedComments.isEmpty() ? View.VISIBLE : View.GONE);
+        HeliosUi.setVisible(tvNoUsers, currentTab == Tab.USERS && displayedUsers.isEmpty());
+        HeliosUi.setVisible(tvNoOrganizers, currentTab == Tab.ORGANIZERS && displayedOrganizers.isEmpty());
+        HeliosUi.setVisible(tvNoEvents, currentTab == Tab.EVENTS && displayedEvents.isEmpty());
+        HeliosUi.setVisible(tvNoImages, currentTab == Tab.IMAGES && displayedImages.isEmpty());
+        HeliosUi.setVisible(tvNoNotifications, currentTab == Tab.NOTIFICATIONS && displayedNotifications.isEmpty());
+        HeliosUi.setVisible(tvNoComments, currentTab == Tab.COMMENTS && displayedComments.isEmpty());
     }
 
     private void updateTabSelection(TextView tab, boolean selected) {
@@ -357,12 +356,12 @@ public class AdminFragment extends Fragment {
     }
 
     private void updateEmptyStates() {
-        tvNoUsers.setVisibility(rvUsers.getVisibility() == View.VISIBLE && displayedUsers.isEmpty() ? View.VISIBLE : View.GONE);
-        tvNoOrganizers.setVisibility(rvOrganizers.getVisibility() == View.VISIBLE && displayedOrganizers.isEmpty() ? View.VISIBLE : View.GONE);
-        tvNoEvents.setVisibility(rvEvents.getVisibility() == View.VISIBLE && displayedEvents.isEmpty() ? View.VISIBLE : View.GONE);
-        tvNoImages.setVisibility(rvImages.getVisibility() == View.VISIBLE && displayedImages.isEmpty() ? View.VISIBLE : View.GONE);
-        tvNoNotifications.setVisibility(rvNotifications.getVisibility() == View.VISIBLE && displayedNotifications.isEmpty() ? View.VISIBLE : View.GONE);
-        tvNoComments.setVisibility(rvComments.getVisibility() == View.VISIBLE && displayedComments.isEmpty() ? View.VISIBLE : View.GONE);
+        HeliosUi.setVisible(tvNoUsers, rvUsers.getVisibility() == View.VISIBLE && displayedUsers.isEmpty());
+        HeliosUi.setVisible(tvNoOrganizers, rvOrganizers.getVisibility() == View.VISIBLE && displayedOrganizers.isEmpty());
+        HeliosUi.setVisible(tvNoEvents, rvEvents.getVisibility() == View.VISIBLE && displayedEvents.isEmpty());
+        HeliosUi.setVisible(tvNoImages, rvImages.getVisibility() == View.VISIBLE && displayedImages.isEmpty());
+        HeliosUi.setVisible(tvNoNotifications, rvNotifications.getVisibility() == View.VISIBLE && displayedNotifications.isEmpty());
+        HeliosUi.setVisible(tvNoComments, rvComments.getVisibility() == View.VISIBLE && displayedComments.isEmpty());
     }
 
     private void loadEvents() {
@@ -541,7 +540,7 @@ public class AdminFragment extends Fragment {
         String message = "Remove this comment from "
                 + "\"" + nonEmptyOr(eventTitle, "the event") + "\"?"
                 + "\n\n" + nonEmptyOr(comment.getBody(), "(empty comment)");
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Delete Comment")
                 .setMessage(message)
                 .setPositiveButton("Delete", (dialog, which) -> deleteComment(comment))
@@ -594,7 +593,7 @@ public class AdminFragment extends Fragment {
             return;
         }
 
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Delete Notification Log Entry")
                 .setMessage("Remove \"" + nonEmptyOr(record.getTitle(), "this notification") + "\" from the audit log?")
                 .setPositiveButton("Delete", (dialog, which) -> deleteNotification(record))
@@ -622,7 +621,7 @@ public class AdminFragment extends Fragment {
         if (layoutGeolocationLabToggle != null) {
             layoutGeolocationLabToggle.setOnClickListener(v -> {
                 boolean isVisible = layoutGeolocationLabContent.getVisibility() == View.VISIBLE;
-                layoutGeolocationLabContent.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                HeliosUi.setVisible(layoutGeolocationLabContent, !isVisible);
                 tvGeolocationLabToggleState.setText(isVisible ? "Show" : "Hide");
             });
         }
@@ -638,7 +637,7 @@ public class AdminFragment extends Fragment {
         if (layoutNotificationLabToggle != null) {
             layoutNotificationLabToggle.setOnClickListener(v -> {
                 boolean isVisible = layoutNotificationLabContent.getVisibility() == View.VISIBLE;
-                layoutNotificationLabContent.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                HeliosUi.setVisible(layoutNotificationLabContent, !isVisible);
                 tvNotificationLabToggleState.setText(isVisible ? "Show" : "Hide");
             });
         }
@@ -651,7 +650,7 @@ public class AdminFragment extends Fragment {
     }
 
     private void onEventDelete(@NonNull Event event) {
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Delete Event")
                 .setMessage("Are you sure you want to delete this event and all its data?")
                 .setPositiveButton("Delete", (dialog, which) -> deleteEvent(event))
@@ -660,7 +659,7 @@ public class AdminFragment extends Fragment {
     }
 
     private void onUserDelete(@NonNull UserProfile user) {
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Delete User")
                 .setMessage("Are you sure you want to delete this user and all their organized events?")
                 .setPositiveButton("Delete", (dialog, which) -> deleteUser(user))
@@ -992,7 +991,7 @@ public class AdminFragment extends Fragment {
         if (tvNoImages == null) {
             return;
         }
-        tvNoImages.setVisibility(imagesVisible && displayedImages.isEmpty() ? View.VISIBLE : View.GONE);
+        HeliosUi.setVisible(tvNoImages, imagesVisible && displayedImages.isEmpty());
     }
 
     private void updateNoCommentsState() {
@@ -1003,20 +1002,20 @@ public class AdminFragment extends Fragment {
         if (tvNoComments == null) {
             return;
         }
-        tvNoComments.setVisibility(commentsVisible && displayedComments.isEmpty() ? View.VISIBLE : View.GONE);
+        HeliosUi.setVisible(tvNoComments, commentsVisible && displayedComments.isEmpty());
     }
 
     private void updateNoNotificationsState(boolean notificationsVisible) {
         if (tvNoNotifications == null) {
             return;
         }
-        tvNoNotifications.setVisibility(notificationsVisible && displayedNotifications.isEmpty() ? View.VISIBLE : View.GONE);
+        HeliosUi.setVisible(tvNoNotifications, notificationsVisible && displayedNotifications.isEmpty());
     }
 
     private void showOrganizerInfo(@NonNull Event event) {
         String organizerUid = event.getOrganizerUid();
         if (!isNonEmpty(organizerUid)) {
-            new AlertDialog.Builder(requireContext())
+            new MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Organizer Info")
                     .setMessage("This event has no organizer on record.")
                     .setPositiveButton("OK", null)
@@ -1032,7 +1031,7 @@ public class AdminFragment extends Fragment {
             String email = profile != null && profile.getEmail() != null ? profile.getEmail() : "(not set)";
             String role = profile != null && profile.getRole() != null ? profile.getRole() : "user";
 
-            new AlertDialog.Builder(requireContext())
+            new MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Organizer - " + nonEmptyOr(event.getTitle(), "Untitled Event"))
                     .setMessage("Name: " + name + "\nEmail: " + email + "\nRole: " + role)
                     .setPositiveButton("OK", null)
@@ -1062,7 +1061,7 @@ public class AdminFragment extends Fragment {
         String displayName = user.getName() != null ? user.getName() : "(no name)";
 
         if (userEvents.isEmpty()) {
-            new AlertDialog.Builder(requireContext())
+            new MaterialAlertDialogBuilder(requireContext())
                     .setTitle("Events by " + displayName)
                     .setMessage("This user has not created any events.")
                     .setPositiveButton("OK", null)
@@ -1087,7 +1086,7 @@ public class AdminFragment extends Fragment {
             }
         }
 
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Events by " + displayName + " (" + userEvents.size() + ")")
                 .setMessage(builder.toString())
                 .setPositiveButton("OK", null)
@@ -1102,7 +1101,7 @@ public class AdminFragment extends Fragment {
     private void confirmRevokeOrganizerAccess(@NonNull UserProfile user, int userEventCount) {
         String displayName = user.getName() != null ? user.getName() : "(no name)";
         boolean restoreAccess = user.isOrganizerAccessRevoked();
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle((restoreAccess ? "Restore" : "Restrict") + " organizer access?")
                 .setMessage(restoreAccess
                         ? displayName + " will regain access to organizer features. Existing events will remain unchanged."

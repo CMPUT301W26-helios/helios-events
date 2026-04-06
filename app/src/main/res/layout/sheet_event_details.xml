@@ -366,6 +366,48 @@
             android:layout_marginTop="12dp"
             app:singleLine="false" />
 
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_geofence_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:visibility="gone"
+            app:cardBackgroundColor="?attr/colorSecondaryContainer"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Location Required"
+                    android:textColor="?attr/colorOnSecondaryContainer"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_geofence_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="?attr/colorOnSecondaryContainer"
+                    android:textSize="13sp"
+                    tools:text="You must be within 500 m of the event to join." />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_view_event_area"
+                    style="@style/Widget.Helios.Button.Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="View event area on map" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_primary_action"
             style="@style/Widget.Helios.Button.Primary"

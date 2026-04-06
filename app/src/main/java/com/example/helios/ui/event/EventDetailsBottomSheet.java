@@ -2,7 +2,10 @@ package com.example.helios.ui.event;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.content.res.ColorStateList;
+import android.net.Uri;
 import android.os.Bundle;
 import android.transition.TransitionManager;
 import android.util.TypedValue;
@@ -17,6 +20,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -362,6 +366,62 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                 ivPoster.setImageResource(R.drawable.placeholder_event);
             }
         }
+
+        bindGeofenceCard(event);
+    }
+
+    private void bindGeofenceCard(@NonNull Event event) {
+        View card = getView() == null ? null : getView().findViewById(R.id.card_geofence_info);
+        if (card == null) return;
+
+        if (!event.isGeolocationRequired()) {
+            card.setVisibility(View.GONE);
+            return;
+        }
+
+        card.setVisibility(View.VISIBLE);
+        TextView tvInfo = getView().findViewById(R.id.tv_geofence_info);
+        if (tvInfo != null) {
+            String geofenceSummary = EventUiFormatter.getGeofenceSummary(event);
+            if (geofenceSummary != null) {
+                tvInfo.setText("Your location is captured when joining. You must be within the "
+                        + geofenceSummary.toLowerCase() + " to register.");
+            } else {
+                tvInfo.setText("Your location will be captured when you join this event.");
+            }
+        }
+
+        View mapBtn = getView().findViewById(R.id.button_view_event_area);
+        if (mapBtn != null) {
+            boolean hasCenter = event.hasGeofence() && event.getGeofenceCenter() != null;
+            mapBtn.setVisibility(hasCenter ? View.VISIBLE : View.GONE);
+            if (hasCenter) {
+                mapBtn.setOnClickListener(v -> openEventAreaInMaps(event));
+            }
+        }
+    }
+
+    private void openEventAreaInMaps(@NonNull Event event) {
+        if (!isAdded() || event.getGeofenceCenter() == null) return;
+        double lat = event.getGeofenceCenter().getLatitude();
+        double lng = event.getGeofenceCenter().getLongitude();
+        String label = event.getLocationName() != null && !event.getLocationName().trim().isEmpty()
+                ? event.getLocationName() : "Event Location";
+
+        Uri geoUri = Uri.parse("geo:" + lat + "," + lng
+                + "?q=" + lat + "," + lng + "(" + Uri.encode(label) + ")");
+        Intent intent = new Intent(Intent.ACTION_VIEW, geoUri);
+        intent.setPackage("com.google.android.apps.maps");
+        if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
+            startActivity(intent);
+            return;
+        }
+        intent.setPackage(null);
+        try {
+            startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            toast("No maps app available.");
+        }
     }
 
     private void refreshWaitingListState() {
@@ -639,7 +699,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void showJoinWaitingListDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        AlertDialog.Builder builder = new MaterialAlertDialogBuilder(requireContext());
 
         builder.setView(R.layout.dialog_waiting_list_confirm)
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
@@ -791,7 +851,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         if (!isAdded()) {
             return;
         }
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Location Required")
                 .setMessage(buildLocationRequiredMessage(baseMessage))
                 .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())

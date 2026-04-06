@@ -9,8 +9,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -21,6 +19,7 @@ import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.service.EventService;
+import com.example.helios.ui.common.HeliosUi;
 import com.example.helios.service.WaitingListService;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -503,9 +502,7 @@ public class EntrantMapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void toast(@NonNull String message) {
-        if (isAdded()) {
-            Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
-        }
+        HeliosUi.toast(this, message);
     }
 
     private static final class MarkerPoint {

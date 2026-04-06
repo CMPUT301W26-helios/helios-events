@@ -7,7 +7,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -223,7 +223,7 @@ final class EventCommentsSection {
         boolean canPin = organizerUid != null
                 && currentUserUid != null
                 && organizerUid.equals(currentUserUid);
-        pinCommentCheckbox.setVisibility(canPin ? View.VISIBLE : View.GONE);
+        HeliosUi.setVisible(pinCommentCheckbox, canPin);
         pinCommentCheckbox.setEnabled(canPin);
     }
 
@@ -315,7 +315,7 @@ final class EventCommentsSection {
     }
 
     private void showDeleteCommentDialog(@NonNull EventComment comment) {
-        new AlertDialog.Builder(fragment.requireContext())
+        new MaterialAlertDialogBuilder(fragment.requireContext())
                 .setTitle("Delete comment")
                 .setMessage("Delete this comment permanently?")
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())

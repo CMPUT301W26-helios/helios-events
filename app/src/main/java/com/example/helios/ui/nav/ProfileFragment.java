@@ -1,5 +1,6 @@
 package com.example.helios.ui.nav;
 
+import android.app.Activity;
 import android.content.res.ColorStateList;
 import android.content.Context;
 import android.content.Intent;
@@ -8,15 +9,15 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.IntentSenderRequest;
 import androidx.activity.result.PickVisualMediaRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
@@ -41,8 +42,14 @@ import com.example.helios.ui.LauncherActivity;
 import com.example.helios.ui.ProfileSetupActivity;
 import com.example.helios.ui.common.HeliosChipFactory;
 import com.example.helios.ui.common.HeliosImageUploader;
+import com.example.helios.ui.common.HeliosLocation;
+import com.example.helios.ui.common.HeliosUi;
 import com.example.helios.ui.event.EventDetailsBottomSheet;
 import com.example.helios.ui.event.EventUiFormatter;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.CancellationTokenSource;
 import com.example.helios.ui.theme.HeliosFontOption;
 import com.example.helios.ui.theme.HeliosThemeManager;
 import com.example.helios.ui.theme.HeliosThemeOption;
@@ -110,6 +117,27 @@ public class ProfileFragment extends Fragment {
 
     private boolean notificationsCurrentlyEnabled = true;
     @Nullable private String profileImageUrl;
+    @Nullable private FusedLocationProviderClient locationClient;
+
+    private final ActivityResultLauncher<String[]> locationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+                    results -> {
+                        if (HeliosLocation.hasAnyLocationPermission(requireContext())) {
+                            requestLocationServicesAndShow();
+                        } else {
+                            HeliosUi.toastLong(this, HeliosLocation.buildPermissionDeniedMessage("view your location"));
+                        }
+                    });
+
+    private final ActivityResultLauncher<IntentSenderRequest> locationSettingsLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(),
+                    result -> {
+                        if (result.getResultCode() == Activity.RESULT_OK) {
+                            fetchLocationAndOpenMap();
+                        } else {
+                            HeliosUi.toastLong(this, HeliosLocation.buildLocationServicesDisabledMessage("view your location"));
+                        }
+                    });
 
     private final ActivityResultLauncher<PickVisualMediaRequest> pickProfileImageLauncher =
             registerForActivityResult(new ActivityResultContracts.PickVisualMedia(), uri -> {
@@ -187,6 +215,12 @@ public class ProfileFragment extends Fragment {
         if (btnChangePhoto != null) {
             btnChangePhoto.setOnClickListener(v -> launchProfileImagePicker());
         }
+
+        MaterialButton btnViewLocation = view.findViewById(R.id.btn_view_my_location);
+        if (btnViewLocation != null) {
+            btnViewLocation.setOnClickListener(v -> onViewMyLocationPressed());
+        }
+
         bindAccessibilityPreferences();
         bindHeaderIconPreference();
         bindThemeOptions();
@@ -227,7 +261,7 @@ public class ProfileFragment extends Fragment {
         Context ctx = getContext();
         if (ctx == null) return;
 
-        new AlertDialog.Builder(ctx)
+        new MaterialAlertDialogBuilder(ctx)
                 .setTitle("Delete Profile")
                 .setMessage("Are you sure you want to delete your profile? This cannot be undone.")
                 .setPositiveButton("I'm sure", (dialog, which) -> deleteProfile())
@@ -250,10 +284,8 @@ public class ProfileFragment extends Fragment {
                     startActivity(intent);
                 },
                 error -> {
-                    if (!isAdded() || getContext() == null) return;
-                    Toast.makeText(getContext(),
-                            "Delete failed: " + error.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                    if (!isAdded()) return;
+                    HeliosUi.toastLong(this, "Delete failed: " + error.getMessage());
                 });
     }
 
@@ -270,17 +302,14 @@ public class ProfileFragment extends Fragment {
         boolean nowMuting = notificationsCurrentlyEnabled; // if enabled → we are muting
         profileService.setNotificationsMuted(ctx, nowMuting,
                 unused -> {
-                    if (!isAdded() || getContext() == null) return;
+                    if (!isAdded()) return;
                     notificationsCurrentlyEnabled = !nowMuting;
                     updateMuteButton();
-                    String msg = nowMuting ? "Notifications muted." : "Notifications unmuted.";
-                    Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+                    HeliosUi.toast(this, nowMuting ? "Notifications muted." : "Notifications unmuted.");
                 },
                 error -> {
-                    if (!isAdded() || getContext() == null) return;
-                    Toast.makeText(getContext(),
-                            "Failed to update notifications: " + error.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                    if (!isAdded()) return;
+                    HeliosUi.toastLong(this, "Failed to update notifications: " + error.getMessage());
                 });
     }
 
@@ -554,24 +583,12 @@ public class ProfileFragment extends Fragment {
                         buildHistoryItems(entries, eventsById, false, nowMillis);
                 bindEventHistory(currentItems, pastItems);
             }, error -> {
-                if (!isHistoryRequestActive(requestVersion) || getContext() == null) {
-                    return;
-                }
-                Toast.makeText(
-                        getContext(),
-                        "Failed to load event history: " + error.getMessage(),
-                        Toast.LENGTH_LONG
-                ).show();
+                if (!isHistoryRequestActive(requestVersion)) return;
+                HeliosUi.toastLong(this, "Failed to load event history: " + error.getMessage());
             });
         }, error -> {
-            if (!isHistoryRequestActive(requestVersion) || getContext() == null) {
-                return;
-            }
-            Toast.makeText(
-                    getContext(),
-                    "Failed to load event history: " + error.getMessage(),
-                    Toast.LENGTH_LONG
-            ).show();
+            if (!isHistoryRequestActive(requestVersion)) return;
+            HeliosUi.toastLong(this, "Failed to load event history: " + error.getMessage());
         });
     }
 
@@ -855,10 +872,8 @@ public class ProfileFragment extends Fragment {
             }
 
         }, error -> {
-            if (!isAdded() || getContext() == null) return;
-            Toast.makeText(getContext(),
-                    "Failed to load profile: " + error.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            if (!isAdded()) return;
+            HeliosUi.toastLong(this, "Failed to load profile: " + error.getMessage());
         });
     }
 
@@ -921,18 +936,111 @@ public class ProfileFragment extends Fragment {
             profileService.setSignInBannerEnabled(requireContext(), isChecked,
                     unused -> {
                         if (!isAdded()) return;
-                        Toast.makeText(getContext(),
-                                isChecked ? "Banner enabled." : "Banner disabled.",
-                                Toast.LENGTH_SHORT).show();
+                        HeliosUi.toast(this, isChecked ? "Banner enabled." : "Banner disabled.");
                     },
                     error -> {
                         if (!isAdded()) return;
                         switchSignInBanner.setChecked(!isChecked); // Revert UI
-                        Toast.makeText(getContext(),
-                                "Failed to update banner preference: " + error.getMessage(),
-                                Toast.LENGTH_LONG).show();
+                        HeliosUi.toastLong(this, "Failed to update banner preference: " + error.getMessage());
                     });
         });
+    }
+
+    // ── Location / map ────────────────────────────────────────────────────────
+
+    /** Starts the permission + settings check before opening the map. */
+    private void onViewMyLocationPressed() {
+        if (!isAdded()) return;
+        if (locationClient == null) {
+            locationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+        }
+        if (!HeliosLocation.hasAnyLocationPermission(requireContext())) {
+            locationPermissionLauncher.launch(HeliosLocation.LOCATION_PERMISSIONS);
+            return;
+        }
+        requestLocationServicesAndShow();
+    }
+
+    /** Checks location services are enabled, then fetches location. */
+    private void requestLocationServicesAndShow() {
+        if (!isAdded()) return;
+        LocationServices.getSettingsClient(requireContext())
+                .checkLocationSettings(HeliosLocation.createLocationSettingsRequest(requireContext()))
+                .addOnSuccessListener(unused -> fetchLocationAndOpenMap())
+                .addOnFailureListener(error -> {
+                    if (!isAdded()) return;
+                    if (error instanceof ResolvableApiException) {
+                        locationSettingsLauncher.launch(new IntentSenderRequest.Builder(
+                                ((ResolvableApiException) error).getResolution()).build());
+                    } else {
+                        HeliosUi.toastLong(this, HeliosLocation.buildLocationServicesDisabledMessage("view your location"));
+                    }
+                });
+    }
+
+    /** Fetches current location and opens it in the system maps app. */
+    private void fetchLocationAndOpenMap() {
+        if (!isAdded() || locationClient == null) return;
+        try {
+            CancellationTokenSource cts = new CancellationTokenSource();
+            locationClient.getCurrentLocation(
+                    HeliosLocation.createCurrentLocationRequest(requireContext()),
+                    cts.getToken()
+            ).addOnSuccessListener(location -> {
+                if (!isAdded()) return;
+                if (location != null) {
+                    openLocationInMaps(location.getLatitude(), location.getLongitude());
+                } else {
+                    fetchLastKnownLocationAndOpenMap();
+                }
+            }).addOnFailureListener(e -> {
+                if (!isAdded()) return;
+                fetchLastKnownLocationAndOpenMap();
+            });
+        } catch (SecurityException e) {
+            HeliosUi.toastLong(this, "Location permission error: " + e.getMessage());
+        }
+    }
+
+    /** Falls back to last-known location if current location is unavailable. */
+    private void fetchLastKnownLocationAndOpenMap() {
+        if (!isAdded() || locationClient == null) return;
+        try {
+            locationClient.getLastLocation()
+                    .addOnSuccessListener(location -> {
+                        if (!isAdded()) return;
+                        if (location != null) {
+                            openLocationInMaps(location.getLatitude(), location.getLongitude());
+                        } else {
+                            HeliosUi.toastLong(this, HeliosLocation.buildLocationUnavailableMessage("view your location"));
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        if (!isAdded()) return;
+                        HeliosUi.toastLong(this, HeliosLocation.buildLocationUnavailableMessage("view your location"));
+                    });
+        } catch (SecurityException e) {
+            HeliosUi.toastLong(this, "Location permission error: " + e.getMessage());
+        }
+    }
+
+    /** Opens the given coordinates in the system maps app. */
+    private void openLocationInMaps(double latitude, double longitude) {
+        Uri mapUri = Uri.parse("geo:" + latitude + "," + longitude
+                + "?q=" + latitude + "," + longitude + "(My+Location)");
+        Intent intent = new Intent(Intent.ACTION_VIEW, mapUri);
+        intent.setPackage("com.google.android.apps.maps");
+        if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
+            startActivity(intent);
+            return;
+        }
+        // Fallback to any maps app
+        intent.setPackage(null);
+        if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            HeliosUi.toast(this, "No maps app available on this device.");
+        }
     }
 
     /**
@@ -973,41 +1081,25 @@ public class ProfileFragment extends Fragment {
                                             if (!isAdded()) return;
                                             setPhotoUploadInProgress(false);
                                             bindProfile(profile);
-                                            Toast.makeText(
-                                                    requireContext(),
-                                                    "Profile photo updated.",
-                                                    Toast.LENGTH_SHORT
-                                            ).show();
+                                            HeliosUi.toast(this, "Profile photo updated.");
                                         },
                                         error -> {
                                             if (!isAdded()) return;
                                             setPhotoUploadInProgress(false);
-                                            Toast.makeText(
-                                                    requireContext(),
-                                                    "Photo update failed: " + error.getMessage(),
-                                                    Toast.LENGTH_LONG
-                                            ).show();
+                                            HeliosUi.toastLong(this, "Photo update failed: " + error.getMessage());
                                         }
                                 ),
                                 error -> {
                                     if (!isAdded()) return;
                                     setPhotoUploadInProgress(false);
-                                    Toast.makeText(
-                                            requireContext(),
-                                            "Photo upload failed: "
-                                                    + HeliosImageUploader.getUserFacingUploadErrorMessage(error),
-                                            Toast.LENGTH_LONG
-                                    ).show();
+                                    HeliosUi.toastLong(this, "Photo upload failed: "
+                                            + HeliosImageUploader.getUserFacingUploadErrorMessage(error));
                                 }
                         ),
                 error -> {
                     if (!isAdded()) return;
                     setPhotoUploadInProgress(false);
-                    Toast.makeText(
-                            requireContext(),
-                            "Auth failed: " + error.getMessage(),
-                            Toast.LENGTH_LONG
-                    ).show();
+                    HeliosUi.toastLong(this, "Auth failed: " + error.getMessage());
                 }
         );
     }

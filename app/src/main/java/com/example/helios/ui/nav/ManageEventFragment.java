@@ -1,15 +1,11 @@
 package com.example.helios.ui.nav;
 
 import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
@@ -22,6 +18,7 @@ import com.example.helios.service.OrganizerNotificationService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.service.WaitingListService;
 import com.example.helios.ui.common.EventNavArgs;
+import com.example.helios.ui.common.HeliosUi;
 import com.example.helios.ui.event.EventDetailsBottomSheet;
 import com.example.helios.ui.event.EventUiFormatter;
 import com.google.android.material.button.MaterialButton;
@@ -85,8 +82,7 @@ public class ManageEventFragment extends Fragment {
         deleteEventButton.setOnClickListener(v -> showDeleteEventConfirmDialog(deleteEventButton));
 
         if (eventId == null || eventId.isEmpty()) {
-            Toast.makeText(requireContext(),
-                    "Select an event first.", Toast.LENGTH_SHORT).show();
+            HeliosUi.toast(this, "Select an event first.");
             NavHostFragment.findNavController(this)
                     .popBackStack(R.id.organizeFragment, false);
             return;
@@ -115,9 +111,7 @@ public class ManageEventFragment extends Fragment {
             }
         }, error -> {
             if (!isAdded()) return;
-            Toast.makeText(requireContext(),
-                    "Failed to load event: " + error.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            HeliosUi.toastLong(this, "Failed to load event: " + error.getMessage());
         });
 
         profileService.loadCurrentProfile(requireContext(), profile -> {
@@ -202,8 +196,7 @@ public class ManageEventFragment extends Fragment {
 
     private void openEventPosting() {
         if (eventId == null || eventId.trim().isEmpty()) {
-            Toast.makeText(requireContext(),
-                    "Missing event id.", Toast.LENGTH_SHORT).show();
+            HeliosUi.toast(this, "Missing event id.");
             return;
         }
         EventDetailsBottomSheet.newInstance(eventId, true)
@@ -240,11 +233,11 @@ public class ManageEventFragment extends Fragment {
 
     private void showDeleteEventConfirmDialog(@NonNull MaterialButton deleteEventButton) {
         if (loadedEvent == null || eventId == null || eventId.trim().isEmpty()) {
-            Toast.makeText(requireContext(), "Event not loaded yet.", Toast.LENGTH_SHORT).show();
+            HeliosUi.toast(this, "Event not loaded yet.");
             return;
         }
 
-        new AlertDialog.Builder(requireContext())
+        new MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Cancel and delete event")
                 .setMessage("This will notify entrants, write an admin audit log, and permanently remove the event from organizer and entrant views.")
                 .setPositiveButton("Delete Event", (dialog, which) -> deleteEventButton.post(
@@ -256,14 +249,12 @@ public class ManageEventFragment extends Fragment {
 
     private void deleteCurrentEvent(@NonNull MaterialButton deleteEventButton) {
         if (loadedEvent == null || eventId == null || eventId.trim().isEmpty()) {
-            Toast.makeText(requireContext(), "Event not loaded yet.", Toast.LENGTH_SHORT).show();
+            HeliosUi.toast(this, "Event not loaded yet.");
             return;
         }
         boolean isAdmin = currentUserProfile != null && currentUserProfile.isAdmin();
         if (!isAdmin && (currentUserUid == null || !currentUserUid.equals(loadedEvent.getOrganizerUid()))) {
-            Toast.makeText(requireContext(),
-                    "Only the event organizer or an admin can delete this event.",
-                    Toast.LENGTH_SHORT).show();
+            HeliosUi.toast(this, "Only the event organizer or an admin can delete this event.");
             return;
         }
 
@@ -295,9 +286,7 @@ public class ManageEventFragment extends Fragment {
         }, error -> {
             if (!isAdded()) return;
             deleteEventButton.setEnabled(true);
-            Toast.makeText(requireContext(),
-                    "Failed to prepare event deletion: " + error.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            HeliosUi.toastLong(this, "Failed to prepare event deletion: " + error.getMessage());
         });
     }
 
@@ -317,9 +306,7 @@ public class ManageEventFragment extends Fragment {
                 error -> {
                     if (!isAdded()) return;
                     deleteEventButton.setEnabled(true);
-                    Toast.makeText(requireContext(),
-                            "Failed to log event deletion: " + error.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                    HeliosUi.toastLong(this, "Failed to log event deletion: " + error.getMessage());
                 }
         );
     }
@@ -334,14 +321,12 @@ public class ManageEventFragment extends Fragment {
             String message = notificationError == null
                     ? "Event deleted."
                     : "Event deleted. Some entrant notifications failed.";
-            Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
+            HeliosUi.toastLong(this, message);
             NavHostFragment.findNavController(this).popBackStack(R.id.organizeFragment, false);
         }, error -> {
             if (!isAdded()) return;
             deleteEventButton.setEnabled(true);
-            Toast.makeText(requireContext(),
-                    "Failed to delete event: " + error.getMessage(),
-                    Toast.LENGTH_LONG).show();
+            HeliosUi.toastLong(this, "Failed to delete event: " + error.getMessage());
         });
     }
 

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,7 +17,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
@@ -164,6 +164,7 @@ public class SetupEventFragment extends Fragment {
         LinearLayout manualCoordinatesFields = view.findViewById(R.id.layout_manual_coordinates_fields);
         MaterialButton useCurrentLocationButton = view.findViewById(R.id.button_use_current_location);
         MaterialButton manualCoordinatesToggle = view.findViewById(R.id.button_toggle_manual_coordinates);
+        MaterialButton previewGeofenceButton = view.findViewById(R.id.button_preview_geofence);
         uploadImageView = view.findViewById(R.id.iv_upload_image);
         uploadProgressBar = view.findViewById(R.id.progress_poster_upload);
 
@@ -189,6 +190,21 @@ public class SetupEventFragment extends Fragment {
                         manualCoordinatesToggle,
                         manualCoordinatesFields.getVisibility() != View.VISIBLE
                 ));
+
+        if (previewGeofenceButton != null) {
+            previewGeofenceButton.setOnClickListener(v ->
+                    openGeofencePreview(geofenceLatitudeInput, geofenceLongitudeInput));
+            android.text.TextWatcher coordWatcher = new android.text.TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override public void afterTextChanged(android.text.Editable s) {
+                    updatePreviewButtonVisibility(previewGeofenceButton,
+                            geofenceLatitudeInput, geofenceLongitudeInput);
+                }
+            };
+            geofenceLatitudeInput.addTextChangedListener(coordWatcher);
+            geofenceLongitudeInput.addTextChangedListener(coordWatcher);
+        }
 
         geoOn.setOnClickListener(v -> {
             geolocationRequired = true;
@@ -353,8 +369,7 @@ public class SetupEventFragment extends Fragment {
             primaryButton.setText("Save");
 
             if (eventId == null || eventId.trim().isEmpty()) {
-                Toast.makeText(requireContext(),
-                        "Missing event id.", Toast.LENGTH_SHORT).show();
+                HeliosUi.toast(this, "Missing event id.");
                 NavHostFragment.findNavController(this).navigateUp();
                 return;
             }
@@ -422,15 +437,12 @@ public class SetupEventFragment extends Fragment {
                 }
             }, error -> {
                 if (!isAdded()) return;
-                Toast.makeText(requireContext(),
-                        "Failed to load event: " + error.getMessage(),
-                        Toast.LENGTH_LONG).show();
+                HeliosUi.toastLong(this, "Failed to load event: " + error.getMessage());
             });
 
             primaryButton.setOnClickListener(v -> {
                 if (loadedEvent == null) {
-                    Toast.makeText(requireContext(),
-                            "Event not loaded yet.", Toast.LENGTH_SHORT).show();
+                    HeliosUi.toast(this, "Event not loaded yet.");
                     return;
                 }
 
@@ -478,18 +490,15 @@ public class SetupEventFragment extends Fragment {
                             unused -> {
                                 if (!isAdded()) return;
                                 setUploadInProgress(false);
-                                Toast.makeText(requireContext(),
-                                        "Event updated.", Toast.LENGTH_SHORT).show();
+                                HeliosUi.toast(this, "Event updated.");
                                 NavHostFragment.findNavController(this)
                                         .popBackStack(R.id.manageEventFragment, false);
                             },
                             error -> {
                                 if (!isAdded()) return;
                                 setUploadInProgress(false);
-                                Toast.makeText(requireContext(),
-                                        "Update failed: "
-                                                + HeliosImageUploader.getUserFacingUploadErrorMessage(error),
-                                        Toast.LENGTH_LONG).show();
+                                HeliosUi.toastLong(this, "Update failed: "
+                                        + HeliosImageUploader.getUserFacingUploadErrorMessage(error));
                             }
                     );
                     return;
@@ -498,14 +507,11 @@ public class SetupEventFragment extends Fragment {
                 eventService.saveEvent(
                         loadedEvent,
                         unused -> {
-                            Toast.makeText(requireContext(),
-                                    "Event updated.", Toast.LENGTH_SHORT).show();
+                            HeliosUi.toast(this, "Event updated.");
                             NavHostFragment.findNavController(this)
                                     .popBackStack(R.id.manageEventFragment, false);
                         },
-                        error -> Toast.makeText(requireContext(),
-                                "Update failed: " + error.getMessage(),
-                                Toast.LENGTH_LONG).show()
+                        error -> HeliosUi.toastLong(this, "Update failed: " + error.getMessage())
                 );
             });
         }
@@ -533,19 +539,13 @@ public class SetupEventFragment extends Fragment {
                             setUploadInProgress(false);
                             String createdEventId = event.getEventId();
                             if (createdEventId == null || createdEventId.trim().isEmpty()) {
-                                Toast.makeText(requireContext(),
-                                        "Event created but could not be opened.",
-                                        Toast.LENGTH_LONG).show();
+                                HeliosUi.toastLong(this, "Event created but could not be opened.");
                                 NavHostFragment.findNavController(this)
                                         .popBackStack(R.id.organizeFragment, false);
                                 return;
                             }
 
-                            Toast.makeText(requireContext(),
-                                    event.isPrivateEvent()
-                                            ? "Private event created."
-                                            : "Event created.",
-                                    Toast.LENGTH_SHORT).show();
+                            HeliosUi.toast(this, event.isPrivateEvent() ? "Private event created." : "Event created.");
 
                             NavOptions navOptions = new NavOptions.Builder()
                                     .setPopUpTo(R.id.createEventFragment, true)
@@ -577,16 +577,12 @@ public class SetupEventFragment extends Fragment {
                     }, error -> {
                         if (!isAdded()) return;
                         setUploadInProgress(false);
-                        Toast.makeText(requireContext(),
-                                "Create failed: " + error.getMessage(),
-                                Toast.LENGTH_LONG).show();
+                        HeliosUi.toastLong(this, "Create failed: " + error.getMessage());
                     });
                 },
                 error -> {
                     if (!isAdded()) return;
-                    Toast.makeText(requireContext(),
-                            "Auth failed: " + error.getMessage(),
-                            Toast.LENGTH_LONG).show();
+                    HeliosUi.toastLong(this, "Auth failed: " + error.getMessage());
                 }
         );
     }
@@ -807,7 +803,7 @@ public class SetupEventFragment extends Fragment {
                     + cleanupMessage;
         }
 
-        Toast.makeText(requireContext(), message, Toast.LENGTH_LONG).show();
+        HeliosUi.toastLong(this, message);
     }
 
     private void replaceExistingPosterIfNeeded(
@@ -1050,6 +1046,11 @@ public class SetupEventFragment extends Fragment {
         if (event.getGeofenceRadiusMeters() != null && event.getGeofenceRadiusMeters() > 0) {
             geofenceRadiusInput.setText(String.valueOf(event.getGeofenceRadiusMeters()));
         }
+        // Show preview button if coordinates are already set
+        if (getView() != null && event.getGeofenceCenter() != null) {
+            MaterialButton previewBtn = getView().findViewById(R.id.button_preview_geofence);
+            if (previewBtn != null) previewBtn.setVisibility(View.VISIBLE);
+        }
     }
 
     private void updateGeofenceSectionVisibility(@NonNull View geofenceFields, boolean visible) {
@@ -1247,7 +1248,59 @@ public class SetupEventFragment extends Fragment {
             locationNameInput.setText("Pinned event location");
         }
         clearPendingLocationAction();
-        HeliosUi.toast(this, "Geofence center updated from the current device location.");
+        // Show the manual coordinates section so the user can see the filled values
+        if (getView() != null) {
+            LinearLayout manualFields = getView().findViewById(R.id.layout_manual_coordinates_fields);
+            MaterialButton toggleBtn = getView().findViewById(R.id.button_toggle_manual_coordinates);
+            if (manualFields != null && toggleBtn != null && manualFields.getVisibility() != View.VISIBLE) {
+                updateManualCoordinatesVisibility(manualFields, toggleBtn, true);
+            }
+        }
+        HeliosUi.toast(this, "Geofence center set. Adjust the radius and preview on map if needed.");
+    }
+
+    private void updatePreviewButtonVisibility(
+            @NonNull MaterialButton previewButton,
+            @NonNull EditText latInput,
+            @NonNull EditText lngInput
+    ) {
+        String lat = latInput.getText() != null ? latInput.getText().toString().trim() : "";
+        String lng = lngInput.getText() != null ? lngInput.getText().toString().trim() : "";
+        boolean hasCoords = !lat.isEmpty() && !lng.isEmpty();
+        previewButton.setVisibility(hasCoords ? View.VISIBLE : View.GONE);
+    }
+
+    private void openGeofencePreview(
+            @NonNull EditText latInput,
+            @NonNull EditText lngInput
+    ) {
+        if (!isAdded()) return;
+        String latStr = latInput.getText() != null ? latInput.getText().toString().trim() : "";
+        String lngStr = lngInput.getText() != null ? lngInput.getText().toString().trim() : "";
+        if (latStr.isEmpty() || lngStr.isEmpty()) {
+            HeliosUi.toast(this, "Enter coordinates first.");
+            return;
+        }
+        try {
+            double lat = Double.parseDouble(latStr);
+            double lng = Double.parseDouble(lngStr);
+            Uri geoUri = Uri.parse("geo:" + lat + "," + lng
+                    + "?q=" + lat + "," + lng + "(Event+Location)");
+            Intent intent = new Intent(Intent.ACTION_VIEW, geoUri);
+            intent.setPackage("com.google.android.apps.maps");
+            if (intent.resolveActivity(requireContext().getPackageManager()) != null) {
+                startActivity(intent);
+                return;
+            }
+            intent.setPackage(null);
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                HeliosUi.toast(this, "No maps app available.");
+            }
+        } catch (NumberFormatException e) {
+            HeliosUi.toast(this, "Invalid coordinates — enter valid numbers.");
+        }
     }
 
     private void runPendingLocationAction() {

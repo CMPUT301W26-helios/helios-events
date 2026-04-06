@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -30,6 +32,7 @@ import com.example.helios.service.HeliosFirebaseMessagingService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.ui.common.EventNavArgs;
 import com.example.helios.ui.common.HeliosText;
+import com.example.helios.ui.common.HeliosUi;
 import com.example.helios.ui.common.NotificationNavArgs;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationBarView;
@@ -425,6 +428,10 @@ public class MainActivity extends ThemedActivity {
      * Refreshes the user information displayed in the top banner and manages admin menu visibility.
      */
     private void refreshUserBanner() {
+        refreshUserBannerWithRetry(false);
+    }
+
+    private void refreshUserBannerWithRetry(boolean isRetry) {
         profileService.loadCurrentProfile(this, profile -> {
             cachedProfile = profile;
             cachedProfileComplete = profile != null && !profileService.requiresProfileCompletion(profile);
@@ -444,7 +451,7 @@ public class MainActivity extends ThemedActivity {
             bannerText.setText("Signed in as: " + name);
             bannerRole.setText(profile.isAdmin() ? "admin" : "user");
 
-            bannerView.setVisibility(profile.isSignInBannerEnabled() ? View.VISIBLE : View.GONE);
+            HeliosUi.setVisible(bannerView, profile.isSignInBannerEnabled());
 
             // Toggle Admin menu visibility
             MenuItem adminItem = bottomNav.getMenu().findItem(R.id.adminFragment);
@@ -462,6 +469,14 @@ public class MainActivity extends ThemedActivity {
             }
 
         }, error -> {
+            if (!isRetry) {
+                // Retry once after a short delay before showing error state
+                new Handler(Looper.getMainLooper()).postDelayed(
+                        () -> refreshUserBannerWithRetry(true),
+                        2000
+                );
+                return;
+            }
             cachedProfile = null;
             cachedProfileComplete = null;
             bannerText.setText("Signed in as: (error)");

@@ -13,14 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 /**
- * Service for organizer-side waiting-list retrieval, update, and removal actions.
- *
- * Role: control/service layer for waiting-list management.
- * Issues: validation is minimal and most operations delegate directly to the repository.
- *
- * Alt Description:
- * Service class that provides business logic for managing event waiting lists.
- * It interacts with the {@link WaitingListRepository} to perform operations on waiting list entries.
+ * Service for organizer-side waiting-list operations: retrieval, updates, invitations,
+ * cancellations, and auto-replacement draws.
  */
 public class WaitingListService {
 

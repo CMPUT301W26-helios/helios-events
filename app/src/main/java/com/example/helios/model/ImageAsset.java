@@ -1,16 +1,10 @@
 package com.example.helios.model;
 
 /**
- * Represents an uploaded image resource such as an event poster.
+ * Metadata record for an uploaded image resource such as an event poster.
  *
- * <p>Role in the application: image metadata record, mostly for admin purposes and code cleanliness,
- * which links uploaded media to organizers and optionally to specific events.
- *
- * <p>Issues: The current application UI still uses placeholder images in several places, so full image-persistence integration is incomplete.
- * Alt Description:
- * Represents an image asset in the Helios application.
- * Stores information about uploaded images, their owners, and their storage locations.
- * TODO: Consolidate descriptions
+ * <p>Links uploaded media to its organizer owner and optionally to a specific event.
+ * Used by admin moderation and image-cleanup flows.
  */
 public class ImageAsset {
     private String imageId;

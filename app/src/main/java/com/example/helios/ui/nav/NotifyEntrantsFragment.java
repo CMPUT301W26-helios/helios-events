@@ -6,8 +6,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -20,6 +18,7 @@ import com.example.helios.model.NotificationAudience;
 import com.example.helios.service.EventService;
 import com.example.helios.service.OrganizerNotificationService;
 import com.example.helios.service.ProfileService;
+import com.example.helios.ui.common.HeliosUi;
 import com.example.helios.ui.event.EventUiFormatter;
 import com.google.android.material.button.MaterialButton;
 
@@ -55,7 +54,7 @@ public class NotifyEntrantsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         if (eventId == null || eventId.trim().isEmpty()) {
-            toast("Missing event id.");
+            HeliosUi.toast(this,"Missing event id.");
             NavHostFragment.findNavController(this).navigateUp();
             return;
         }
@@ -78,7 +77,7 @@ public class NotifyEntrantsFragment extends Fragment {
             String title = titleInput.getText() == null ? "" : titleInput.getText().toString().trim();
             String body = bodyInput.getText() == null ? "" : bodyInput.getText().toString().trim();
             if (TextUtils.isEmpty(title) || TextUtils.isEmpty(body)) {
-                toast("Title and message are required.");
+                HeliosUi.toast(this,"Title and message are required.");
                 return;
             }
 
@@ -90,7 +89,7 @@ public class NotifyEntrantsFragment extends Fragment {
             } else if (rbCancelled.isChecked()) {
                 audience = NotificationAudience.CANCELLED;
             } else {
-                toast("Choose an audience.");
+                HeliosUi.toast(this,"Choose an audience.");
                 return;
             }
 
@@ -105,7 +104,7 @@ public class NotifyEntrantsFragment extends Fragment {
         profileService.ensureSignedIn(firebaseUser -> eventService.getEventById(eventId, event -> {
             if (!isAdded()) return;
             if (event == null) {
-                toast("Event not found.");
+                HeliosUi.toast(this,"Event not found.");
                 NavHostFragment.findNavController(this).navigateUp();
                 return;
             }
@@ -117,10 +116,10 @@ public class NotifyEntrantsFragment extends Fragment {
                 subtitleView.setText("Event: " + eventLabel);
             }
             if (!firebaseUser.getUid().equals(event.getOrganizerUid())) {
-                toast("Only the organizer can send entrant notifications.");
+                HeliosUi.toast(this,"Only the organizer can send entrant notifications.");
                 NavHostFragment.findNavController(this).navigateUp();
             }
-        }, e -> toast("Failed to load event: " + e.getMessage())), e -> toast("Auth failed: " + e.getMessage()));
+        }, e -> HeliosUi.toast(this,"Failed to load event: " + e.getMessage())), e -> HeliosUi.toast(this,"Auth failed: " + e.getMessage()));
     }
 
     private void sendNotifications(
@@ -131,7 +130,7 @@ public class NotifyEntrantsFragment extends Fragment {
     ) {
         if (loadedEvent == null) {
             sendButton.setEnabled(true);
-            toast("Event not loaded.");
+            HeliosUi.toast(this,"Event not loaded.");
             return;
         }
 
@@ -149,22 +148,18 @@ public class NotifyEntrantsFragment extends Fragment {
                 result -> {
                     if (!isAdded()) return;
                     sendButton.setEnabled(true);
-                    toast("Sent " + result.getRecipientCount() + " notifications.");
+                    HeliosUi.toast(this,"Sent " + result.getRecipientCount() + " notifications.");
                 },
                 e -> {
                     if (!isAdded()) return;
                     sendButton.setEnabled(true);
-                    toast("Send failed: " + e.getMessage());
+                    HeliosUi.toast(this,"Send failed: " + e.getMessage());
                 }
         ), e -> {
             if (!isAdded()) return;
             sendButton.setEnabled(true);
-            toast("Auth failed: " + e.getMessage());
+            HeliosUi.toast(this,"Auth failed: " + e.getMessage());
         });
     }
 
-    private void toast(@NonNull String msg) {
-        if (!isAdded()) return;
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
-    }
 }

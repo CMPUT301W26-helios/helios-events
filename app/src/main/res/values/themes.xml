@@ -1,7 +1,16 @@
 <resources>
     <style name="Theme.Helios" parent="Theme.Helios.Meadow" />
 
-    <style name="Theme.Helios.Meadow" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Shared chrome/widget overrides applied by all color themes -->
+    <style name="Theme.Helios.Base" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
+        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Helios.MaterialAlertDialog</item>
+    </style>
+
+    <style name="Theme.Helios.Meadow" parent="Theme.Helios.Base">
         <item name="colorPrimary">#24695A</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorPrimaryContainer">#B7E4D2</item>
@@ -23,13 +32,9 @@
         <item name="colorSurfaceVariant">#DCE5DE</item>
         <item name="colorOnSurfaceVariant">#414943</item>
         <item name="colorOutline">#707973</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
-        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
-        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
 
-    <style name="Theme.Helios.Midnight" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Helios.Midnight" parent="Theme.Helios.Base">
         <item name="colorPrimary">#7FD8B7</item>
         <item name="colorOnPrimary">#05392F</item>
         <item name="colorPrimaryContainer">#0F5142</item>
@@ -51,13 +56,9 @@
         <item name="colorSurfaceVariant">#414943</item>
         <item name="colorOnSurfaceVariant">#C0C9C2</item>
         <item name="colorOutline">#8A938D</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
-        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
-        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
 
-    <style name="Theme.Helios.Sunrise" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Helios.Sunrise" parent="Theme.Helios.Base">
         <item name="colorPrimary">#A04D2C</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorPrimaryContainer">#FFDCCF</item>
@@ -79,13 +80,9 @@
         <item name="colorSurfaceVariant">#F4DED5</item>
         <item name="colorOnSurfaceVariant">#55423A</item>
         <item name="colorOutline">#87726A</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
-        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
-        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
 
-    <style name="Theme.Helios.Ocean" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Helios.Ocean" parent="Theme.Helios.Base">
         <item name="colorPrimary">#005F8F</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorPrimaryContainer">#CAE6FF</item>
@@ -107,13 +104,9 @@
         <item name="colorSurfaceVariant">#DDE4EA</item>
         <item name="colorOnSurfaceVariant">#41484D</item>
         <item name="colorOutline">#71787E</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
-        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
-        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
 
-    <style name="Theme.Helios.Blossom" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Helios.Blossom" parent="Theme.Helios.Base">
         <item name="colorPrimary">#8F4B68</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorPrimaryContainer">#FFD8E5</item>
@@ -135,13 +128,9 @@
         <item name="colorSurfaceVariant">#EDDDE3</item>
         <item name="colorOnSurfaceVariant">#4D4449</item>
         <item name="colorOutline">#7F747A</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
-        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
-        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
-    
-    <style name="Theme.Helios.Discordant" parent="Theme.Material3.DayNight.NoActionBar">
+
+    <style name="Theme.Helios.Discordant" parent="Theme.Helios.Base">
         <item name="colorPrimary">@color/discord_blurple</item>
         <item name="colorOnPrimary">@color/discord_white</item>
         <item name="colorPrimaryContainer">@color/discord_blurple</item>
@@ -163,10 +152,6 @@
         <item name="colorSurfaceVariant">@color/discord_dark_grey</item>
         <item name="colorOnSurfaceVariant">@color/discord_light_grey</item>
         <item name="colorOutline">@color/discord_black</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">?attr/colorSurface</item>
-        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
-        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
 
     <style name="Theme.Helios.Accessibility.ColorBlind" parent="ThemeOverlay.Material3">

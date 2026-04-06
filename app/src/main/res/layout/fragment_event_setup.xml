@@ -421,6 +421,15 @@
                     android:layout_marginTop="8dp"
                     android:hint="Radius in meters"
                     android:inputType="number" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_preview_geofence"
+                    style="@style/Widget.Helios.Button.Secondary.Compact"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="Preview on map"
+                    android:visibility="gone" />
             </LinearLayout>
 
             <TextView

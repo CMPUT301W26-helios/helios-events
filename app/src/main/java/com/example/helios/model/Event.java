@@ -4,19 +4,11 @@ import androidx.annotation.Nullable;
 
 import java.util.List;
 /**
- * Represents an event that entrants may join through the lottery-based waiting list flow.
+ * Domain model for a Helios event.
  *
- * <p>Role in the application: this is the main domain model for entrant browsing, organizer event
- * management, QR generation, and lottery/draw state.
- *
- * <p>Potential issues: the model does not enforce invariants such as the following:
- * positive capacity, valid date ordering, sample size limits, etc...
- * Those rules currently need to be enforced elsewhere.
- *
- * Alt Description:
- * Represents an event in the Helios application.
- * Contains details about the event, its location, timing, registration, and lottery settings.
- * TODO! Update and consolidate these descriptions!
+ * <p>Used across entrant browsing, organizer event management, QR generation, and lottery/draw
+ * state. Invariants such as positive capacity and valid date ordering are enforced by service-layer
+ * validation, not by this model.
  */
 public class Event {
     private String eventId;

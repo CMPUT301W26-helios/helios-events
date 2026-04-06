@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +38,7 @@ import com.example.helios.service.OrganizerNotificationService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.service.WaitingListService;
 import com.example.helios.ui.common.EventNavArgs;
+import com.example.helios.ui.common.HeliosUi;
 import com.example.helios.ui.event.EventUiFormatter;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.ChipGroup;
@@ -823,7 +824,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
     }
 
     private void toast(String msg) {
-        if (isAdded()) Toast.makeText(getContext(), msg, Toast.LENGTH_SHORT).show();
+        HeliosUi.toast(this, msg);
     }
 
     private void notifyReplacementInvites(

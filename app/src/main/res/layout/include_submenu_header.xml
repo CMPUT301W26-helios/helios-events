@@ -2,7 +2,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:minHeight="44dp">
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/submenu_back_button"
@@ -24,8 +25,8 @@
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/submenu_back_button"
-        app:layout_constraintTop_toTopOf="@id/submenu_back_button"
-        app:layout_constraintBottom_toBottomOf="@id/submenu_back_button">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageView
             android:id="@+id/ivHeaderHeliosIcon"
@@ -52,8 +53,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:textColor="?attr/colorOnSurfaceVariant"
-        android:textSize="13sp"
+        android:textAppearance="@style/TextAppearance.Helios.Caption"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/submenu_title_container"
         app:layout_constraintTop_toBottomOf="@id/submenu_title_container" />

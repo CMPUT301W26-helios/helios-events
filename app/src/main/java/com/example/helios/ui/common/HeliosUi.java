@@ -1,5 +1,7 @@
 package com.example.helios.ui.common;
 
+import android.content.Context;
+import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -14,5 +16,16 @@ public final class HeliosUi {
             return;
         }
         Toast.makeText(fragment.requireContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    public static void toastLong(@NonNull Fragment fragment, @NonNull String message) {
+        if (!fragment.isAdded()) {
+            return;
+        }
+        Toast.makeText(fragment.requireContext(), message, Toast.LENGTH_LONG).show();
+    }
+
+    public static void setVisible(@NonNull View view, boolean visible) {
+        view.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 }

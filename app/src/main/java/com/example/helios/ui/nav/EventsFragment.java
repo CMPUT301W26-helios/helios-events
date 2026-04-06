@@ -13,11 +13,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -327,25 +326,13 @@ public class EventsFragment extends Fragment {
                         loadCurrentUserEntries();
                     },
                     e -> {
-                        if (!isAdded()) {
-                            return;
-                        }
-                        Toast.makeText(
-                                requireContext(),
-                                "Failed to load events: " + e.getMessage(),
-                                Toast.LENGTH_SHORT
-                        ).show();
+                        if (!isAdded()) return;
+                        HeliosUi.toast(this, "Failed to load events: " + e.getMessage());
                     }
             );
         }, e -> {
-            if (!isAdded()) {
-                return;
-            }
-            Toast.makeText(
-                    requireContext(),
-                    "Auth failed: " + e.getMessage(),
-                    Toast.LENGTH_SHORT
-            ).show();
+            if (!isAdded()) return;
+            HeliosUi.toast(this, "Auth failed: " + e.getMessage());
         });
     }
 
@@ -463,7 +450,7 @@ public class EventsFragment extends Fragment {
             public void afterTextChanged(Editable s) {}
         });
 
-        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+        AlertDialog dialog = new MaterialAlertDialogBuilder(requireContext())
                 .setView(dialogView)
                 .setPositiveButton("Apply", (d, which) -> {
                     browseFilter.replaceSelectedInterests(pendingInterests);
@@ -975,24 +962,12 @@ public class EventsFragment extends Fragment {
                         HeliosUi.toast(this, successMessage);
                     },
                     e -> {
-                        if (!isAdded()) {
-                            return;
-                        }
-                        Toast.makeText(
-                                requireContext(),
-                                "Failed to save response: " + e.getMessage(),
-                                Toast.LENGTH_SHORT
-                        ).show();
+                        if (!isAdded()) return;
+                        HeliosUi.toast(this, "Failed to save response: " + e.getMessage());
                     });
         }, e -> {
-            if (!isAdded()) {
-                return;
-            }
-            Toast.makeText(
-                    requireContext(),
-                    "Failed to load invite: " + e.getMessage(),
-                    Toast.LENGTH_SHORT
-            ).show();
+            if (!isAdded()) return;
+            HeliosUi.toast(this, "Failed to load invite: " + e.getMessage());
         });
     }
 

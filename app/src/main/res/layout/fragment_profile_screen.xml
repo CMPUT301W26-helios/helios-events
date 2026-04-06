@@ -417,6 +417,41 @@
                     style="@style/TextAppearance.Helios.SectionTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:text="Location" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Test that device location is working before joining geofenced events."
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_view_my_location"
+                    style="@style/Widget.Helios.Button.Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="View my location on map" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/Widget.Helios.Card.ProfileSection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    style="@style/TextAppearance.Helios.SectionTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:text="Account" />
 
                 <TextView

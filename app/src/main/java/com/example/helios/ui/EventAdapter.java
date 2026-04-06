@@ -16,6 +16,7 @@ import com.bumptech.glide.Glide;
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.model.WaitingListStatus;
+import com.example.helios.ui.common.HeliosUi;
 import com.example.helios.ui.event.EventUiFormatter;
 
 import java.util.ArrayList;
@@ -24,10 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * RecyclerView adapter for displaying a list of events.
- * It handles basic event details like title, description, location, and date.
- */
 public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolder> {
     private static final int VIEW_TYPE_EVENT = 0;
     private static final int VIEW_TYPE_CO_ORGANIZER_INVITE = 1;
@@ -46,14 +43,7 @@ public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolde
     @NonNull
     private final Map<String, WaitingListStatus> entrantStatusesByEventId = new HashMap<>();
 
-    /**
-     * Listener interface for handling event click actions.
-     */
     public interface OnEventClickListener {
-        /**
-         * Called when an event item is clicked.
-         * @param event The event associated with the clicked item.
-         */
         void onEventClick(@NonNull Event event);
     }
 
@@ -67,21 +57,10 @@ public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolde
         void onDeclineInvite(@NonNull Event event);
     }
 
-    /**
-     * Constructs an EventAdapter without a click listener.
-     *
-     * @param events The list of events to display.
-     */
     public EventAdapter(@NonNull List<Event> events) {
         this(events, null, null, null);
     }
 
-    /**
-     * Constructs an EventAdapter with a click listener.
-     *
-     * @param events       The list of events to display.
-     * @param onEventClick The listener for click events.
-     */
     public EventAdapter(@NonNull List<Event> events, @Nullable OnEventClickListener onEventClick) {
         this(events, onEventClick, null, null);
     }
@@ -179,20 +158,18 @@ public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolde
 
         String tagSummary = EventUiFormatter.getTagSummary(event, 3);
         holder.tvTags.setText(tagSummary);
-        holder.tvTags.setVisibility(tagSummary.isEmpty() ? View.GONE : View.VISIBLE);
-        holder.tvMaxEntrants.setText(event.getCapacity() + " seats");
+        HeliosUi.setVisible(holder.tvTags, !tagSummary.isEmpty());
+        holder.tvMaxEntrants.setText(EventUiFormatter.getCapacityChipLabel(event));
         boolean showCoOrganizerBadge = organizerViewerUid != null
                 && !organizerViewerUid.equals(event.getOrganizerUid())
                 && event.isCoOrganizer(organizerViewerUid);
-        holder.tvCoOrganizerBadge.setVisibility(showCoOrganizerBadge ? View.VISIBLE : View.GONE);
+        HeliosUi.setVisible(holder.tvCoOrganizerBadge, showCoOrganizerBadge);
         boolean showPrivateEventBadge = event.isPrivateEvent()
                 && ((organizerViewerUid != null && organizerViewerUid.equals(event.getOrganizerUid()))
                 || getEntrantStatusForEvent(event) == WaitingListStatus.ACCEPTED
                 || getEntrantStatusForEvent(event) == WaitingListStatus.INVITED);
-        holder.tvPrivateEventBadge.setVisibility(showPrivateEventBadge ? View.VISIBLE : View.GONE);
-        holder.badgeContainer.setVisibility(
-                showCoOrganizerBadge || showPrivateEventBadge ? View.VISIBLE : View.GONE
-        );
+        HeliosUi.setVisible(holder.tvPrivateEventBadge, showPrivateEventBadge);
+        HeliosUi.setVisible(holder.badgeContainer, showCoOrganizerBadge || showPrivateEventBadge);
 
         holder.itemView.setOnClickListener(v -> {
             if (onEventClick != null) {
@@ -221,7 +198,7 @@ public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolde
     ) {
         holder.tvEventTitle.setText(EventUiFormatter.getTitle(event));
         holder.tvDate.setText(EventUiFormatter.getScheduleLabel(event));
-        holder.tvMaxEntrants.setText(event.getCapacity() + " seats");
+        holder.tvMaxEntrants.setText(EventUiFormatter.getCapacityChipLabel(event));
 
         holder.itemView.setOnClickListener(v -> {
             if (onEventClick != null) {
@@ -261,9 +238,6 @@ public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolde
         return entrantStatusesByEventId.get(eventId);
     }
 
-    /**
-     * ViewHolder class for event items.
-     */
     static class EventViewHolder extends RecyclerView.ViewHolder {
         EventViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -282,10 +256,6 @@ public class EventAdapter extends ListAdapter<Event, EventAdapter.EventViewHolde
         TextView tvCoOrganizerBadge;
         TextView tvPrivateEventBadge;
 
-        /**
-         * Constructs an EventViewHolder.
-         * @param itemView The view for a single list item.
-         */
         public EventCardViewHolder(@NonNull View itemView) {
             super(itemView);
             posterImageView = itemView.findViewById(R.id.iv_event_poster);

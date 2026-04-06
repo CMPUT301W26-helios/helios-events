@@ -49,6 +49,10 @@
             android:orientation="horizontal"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="48dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/et_search_my_events">
@@ -84,8 +88,9 @@
                 android:id="@+id/iv_current_events_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:contentDescription="Current events section"
-                android:src="@drawable/ic_event_list" />
+                android:contentDescription="Toggle current events"
+                android:src="@drawable/ic_expand_more"
+                app:tint="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
 
         <androidx.cardview.widget.CardView
@@ -143,6 +148,10 @@
             android:orientation="horizontal"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:minHeight="48dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/card_current_events">
@@ -178,8 +187,9 @@
                 android:id="@+id/iv_past_events_icon"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:contentDescription="Past events section"
-                android:src="@drawable/ic_history" />
+                android:contentDescription="Toggle past events"
+                android:src="@drawable/ic_expand_more"
+                app:tint="?attr/colorOnSurfaceVariant" />
         </LinearLayout>
 
         <androidx.cardview.widget.CardView

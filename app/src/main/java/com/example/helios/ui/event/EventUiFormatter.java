@@ -201,6 +201,21 @@ public final class EventUiFormatter {
         return new ArrayList<>(normalizedTags.values());
     }
 
+    /**
+     * Returns a short capacity chip label for event cards.
+     * Shows "X/Y" where X is the lottery sample size and Y is the total waiting list capacity,
+     * or just "Y seats" when sample size equals capacity or is not set.
+     */
+    @NonNull
+    public static String getCapacityChipLabel(@NonNull Event event) {
+        int capacity = event.getCapacity();
+        int sampleSize = event.getSampleSize();
+        if (sampleSize > 0 && sampleSize < capacity) {
+            return sampleSize + "/" + capacity;
+        }
+        return capacity + " seats";
+    }
+
     @Nullable
     private static String trimToNull(@Nullable String value) {
         if (value == null) {
