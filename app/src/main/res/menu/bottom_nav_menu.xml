@@ -2,27 +2,27 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/eventsFragment"
-        android:icon="@android:drawable/ic_menu_today"
+        android:icon="@drawable/ic_nav_events"
         android:title="Events" />
     <item
         android:id="@+id/scanQrFragment"
-        android:icon="@android:drawable/ic_menu_camera"
+        android:icon="@drawable/ic_nav_scan_qr"
         android:title="Scan QR" />
     <item
         android:id="@+id/organizeFragment"
-        android:icon="@android:drawable/ic_menu_myplaces"
+        android:icon="@drawable/ic_nav_organize"
         android:title="Organize" />
     <item
         android:id="@+id/profileFragment"
-        android:icon="@android:drawable/ic_menu_edit"
+        android:icon="@drawable/ic_nav_profile"
         android:title="Profile" />
     <item
         android:id="@+id/notificationsFragment"
-        android:icon="@android:drawable/ic_popup_reminder"
+        android:icon="@drawable/ic_nav_notifications"
         android:title="Notifications" />
     <item
         android:id="@+id/adminFragment"
-        android:icon="@android:drawable/ic_menu_manage"
+        android:icon="@drawable/ic_nav_admin"
         android:title="Admin"
         android:visible="false" />
 </menu>

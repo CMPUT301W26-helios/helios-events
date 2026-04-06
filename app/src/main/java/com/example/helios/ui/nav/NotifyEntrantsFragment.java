@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.RadioButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -12,18 +13,20 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import com.example.helios.HeliosApplication;
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.model.NotificationAudience;
 import com.example.helios.service.EventService;
+import com.example.helios.service.OrganizerNotificationService;
 import com.example.helios.service.ProfileService;
-import com.example.helios.service.SendEntrantNotificationsUseCase;
+import com.example.helios.ui.event.EventUiFormatter;
 import com.google.android.material.button.MaterialButton;
 
 public class NotifyEntrantsFragment extends Fragment {
-    private final EventService eventService = new EventService();
-    private final ProfileService profileService = new ProfileService();
-    private final SendEntrantNotificationsUseCase sendEntrantNotificationsUseCase = new SendEntrantNotificationsUseCase();
+    private EventService eventService;
+    private ProfileService profileService;
+    private OrganizerNotificationService organizerNotificationService;
 
     @Nullable
     private String eventId;
@@ -37,6 +40,10 @@ public class NotifyEntrantsFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        HeliosApplication application = HeliosApplication.from(requireContext());
+        eventService = application.getEventService();
+        profileService = application.getProfileService();
+        organizerNotificationService = application.getOrganizerNotificationService();
         Bundle args = getArguments();
         if (args != null) {
             eventId = args.getString("arg_event_id");
@@ -53,13 +60,18 @@ public class NotifyEntrantsFragment extends Fragment {
             return;
         }
 
+        TextView titleView = view.findViewById(R.id.submenu_title);
+        TextView subtitleView = view.findViewById(R.id.submenu_subtitle);
         EditText titleInput = view.findViewById(R.id.et_notification_title);
         EditText bodyInput = view.findViewById(R.id.et_notification_body);
         RadioButton rbWaiting = view.findViewById(R.id.rb_audience_waiting);
         RadioButton rbSelected = view.findViewById(R.id.rb_audience_selected);
         RadioButton rbCancelled = view.findViewById(R.id.rb_audience_cancelled);
         MaterialButton sendButton = view.findViewById(R.id.btn_send_notification);
-        MaterialButton cancelButton = view.findViewById(R.id.btn_cancel_notification);
+        MaterialButton cancelButton = view.findViewById(R.id.submenu_back_button);
+
+        titleView.setText("Notify Entrants");
+        subtitleView.setText("Send an organizer message to waiting, selected, or cancelled entrants.");
 
         cancelButton.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
         sendButton.setOnClickListener(v -> {
@@ -98,6 +110,12 @@ public class NotifyEntrantsFragment extends Fragment {
                 return;
             }
             loadedEvent = event;
+            String eventLabel = EventUiFormatter.getTitle(event);
+            View view = getView();
+            if (view != null) {
+                TextView subtitleView = view.findViewById(R.id.submenu_subtitle);
+                subtitleView.setText("Event: " + eventLabel);
+            }
             if (!firebaseUser.getUid().equals(event.getOrganizerUid())) {
                 toast("Only the organizer can send entrant notifications.");
                 NavHostFragment.findNavController(this).navigateUp();
@@ -122,7 +140,7 @@ public class NotifyEntrantsFragment extends Fragment {
                 : loadedEvent.getTitle().trim();
         String messageWithEventContext = "Event: " + eventTitle + "\n\n" + message;
 
-        profileService.ensureSignedIn(firebaseUser -> sendEntrantNotificationsUseCase.execute(
+        profileService.ensureSignedIn(firebaseUser -> organizerNotificationService.sendToAudience(
                 firebaseUser.getUid(),
                 eventId,
                 audience,

@@ -10,11 +10,13 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.helios.R;
 import com.example.helios.model.EventComment;
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +35,7 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
 
     private final List<EventComment> topLevelComments = new ArrayList<>();
     private final Map<String, List<EventComment>> repliesByParent = new HashMap<>();
+    private final Map<String, String> authorProfileImageUrls = new HashMap<>();
     private final Set<String> likedCommentIds = new HashSet<>();
     private final CommentActionListener actionListener;
     private final RecyclerView.RecycledViewPool sharedReplyPool = new RecyclerView.RecycledViewPool();
@@ -50,18 +53,18 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
     public void setCurrentUser(@Nullable String uid, boolean isAdmin) {
         this.currentUserUid = uid;
         this.currentUserAdmin = isAdmin;
-        notifyDataSetChanged();
+        notifyItemRangeChanged(0, getItemCount());
     }
 
     public void setOrganizerUid(@Nullable String organizerUid) {
         this.organizerUid = organizerUid;
-        notifyDataSetChanged();
+        notifyItemRangeChanged(0, getItemCount());
     }
 
     public void setTopLevelComments(@NonNull List<EventComment> comments) {
-        topLevelComments.clear();
-        topLevelComments.addAll(comments);
-        topLevelComments.sort((a, b) -> {
+        List<EventComment> previous = new ArrayList<>(topLevelComments);
+        List<EventComment> next = new ArrayList<>(comments);
+        next.sort((a, b) -> {
             boolean ap = a != null && a.isPinned();
             boolean bp = b != null && b.isPinned();
             if (ap != bp) return ap ? -1 : 1;
@@ -69,17 +72,29 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
             long bt = b != null ? b.getCreatedAtMillis() : 0L;
             return Long.compare(bt, at);
         });
-        notifyDataSetChanged();
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new CommentDiff(previous, next));
+        topLevelComments.clear();
+        topLevelComments.addAll(next);
+        diffResult.dispatchUpdatesTo(this);
     }
 
     public void setReplies(@NonNull String parentCommentId, @NonNull List<EventComment> replies) {
         repliesByParent.put(parentCommentId, new ArrayList<>(replies));
-        notifyDataSetChanged();
+        int parentIndex = findTopLevelCommentIndex(parentCommentId);
+        if (parentIndex >= 0) {
+            notifyItemChanged(parentIndex);
+        }
     }
 
     public void setLikedCommentIds(@NonNull Set<String> likedIds) {
         likedCommentIds.clear();
         likedCommentIds.addAll(likedIds);
+        notifyItemRangeChanged(0, getItemCount());
+    }
+
+    public void setAuthorProfileImageUrls(@NonNull Map<String, String> profileImageUrlsByUid) {
+        authorProfileImageUrls.clear();
+        authorProfileImageUrls.putAll(profileImageUrlsByUid);
         notifyDataSetChanged();
     }
 
@@ -99,6 +114,19 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
             }
         }
         return ids;
+    }
+
+    @NonNull
+    public List<EventComment> getAllVisibleComments() {
+        List<EventComment> comments = new ArrayList<>();
+        for (EventComment top : topLevelComments) {
+            comments.add(top);
+            List<EventComment> replies = repliesByParent.get(top.getCommentId());
+            if (replies != null) {
+                comments.addAll(replies);
+            }
+        }
+        return comments;
     }
 
     @NonNull
@@ -165,8 +193,54 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
         return value != null && !value.trim().isEmpty();
     }
 
+    @Nullable
+    private String resolveAuthorProfileImageUrl(@Nullable EventComment comment) {
+        if (comment == null) {
+            return null;
+        }
+        String authorUid = comment.getAuthorUid();
+        if (isNonEmpty(authorUid) && authorProfileImageUrls.containsKey(authorUid)) {
+            return authorProfileImageUrls.get(authorUid);
+        }
+        return comment.getAuthorProfileImageUrlSnapshot();
+    }
+
+    private void bindAvatar(@NonNull ImageView imageView, @Nullable EventComment comment) {
+        Glide.with(imageView).clear(imageView);
+        imageView.setImageTintList(null);
+        imageView.setColorFilter(null);
+
+        String imageUrl = resolveAuthorProfileImageUrl(comment);
+        if (!isNonEmpty(imageUrl)) {
+            imageView.setImageResource(R.drawable.ic_avatar_person_placeholder);
+            return;
+        }
+
+        Glide.with(imageView)
+                .load(imageUrl)
+                .placeholder(R.drawable.ic_avatar_person_placeholder)
+                .error(R.drawable.ic_avatar_person_placeholder)
+                .circleCrop()
+                .into(imageView);
+    }
+
+    private int findTopLevelCommentIndex(@Nullable String commentId) {
+        if (!isNonEmpty(commentId)) {
+            return -1;
+        }
+        for (int i = 0; i < topLevelComments.size(); i++) {
+            EventComment comment = topLevelComments.get(i);
+            if (commentId.equals(comment.getCommentId())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     class CommentViewHolder extends RecyclerView.ViewHolder {
+        private final ImageView ivAvatar;
         private final TextView tvAuthor;
+        private final TextView tvPinned;
         private final TextView tvRole;
         private final TextView tvTime;
         private final TextView tvBody;
@@ -180,7 +254,9 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
 
         CommentViewHolder(@NonNull View itemView, @NonNull RecyclerView.RecycledViewPool recycledViewPool) {
             super(itemView);
+            ivAvatar = itemView.findViewById(R.id.image_comment_avatar);
             tvAuthor = itemView.findViewById(R.id.text_comment_author);
+            tvPinned = itemView.findViewById(R.id.text_comment_pinned);
             tvRole = itemView.findViewById(R.id.text_comment_role);
             tvTime = itemView.findViewById(R.id.text_comment_time);
             tvBody = itemView.findViewById(R.id.text_comment_body);
@@ -199,7 +275,18 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
         }
 
         void bind(@NonNull EventComment comment) {
+            bindAvatar(ivAvatar, comment);
+            itemView.setBackgroundResource(comment.isPinned()
+                    ? R.drawable.bg_comment_pinned_card
+                    : R.drawable.bg_helios_form_card);
             tvAuthor.setText(nonEmptyOr(comment.getAuthorNameSnapshot(), "Anonymous"));
+            if (tvPinned != null && comment.isPinned() && comment.isTopLevel()) {
+                tvPinned.setVisibility(View.VISIBLE);
+                tvPinned.setText("Pinned");
+            } else if (tvPinned != null) {
+                tvPinned.setVisibility(View.GONE);
+                tvPinned.setText("");
+            }
             if (tvRole != null && isOrganizerAuthor(comment) && comment.isTopLevel()) {
                 tvRole.setVisibility(View.VISIBLE);
                 tvRole.setText("Organizer");
@@ -260,6 +347,7 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
         }
 
         class ReplyViewHolder extends RecyclerView.ViewHolder {
+            private final ImageView ivAvatar;
             private final TextView tvAuthor;
             private final TextView tvRole;
             private final TextView tvTime;
@@ -271,6 +359,7 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
 
             ReplyViewHolder(@NonNull View itemView) {
                 super(itemView);
+                ivAvatar = itemView.findViewById(R.id.image_comment_reply_avatar);
                 tvAuthor = itemView.findViewById(R.id.text_comment_reply_author);
                 tvRole = itemView.findViewById(R.id.text_comment_reply_role);
                 tvTime = itemView.findViewById(R.id.text_comment_reply_time);
@@ -282,6 +371,7 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
             }
 
             void bind(@NonNull EventComment reply) {
+                bindAvatar(ivAvatar, reply);
                 tvAuthor.setText(nonEmptyOr(reply.getAuthorNameSnapshot(), "Anonymous"));
                 if (tvRole != null && isOrganizerAuthor(reply)) {
                     tvRole.setVisibility(View.VISIBLE);
@@ -306,6 +396,55 @@ public class EventCommentsAdapter extends RecyclerView.Adapter<EventCommentsAdap
                     tvDelete.setOnClickListener(null);
                 }
             }
+        }
+    }
+
+    private static final class CommentDiff extends DiffUtil.Callback {
+        private final List<EventComment> oldItems;
+        private final List<EventComment> newItems;
+
+        private CommentDiff(
+                @NonNull List<EventComment> oldItems,
+                @NonNull List<EventComment> newItems
+        ) {
+            this.oldItems = oldItems;
+            this.newItems = newItems;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldItems.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newItems.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            EventComment oldItem = oldItems.get(oldItemPosition);
+            EventComment newItem = newItems.get(newItemPosition);
+            String oldId = oldItem.getCommentId();
+            String newId = newItem.getCommentId();
+            return oldId != null && oldId.equals(newId);
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            EventComment oldItem = oldItems.get(oldItemPosition);
+            EventComment newItem = newItems.get(newItemPosition);
+            return equalsNullable(oldItem.getBody(), newItem.getBody())
+                    && equalsNullable(oldItem.getAuthorUid(), newItem.getAuthorUid())
+                    && equalsNullable(oldItem.getAuthorNameSnapshot(), newItem.getAuthorNameSnapshot())
+                    && equalsNullable(oldItem.getAuthorProfileImageUrlSnapshot(), newItem.getAuthorProfileImageUrlSnapshot())
+                    && oldItem.getCreatedAtMillis() == newItem.getCreatedAtMillis()
+                    && oldItem.getLikeCount() == newItem.getLikeCount()
+                    && oldItem.isPinned() == newItem.isPinned();
+        }
+
+        private boolean equalsNullable(@Nullable String left, @Nullable String right) {
+            return left == null ? right == null : left.equals(right);
         }
     }
 }

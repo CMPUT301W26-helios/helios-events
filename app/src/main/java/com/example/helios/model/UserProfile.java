@@ -15,6 +15,9 @@ public class UserProfile {
     private String role;
     private boolean notificationsEnabled;
     private String installationId;
+    private String fcmToken;
+    private String profileImageUrl;
+    private boolean organizerAccessRevoked;
 
     /**
      * Default constructor required for Firestore deserialization.
@@ -117,6 +120,40 @@ public class UserProfile {
      * @param installationId The installation ID for notifications.
      */
     public void setInstallationId(String installationId) { this.installationId = installationId; }
+
+    /**
+     * @return The FCM token for push notifications.
+     */
+    public String getFcmToken() { return fcmToken; }
+
+    /**
+     * @param fcmToken The FCM token for push notifications.
+     */
+    public void setFcmToken(String fcmToken) { this.fcmToken = emptyToNull(fcmToken); }
+
+    /**
+     * @return The profile image URL for the user, or null if none is set.
+     */
+    public String getProfileImageUrl() { return profileImageUrl; }
+
+    /**
+     * @param profileImageUrl The profile image URL for the user.
+     */
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = emptyToNull(profileImageUrl);
+    }
+
+    /**
+     * @return True when admin policy blocks this user from organizer features.
+     */
+    public boolean isOrganizerAccessRevoked() { return organizerAccessRevoked; }
+
+    /**
+     * @param organizerAccessRevoked True to block organizer access for this user.
+     */
+    public void setOrganizerAccessRevoked(boolean organizerAccessRevoked) {
+        this.organizerAccessRevoked = organizerAccessRevoked;
+    }
 
     /**
      * Checks if the user has administrative privileges.

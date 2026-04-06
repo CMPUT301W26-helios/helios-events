@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/helios_background"
+    android:background="?attr/colorSurface"
     android:clipToPadding="false"
     android:fillViewport="true"
     android:paddingBottom="120dp"
@@ -13,35 +13,17 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:paddingStart="16dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="24dp">
 
-        <ImageView
-            android:id="@+id/helios_brand_logo"
-            android:layout_width="54dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:contentDescription="Helios logo"
-            android:src="@drawable/helios_logo_v1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_manage_event_title"
+        <include
+            android:id="@+id/include_manage_header"
+            layout="@layout/include_submenu_header"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="8dp"
-            android:autoSizeMaxTextSize="42sp"
-            android:autoSizeMinTextSize="28sp"
-            android:autoSizeStepGranularity="2sp"
-            android:autoSizeTextType="uniform"
-            android:fontFamily="sans-serif-black"
-            android:text="Manage Event"
-            android:textColor="@color/helios_text_primary"
-            android:textSize="36sp"
-            app:layout_constraintEnd_toStartOf="@id/helios_brand_logo"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -52,105 +34,174 @@
             android:layout_marginTop="20dp"
             android:background="@drawable/bg_container"
             android:orientation="vertical"
-            android:padding="16dp"
-            app:layout_constraintTop_toBottomOf="@id/tv_manage_event_title"
+            android:padding="18dp"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            app:layout_constraintTop_toBottomOf="@id/include_manage_header">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Event Name:"
-                android:textColor="@color/helios_text_primary"
-                android:textSize="14sp" />
+                android:text="Current event"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="13sp" />
 
             <TextView
                 android:id="@+id/tv_manage_event_name"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="8dp"
                 android:text="Dance Class for Elders"
-                android:textColor="@color/helios_text_primary"
-                android:textSize="20sp"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
-            <Button
+            <TextView
+                android:id="@+id/tv_manage_event_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp"
+                tools:text="Tue, Apr 8 | Community Hall" />
+
+            <TextView
+                android:id="@+id/tv_manage_event_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                tools:text="Public event | Draw pending | Geolocation required" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_manage_event_setup_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Event Setup"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/card_event_info" />
+
+        <LinearLayout
+            android:id="@+id/card_manage_setup_actions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_container"
+            android:orientation="vertical"
+            android:padding="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_manage_event_setup_label">
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_view_event_page"
+                style="@style/Widget.Helios.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:minHeight="44dp"
-                android:background="@drawable/bg_helios_button_primary"
-                android:textColor="#FFFFFF"
-                android:text="View Event Page"
+                android:minHeight="@dimen/helios_button_height"
+                android:text="Preview Event Page"
                 android:textAllCaps="false" />
 
-            <Button
-                android:id="@+id/button_entrant_list"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_edit_event"
+                style="@style/Widget.Helios.Button.Primary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:minHeight="44dp"
-                android:background="@drawable/bg_helios_button_primary"
-                android:textColor="#FFFFFF"
-                android:text="Entrant List"
-                android:textAllCaps="false" />
-            <Button
-                android:id="@+id/button_run_lottery"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:minHeight="44dp"
-                android:background="@drawable/bg_helios_button_primary"
-                android:textColor="#FFFFFF"
-                android:text="Run Lottery Draw"
+                android:layout_marginTop="12dp"
+                android:minHeight="@dimen/helios_button_height"
+                android:text="Edit Event Details"
                 android:textAllCaps="false" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_invite_private_entrants"
+                style="@style/Widget.Helios.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:minHeight="44dp"
-                android:background="@drawable/bg_helios_button_primary"
-                android:textColor="#FFFFFF"
+                android:layout_marginTop="12dp"
+                android:minHeight="@dimen/helios_button_height"
                 android:text="Invite Private Entrants"
                 android:textAllCaps="false"
                 android:visibility="gone" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_assign_coorganizer"
+                style="@style/Widget.Helios.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:minHeight="48dp"
-                android:background="@drawable/bg_helios_button_primary"
-                android:textColor="#FFFFFF"
+                android:minHeight="@dimen/helios_button_height"
                 android:text="Assign Co-organizer"
                 android:textAllCaps="false" />
 
-            <Button
-                android:id="@+id/button_edit_event"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:minHeight="44dp"
-                android:background="@drawable/bg_helios_button_primary"
-                android:textColor="#FFFFFF"
-                android:text="Edit Event"
-                android:textAllCaps="false" />
-
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_show_mapped_location"
+                style="@style/Widget.Helios.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:minHeight="44dp"
-                android:background="@drawable/bg_helios_button_primary"
-                android:textColor="#FFFFFF"
-                android:text="Show Mapped Location of Entrants"
-                android:textAllCaps="false" />
+                android:layout_marginTop="12dp"
+                android:minHeight="@dimen/helios_button_height"
+                android:text="View Entrant Map"
+                android:textAllCaps="false"
+                android:visibility="gone" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_delete_event"
+                style="@style/Widget.Helios.Button.Danger"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:minHeight="@dimen/helios_button_height"
+                android:text="Cancel and Delete Event"
+                android:textAllCaps="false"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_manage_entrants_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Entrants"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/card_manage_setup_actions" />
+
+        <LinearLayout
+            android:id="@+id/card_manage_entrant_actions"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_container"
+            android:orientation="vertical"
+            android:padding="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_manage_entrants_label">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Run the initial draw, adjust invited totals, and draw replacements after cancellations here."
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="13sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_entrant_list"
+                style="@style/Widget.Helios.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:minHeight="@dimen/helios_button_height"
+                android:text="Manage Entrants and Draws"
+                android:textAllCaps="false" />
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

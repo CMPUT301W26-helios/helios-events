@@ -3,6 +3,9 @@ package com.example.helios.service;
 import android.content.Context;
 
 import com.example.helios.data.FirebaseRepository;
+import com.example.helios.model.Event;
+import com.example.helios.data.EventRepository;
+import com.example.helios.data.WaitingListRepository;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -56,7 +59,8 @@ public class EntrantEventServiceTest {
 
     @Test
     public void getFilledSlotsCount_countsOnlySelectedStatuses() {
-        FirebaseRepository repository = mock(FirebaseRepository.class);
+        WaitingListRepository waitingListRepository = mock(WaitingListRepository.class);
+        EventRepository eventRepository = mock(EventRepository.class);
         ProfileService profileService = mock(ProfileService.class);
 
         List<WaitingListEntry> entries = Arrays.asList(
@@ -74,21 +78,22 @@ public class EntrantEventServiceTest {
             OnSuccessListener<List<WaitingListEntry>> onSuccess = invocation.getArgument(1);
             onSuccess.onSuccess(entries);
             return null;
-        }).when(repository).getAllWaitingListEntries(eq("event-17"), any(), any());
+        }).when(waitingListRepository).getAllWaitingListEntries(eq("event-17"), any(), any());
 
-        EntrantEventService service = new EntrantEventService(repository, profileService);
+        EntrantEventService service = new EntrantEventService(waitingListRepository, eventRepository, profileService);
         AtomicReference<Integer> count = new AtomicReference<>();
 
         service.getFilledSlotsCount("event-17", count::set, e -> fail("Unexpected failure: " + e.getMessage()));
 
         assertEquals(Integer.valueOf(3), count.get());
-        verify(repository).getAllWaitingListEntries(eq("event-17"), any(), any());
+        verify(waitingListRepository).getAllWaitingListEntries(eq("event-17"), any(), any());
         verifyNoMoreInteractions(profileService);
     }
 
     @Test
     public void getFilledSlotsCount_forwardsRepositoryFailure() {
-        FirebaseRepository repository = mock(FirebaseRepository.class);
+        WaitingListRepository waitingListRepository = mock(WaitingListRepository.class);
+        EventRepository eventRepository = mock(EventRepository.class);
         ProfileService profileService = mock(ProfileService.class);
         RuntimeException expected = new RuntimeException("boom");
 
@@ -96,30 +101,31 @@ public class EntrantEventServiceTest {
             OnFailureListener onFailure = invocation.getArgument(2);
             onFailure.onFailure(expected);
             return null;
-        }).when(repository).getAllWaitingListEntries(eq("event-22"), any(), any());
+        }).when(waitingListRepository).getAllWaitingListEntries(eq("event-22"), any(), any());
 
-        EntrantEventService service = new EntrantEventService(repository, profileService);
+        EntrantEventService service = new EntrantEventService(waitingListRepository, eventRepository, profileService);
         AtomicReference<Exception> failure = new AtomicReference<>();
 
         service.getFilledSlotsCount("event-22", count -> fail("Success should not be called"), failure::set);
 
         assertSame(expected, failure.get());
-        verify(repository).getAllWaitingListEntries(eq("event-22"), any(), any());
+        verify(waitingListRepository).getAllWaitingListEntries(eq("event-22"), any(), any());
         verifyNoMoreInteractions(profileService);
     }
 
     @Test
     public void getFilledSlotsCount_withEmptyEntries_returnsZero() {
-        FirebaseRepository repository = mock(FirebaseRepository.class);
+        WaitingListRepository waitingListRepository = mock(WaitingListRepository.class);
+        EventRepository eventRepository = mock(EventRepository.class);
         ProfileService profileService = mock(ProfileService.class);
 
         doAnswer(invocation -> {
             OnSuccessListener<List<WaitingListEntry>> onSuccess = invocation.getArgument(1);
             onSuccess.onSuccess(new ArrayList<>());
             return null;
-        }).when(repository).getAllWaitingListEntries(eq("event-empty"), any(), any());
+        }).when(waitingListRepository).getAllWaitingListEntries(eq("event-empty"), any(), any());
 
-        EntrantEventService service = new EntrantEventService(repository, profileService);
+        EntrantEventService service = new EntrantEventService(waitingListRepository, eventRepository, profileService);
         AtomicReference<Integer> count = new AtomicReference<>();
         AtomicReference<Exception> failure = new AtomicReference<>();
 
@@ -127,7 +133,7 @@ public class EntrantEventServiceTest {
 
         assertEquals(Integer.valueOf(0), count.get());
         assertNull(failure.get());
-        verify(repository).getAllWaitingListEntries(eq("event-empty"), any(), any());
+        verify(waitingListRepository).getAllWaitingListEntries(eq("event-empty"), any(), any());
         verifyNoMoreInteractions(profileService);
     }
 
@@ -252,16 +258,26 @@ public class EntrantEventServiceTest {
 
     @Test
     public void joinWaitingList_createsWaitingEntryWhenNoExistingEntry() {
-        FirebaseRepository repository = mock(FirebaseRepository.class);
+        WaitingListRepository waitingListRepository = mock(WaitingListRepository.class);
+        EventRepository eventRepository = mock(EventRepository.class);
         ProfileService profileService = mock(ProfileService.class);
         FirebaseUser user = mockUser("entrant-1");
         stubSignedInUser(profileService, user);
+
+        Event event = new Event();
+        event.setEventId("event-1");
+
+        doAnswer(invocation -> {
+            OnSuccessListener<Event> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(event);
+            return null;
+        }).when(eventRepository).getEventById(eq("event-1"), any(), any());
 
         doAnswer(invocation -> {
             OnSuccessListener<WaitingListEntry> onSuccess = invocation.getArgument(2);
             onSuccess.onSuccess(null);
             return null;
-        }).when(repository).getWaitingListEntry(eq("event-1"), eq("entrant-1"), any(), any());
+        }).when(waitingListRepository).getWaitingListEntry(eq("event-1"), eq("entrant-1"), any(), any());
 
         AtomicBoolean successCalled = new AtomicBoolean(false);
         ArgumentCaptor<WaitingListEntry> entryCaptor = ArgumentCaptor.forClass(WaitingListEntry.class);
@@ -270,13 +286,14 @@ public class EntrantEventServiceTest {
             OnSuccessListener<Void> onSuccess = invocation.getArgument(3);
             onSuccess.onSuccess(null);
             return null;
-        }).when(repository).upsertWaitingListEntry(eq("event-1"), eq("entrant-1"), entryCaptor.capture(), any(), any());
+        }).when(waitingListRepository).upsertWaitingListEntry(eq("event-1"), eq("entrant-1"), entryCaptor.capture(), any(), any());
 
-        EntrantEventService service = new EntrantEventService(repository, profileService);
+        EntrantEventService service = new EntrantEventService(waitingListRepository, eventRepository, profileService);
 
         service.joinWaitingList(
-                mock(Context.class),
                 "event-1",
+                53.5461,
+                -113.4938,
                 unused -> successCalled.set(true),
                 e -> fail("Unexpected failure: " + e.getMessage())
         );
@@ -288,18 +305,31 @@ public class EntrantEventServiceTest {
         assertEquals("entrant-1", saved.getEntrantUid());
         assertEquals(WaitingListStatus.WAITING, saved.getStatus());
         assertTrue(saved.getJoinedAtMillis() > 0L);
+        assertEquals(Double.valueOf(53.5461), saved.getJoinLatitude());
+        assertEquals(Double.valueOf(-113.4938), saved.getJoinLongitude());
 
         verify(profileService).ensureSignedIn(any(), any());
-        verify(repository).getWaitingListEntry(eq("event-1"), eq("entrant-1"), any(), any());
-        verify(repository).upsertWaitingListEntry(eq("event-1"), eq("entrant-1"), any(), any(), any());
+        verify(eventRepository).getEventById(eq("event-1"), any(), any());
+        verify(waitingListRepository).getWaitingListEntry(eq("event-1"), eq("entrant-1"), any(), any());
+        verify(waitingListRepository).upsertWaitingListEntry(eq("event-1"), eq("entrant-1"), any(), any(), any());
     }
 
     @Test
     public void joinWaitingList_withExistingActiveEntry_returnsSuccessWithoutUpsert() {
-        FirebaseRepository repository = mock(FirebaseRepository.class);
+        WaitingListRepository waitingListRepository = mock(WaitingListRepository.class);
+        EventRepository eventRepository = mock(EventRepository.class);
         ProfileService profileService = mock(ProfileService.class);
         FirebaseUser user = mockUser("entrant-2");
         stubSignedInUser(profileService, user);
+
+        Event event = new Event();
+        event.setEventId("event-2");
+
+        doAnswer(invocation -> {
+            OnSuccessListener<Event> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(event);
+            return null;
+        }).when(eventRepository).getEventById(eq("event-2"), any(), any());
 
         WaitingListEntry existing = entryWithStatus(WaitingListStatus.INVITED);
         existing.setEntrantUid("entrant-2");
@@ -309,21 +339,165 @@ public class EntrantEventServiceTest {
             OnSuccessListener<WaitingListEntry> onSuccess = invocation.getArgument(2);
             onSuccess.onSuccess(existing);
             return null;
-        }).when(repository).getWaitingListEntry(eq("event-2"), eq("entrant-2"), any(), any());
+        }).when(waitingListRepository).getWaitingListEntry(eq("event-2"), eq("entrant-2"), any(), any());
 
         AtomicBoolean successCalled = new AtomicBoolean(false);
-        EntrantEventService service = new EntrantEventService(repository, profileService);
+        EntrantEventService service = new EntrantEventService(waitingListRepository, eventRepository, profileService);
 
         service.joinWaitingList(
-                mock(Context.class),
                 "event-2",
+                null,
+                null,
                 unused -> successCalled.set(true),
                 e -> fail("Unexpected failure: " + e.getMessage())
         );
 
         assertTrue(successCalled.get());
-        verify(repository).getWaitingListEntry(eq("event-2"), eq("entrant-2"), any(), any());
-        verify(repository, never()).upsertWaitingListEntry(any(), any(), any(), any(), any());
+        verify(eventRepository).getEventById(eq("event-2"), any(), any());
+        verify(waitingListRepository).getWaitingListEntry(eq("event-2"), eq("entrant-2"), any(), any());
+        verify(waitingListRepository, never()).upsertWaitingListEntry(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    public void joinWaitingList_whenWaitlistLimitReached_returnsFailureWithoutUpsert() {
+        WaitingListRepository waitingListRepository = mock(WaitingListRepository.class);
+        EventRepository eventRepository = mock(EventRepository.class);
+        ProfileService profileService = mock(ProfileService.class);
+        FirebaseUser user = mockUser("entrant-limit");
+        stubSignedInUser(profileService, user);
+
+        Event event = new Event();
+        event.setEventId("event-limit");
+        event.setWaitlistLimit(1);
+
+        doAnswer(invocation -> {
+            OnSuccessListener<Event> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(event);
+            return null;
+        }).when(eventRepository).getEventById(eq("event-limit"), any(), any());
+
+        doAnswer(invocation -> {
+            OnSuccessListener<WaitingListEntry> onSuccess = invocation.getArgument(2);
+            onSuccess.onSuccess(null);
+            return null;
+        }).when(waitingListRepository).getWaitingListEntry(eq("event-limit"), eq("entrant-limit"), any(), any());
+
+        WaitingListEntry waiting = entryWithStatus(WaitingListStatus.WAITING);
+        waiting.setEntrantUid("other-entrant");
+        waiting.setEventId("event-limit");
+
+        WaitingListEntry cancelled = entryWithStatus(WaitingListStatus.CANCELLED);
+        cancelled.setEntrantUid("former-entrant");
+        cancelled.setEventId("event-limit");
+
+        doAnswer(invocation -> {
+            OnSuccessListener<List<WaitingListEntry>> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(Arrays.asList(waiting, cancelled));
+            return null;
+        }).when(waitingListRepository).getAllWaitingListEntries(eq("event-limit"), any(), any());
+
+        EntrantEventService service = new EntrantEventService(waitingListRepository, eventRepository, profileService);
+        AtomicReference<Exception> failure = new AtomicReference<>();
+
+        service.joinWaitingList(
+                "event-limit",
+                null,
+                null,
+                unused -> fail("Success should not be called"),
+                failure::set
+        );
+
+        assertEquals("The waiting list for this event is full.", failure.get().getMessage());
+        verify(eventRepository).getEventById(eq("event-limit"), any(), any());
+        verify(waitingListRepository).getWaitingListEntry(eq("event-limit"), eq("entrant-limit"), any(), any());
+        verify(waitingListRepository).getAllWaitingListEntries(eq("event-limit"), any(), any());
+        verify(waitingListRepository, never()).upsertWaitingListEntry(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    public void joinWaitingList_requiresCoordinatesWhenEventRequiresGeolocation() {
+        WaitingListRepository waitingListRepository = mock(WaitingListRepository.class);
+        EventRepository eventRepository = mock(EventRepository.class);
+        ProfileService profileService = mock(ProfileService.class);
+        FirebaseUser user = mockUser("entrant-geo");
+        stubSignedInUser(profileService, user);
+
+        Event event = new Event();
+        event.setEventId("event-geo");
+        event.setGeolocationRequired(true);
+
+        doAnswer(invocation -> {
+            OnSuccessListener<Event> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(event);
+            return null;
+        }).when(eventRepository).getEventById(eq("event-geo"), any(), any());
+
+        EntrantEventService service = new EntrantEventService(waitingListRepository, eventRepository, profileService);
+        AtomicReference<Exception> failure = new AtomicReference<>();
+
+        service.joinWaitingList(
+                "event-geo",
+                null,
+                null,
+                unused -> fail("Success should not be called"),
+                failure::set
+        );
+
+        assertEquals("This event requires location access to join.", failure.get().getMessage());
+        verify(eventRepository).getEventById(eq("event-geo"), any(), any());
+        verify(waitingListRepository, never()).getWaitingListEntry(any(), any(), any(), any());
+        verify(waitingListRepository, never()).upsertWaitingListEntry(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    public void joinWaitingList_rejectsCoordinatesOutsideEventFence() {
+        WaitingListRepository waitingListRepository = mock(WaitingListRepository.class);
+        EventRepository eventRepository = mock(EventRepository.class);
+        ProfileService profileService = mock(ProfileService.class);
+        FirebaseUser user = mockUser("entrant-fence");
+        stubSignedInUser(profileService, user);
+
+        Event event = new Event();
+        event.setEventId("event-fence");
+        event.setGeolocationRequired(true);
+        event.setGeofenceCenter(53.5461, -113.4938);
+        event.setGeofenceRadiusMeters(150);
+
+        doAnswer(invocation -> {
+            OnSuccessListener<Event> onSuccess = invocation.getArgument(1);
+            onSuccess.onSuccess(event);
+            return null;
+        }).when(eventRepository).getEventById(eq("event-fence"), any(), any());
+
+        EntrantEventService service = new EntrantEventService(waitingListRepository, eventRepository, profileService);
+        AtomicReference<Exception> failure = new AtomicReference<>();
+
+        service.joinWaitingList(
+                "event-fence",
+                53.5510,
+                -113.4789,
+                unused -> fail("Success should not be called"),
+                failure::set
+        );
+
+        assertEquals(
+                "You must be within 150 meters of the event location to join.",
+                failure.get().getMessage()
+        );
+        verify(waitingListRepository, never()).getWaitingListEntry(any(), any(), any(), any());
+        verify(waitingListRepository, never()).upsertWaitingListEntry(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    public void calculateDistanceMeters_returnsZeroForMatchingCoordinates() {
+        double distance = EntrantEventService.calculateDistanceMeters(
+                53.5461,
+                -113.4938,
+                53.5461,
+                -113.4938
+        );
+
+        assertEquals(0d, distance, 0.0001d);
     }
 
     @Test
@@ -334,9 +508,19 @@ public class EntrantEventServiceTest {
                 WaitingListStatus.DECLINED
         )) {
             FirebaseRepository repository = mock(FirebaseRepository.class);
+            EventRepository eventRepository = repository;
             ProfileService profileService = mock(ProfileService.class);
             FirebaseUser user = mockUser("entrant-rejoin");
             stubSignedInUser(profileService, user);
+
+            Event event = new Event();
+            event.setEventId("event-rejoin");
+
+            doAnswer(invocation -> {
+                OnSuccessListener<Event> onSuccess = invocation.getArgument(1);
+                onSuccess.onSuccess(event);
+                return null;
+            }).when(eventRepository).getEventById(eq("event-rejoin"), any(), any());
 
             WaitingListEntry existing = entryWithStatus(status);
             existing.setEntrantUid("entrant-rejoin");
@@ -358,8 +542,9 @@ public class EntrantEventServiceTest {
             EntrantEventService service = new EntrantEventService(repository, profileService);
 
             service.joinWaitingList(
-                    mock(Context.class),
                     "event-rejoin",
+                    null,
+                    null,
                     unused -> successCalled.set(true),
                     e -> fail("Unexpected failure: " + e.getMessage())
             );
@@ -371,7 +556,8 @@ public class EntrantEventServiceTest {
 
     @Test
     public void joinWaitingList_forwardsAuthFailure() {
-        FirebaseRepository repository = mock(FirebaseRepository.class);
+        WaitingListRepository waitingListRepository = mock(WaitingListRepository.class);
+        EventRepository eventRepository = mock(EventRepository.class);
         ProfileService profileService = mock(ProfileService.class);
         RuntimeException expected = new RuntimeException("auth boom");
 
@@ -381,19 +567,20 @@ public class EntrantEventServiceTest {
             return null;
         }).when(profileService).ensureSignedIn(any(), any());
 
-        EntrantEventService service = new EntrantEventService(repository, profileService);
+        EntrantEventService service = new EntrantEventService(waitingListRepository, eventRepository, profileService);
         AtomicReference<Exception> failure = new AtomicReference<>();
 
         service.joinWaitingList(
-                mock(Context.class),
                 "event-auth",
+                null,
+                null,
                 unused -> fail("Success should not be called"),
                 failure::set
         );
 
         assertSame(expected, failure.get());
-        verify(repository, never()).getWaitingListEntry(any(), any(), any(), any());
-        verify(repository, never()).upsertWaitingListEntry(any(), any(), any(), any(), any());
+        verify(waitingListRepository, never()).getWaitingListEntry(any(), any(), any(), any());
+        verify(waitingListRepository, never()).upsertWaitingListEntry(any(), any(), any(), any(), any());
     }
 
     @Test

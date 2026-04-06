@@ -7,15 +7,16 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.helios.R;
 import com.example.helios.model.Event;
+import com.example.helios.ui.event.EventUiFormatter;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * RecyclerView adapter for displaying a list of events, typically for administrative purposes.
@@ -44,8 +45,7 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
         void onViewOrganizer(@NonNull Event event);
     }
 
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
-    private final List<Event> events;
+    private final List<Event> events = new ArrayList<>();
     private final OnEventDeleteListener onDelete;
     private final OnViewOrganizerListener onViewOrganizer;
 
@@ -61,9 +61,9 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
             @NonNull OnEventDeleteListener onDelete,
             @NonNull OnViewOrganizerListener onViewOrganizer
     ) {
-        this.events = events;
         this.onDelete = onDelete;
         this.onViewOrganizer = onViewOrganizer;
+        replaceEvents(events);
     }
 
     @NonNull
@@ -78,25 +78,11 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Event event = events.get(position);
 
-        holder.tvTitle.setText(nonEmptyOr(event.getTitle(), "Untitled Event"));
-        holder.tvDescription.setText(nonEmptyOr(event.getDescription(), ""));
-
-        String location = nonEmptyOr(event.getLocationName(), null);
-        if (location == null) {
-            location = nonEmptyOr(event.getAddress(), "No location");
-        }
-        holder.tvLocation.setText(location);
-
-        long startMillis = event.getStartTimeMillis();
-        if (startMillis > 0) {
-            holder.tvDate.setText(dateFormat.format(new Date(startMillis)));
-        } else {
-            holder.tvDate.setText("TBA");
-        }
-
-        String guidelines = nonEmptyOr(event.getLotteryGuidelines(), null);
-        holder.tvTags.setText(guidelines != null ? guidelines : "No lottery details");
-
+        holder.tvTitle.setText(EventUiFormatter.getTitle(event));
+        holder.tvDescription.setText(EventUiFormatter.getDescription(event));
+        holder.tvLocation.setText(EventUiFormatter.getLocationLabel(event));
+        holder.tvDate.setText(EventUiFormatter.getDateLabel(event));
+        holder.tvTags.setText(EventUiFormatter.getTagSummary(event, 3));
         holder.tvMaxEntrants.setText("Max: " + event.getCapacity());
 
         holder.btnDelete.setOnClickListener(v -> onDelete.onEventDelete(event));
@@ -108,10 +94,13 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
         return events.size();
     }
 
-    private String nonEmptyOr(String value, String fallback) {
-        if (value == null) return fallback;
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? fallback : trimmed;
+    public void replaceEvents(@NonNull List<Event> updatedEvents) {
+        List<Event> previous = new ArrayList<>(events);
+        List<Event> next = new ArrayList<>(updatedEvents);
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new EventDiff(previous, next));
+        events.clear();
+        events.addAll(next);
+        diffResult.dispatchUpdatesTo(this);
     }
 
     /**
@@ -141,6 +130,50 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
             tvMaxEntrants = itemView.findViewById(R.id.tv_event_max_entrants);
             btnDelete = itemView.findViewById(R.id.btn_delete_event);
             btnViewOrganizer = itemView.findViewById(R.id.btn_view_organizer);
+        }
+    }
+
+    private static final class EventDiff extends DiffUtil.Callback {
+        private final List<Event> oldItems;
+        private final List<Event> newItems;
+
+        private EventDiff(@NonNull List<Event> oldItems, @NonNull List<Event> newItems) {
+            this.oldItems = oldItems;
+            this.newItems = newItems;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldItems.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newItems.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            Event oldItem = oldItems.get(oldItemPosition);
+            Event newItem = newItems.get(newItemPosition);
+            String oldId = oldItem.getEventId();
+            String newId = newItem.getEventId();
+            return oldId != null && oldId.equals(newId);
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            Event oldItem = oldItems.get(oldItemPosition);
+            Event newItem = newItems.get(newItemPosition);
+            return equalsNullable(oldItem.getTitle(), newItem.getTitle())
+                    && equalsNullable(oldItem.getDescription(), newItem.getDescription())
+                    && equalsNullable(oldItem.getLocationName(), newItem.getLocationName())
+                    && oldItem.getStartTimeMillis() == newItem.getStartTimeMillis()
+                    && oldItem.getCapacity() == newItem.getCapacity();
+        }
+
+        private boolean equalsNullable(@Nullable String left, @Nullable String right) {
+            return left == null ? right == null : left.equals(right);
         }
     }
 }

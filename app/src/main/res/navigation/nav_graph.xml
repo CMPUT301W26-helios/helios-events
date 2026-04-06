@@ -22,7 +22,11 @@
     <fragment
         android:id="@+id/manageEventFragment"
         android:name="com.example.helios.ui.nav.ManageEventFragment"
-        android:label="Manage Event" />
+        android:label="Manage Event" >
+        <action
+            android:id="@+id/action_manageEventFragment_to_entrantMapFragment"
+            app:destination="@id/entrantMapFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/organizerViewEntrantsFragment"
@@ -33,11 +37,6 @@
         android:id="@+id/createEventFragment"
         android:name="com.example.helios.ui.nav.SetupEventFragment"
         android:label="Create Event" />
-
-    <fragment
-        android:id="@+id/createEventQrFragment"
-        android:name="com.example.helios.ui.nav.OrganizerQrFragment"
-        android:label="Create Event QR" />
 
     <fragment
         android:id="@+id/viewEventQrFragment"
@@ -86,6 +85,15 @@
             android:name="arg_mode"
             app:argType="string"
             android:defaultValue="ASSIGN_CO_ORGANIZER" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/entrantMapFragment"
+        android:name="com.example.helios.ui.nav.EntrantMapFragment"
+        android:label="Entrant Map">
+        <argument
+            android:name="arg_event_id"
+            app:argType="string" />
     </fragment>
 
 </navigation>

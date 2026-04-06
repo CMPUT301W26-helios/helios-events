@@ -7,8 +7,7 @@ import android.os.Looper;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import com.example.helios.HeliosApplication;
 import com.example.helios.R;
 import com.example.helios.model.UserProfile;
 import com.example.helios.service.ProfileService;
@@ -18,23 +17,27 @@ import com.example.helios.service.ProfileService;
  * Handles user bootstrapping, displays a welcome message, and routes the user
  * to either the profile setup or the main activity.
  */
-public class LauncherActivity extends AppCompatActivity {
+public class LauncherActivity extends ThemedActivity {
     private static final long MIN_LOADING_DELAY_MS = 900;
 
-    private final ProfileService profileService = new ProfileService();
+    private ProfileService profileService;
     private TextView welcomeText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        applyHeliosTheme();
         super.onCreate(savedInstanceState);
+        profileService = HeliosApplication.from(this).getProfileService();
         setContentView(R.layout.activity_launcher);
 
         welcomeText = findViewById(R.id.launcher_welcome_text);
 
         profileService.bootstrapCurrentUser(this, result -> {
             UserProfile profile = result.getProfile();
+            boolean requiresProfileCompletion = profile == null
+                    || profileService.requiresProfileCompletion(profile);
 
-            if (result.isNewUser()) {
+            if (result.isNewUser() || requiresProfileCompletion) {
                 welcomeText.setText("Welcome New User!");
             } else {
                 String name = profile.getDisplayNameOrFallback();
@@ -46,7 +49,7 @@ public class LauncherActivity extends AppCompatActivity {
             }
 
             new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (result.isNewUser()) {
+                if (result.isNewUser() || requiresProfileCompletion) {
                     openProfileSetupRequired();
                 } else {
                     openMain(profile);
@@ -81,7 +84,7 @@ public class LauncherActivity extends AppCompatActivity {
      */
     private void openMain(UserProfile profile) {
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra("is_admin", profile.isAdmin());
+        intent.putExtra("is_admin", profile != null && profile.isAdmin());
         startActivity(intent);
         finish();
     }

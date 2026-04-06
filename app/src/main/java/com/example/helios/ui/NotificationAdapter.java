@@ -6,24 +6,39 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.helios.R;
 import com.example.helios.model.NotificationRecord;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.ViewHolder> {
+public class NotificationAdapter extends ListAdapter<NotificationRecord, NotificationAdapter.ViewHolder> {
+    public interface OnNotificationClickListener {
+        void onNotificationClick(@NonNull NotificationRecord notification);
+    }
 
-    private final List<NotificationRecord> notifications;
     private final SimpleDateFormat dateFormat =
             new SimpleDateFormat("MMM dd, yyyy h:mm a", Locale.getDefault());
+    private final OnNotificationClickListener onNotificationClick;
 
     public NotificationAdapter(List<NotificationRecord> notifications) {
-        this.notifications = notifications;
+        this(notifications, null);
+    }
+
+    public NotificationAdapter(
+            List<NotificationRecord> notifications,
+            OnNotificationClickListener onNotificationClick
+    ) {
+        super(new NotificationDiff());
+        this.onNotificationClick = onNotificationClick;
+        replaceNotifications(notifications);
     }
 
     @NonNull
@@ -36,14 +51,41 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        NotificationRecord n = notifications.get(position);
+        NotificationRecord n = getItem(position);
         holder.tvTitle.setText(n.getTitle());
         holder.tvMessage.setText(n.getMessage());
         holder.tvTime.setText(dateFormat.format(new Date(n.getSentAtMillis())));
+        holder.itemView.setOnClickListener(v -> {
+            if (onNotificationClick != null) {
+                onNotificationClick.onNotificationClick(n);
+            }
+        });
     }
 
-    @Override
-    public int getItemCount() { return notifications.size(); }
+
+    public void replaceNotifications(@NonNull List<NotificationRecord> updatedNotifications) {
+        submitList(new ArrayList<>(updatedNotifications));
+    }
+
+    private static final class NotificationDiff extends DiffUtil.ItemCallback<NotificationRecord> {
+        @Override
+        public boolean areItemsTheSame(@NonNull NotificationRecord oldItem, @NonNull NotificationRecord newItem) {
+            String oldId = oldItem.getNotificationId();
+            String newId = newItem.getNotificationId();
+            return oldId != null && oldId.equals(newId);
+        }
+
+        @Override
+        public boolean areContentsTheSame(@NonNull NotificationRecord oldItem, @NonNull NotificationRecord newItem) {
+            return equalsNullable(oldItem.getTitle(), newItem.getTitle())
+                    && equalsNullable(oldItem.getMessage(), newItem.getMessage())
+                    && oldItem.getSentAtMillis() == newItem.getSentAtMillis();
+        }
+
+        private boolean equalsNullable(String left, String right) {
+            return left == null ? right == null : left.equals(right);
+        }
+    }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle, tvMessage, tvTime;

@@ -16,12 +16,15 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.helios.HeliosApplication;
 import com.example.helios.R;
 import com.example.helios.model.Event;
 import com.example.helios.service.EventService;
 import com.example.helios.service.ProfileService;
 import com.example.helios.service.WaitingListService;
 import com.example.helios.ui.EventAdapter;
+import com.example.helios.ui.common.EventNavArgs;
+import com.example.helios.ui.common.HeliosText;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,9 +38,9 @@ import java.util.Locale;
  */
 public class OrganizeFragment extends Fragment {
 
-    private final EventService eventService = new EventService();
-    private final ProfileService profileService = new ProfileService();
-    private final WaitingListService waitingListService = new WaitingListService();
+    private EventService eventService;
+    private ProfileService profileService;
+    private WaitingListService waitingListService;
 
     private final List<com.example.helios.model.Event> allOrganizerEvents = new ArrayList<>();
     private final List<com.example.helios.model.Event> currentEvents = new ArrayList<>();
@@ -51,6 +54,7 @@ public class OrganizeFragment extends Fragment {
     private EditText searchEditText;
     private TextView currentEmptyText;
     private TextView pastEmptyText;
+    private Button createEventButton;
 
     /**
      * Default constructor for OrganizeFragment.
@@ -61,8 +65,17 @@ public class OrganizeFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        Button seedButton = view.findViewById(R.id.button_seed_demo_event);
-        seedButton.setOnClickListener(v ->
+        TextView tvHeaderTitle = view.findViewById(R.id.tvScreenTitle);
+        if (tvHeaderTitle != null) {
+            tvHeaderTitle.setText("Organize Events");
+        }
+
+        HeliosApplication application = HeliosApplication.from(requireContext());
+        eventService = application.getEventService();
+        profileService = application.getProfileService();
+        waitingListService = application.getWaitingListService();
+        createEventButton = view.findViewById(R.id.button_seed_demo_event);
+        createEventButton.setOnClickListener(v ->
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.createEventFragment)
         );
@@ -127,33 +140,63 @@ public class OrganizeFragment extends Fragment {
     private void loadOrganizerEvents() {
         profileService.ensureSignedIn(firebaseUser -> {
             organizerUid = firebaseUser.getUid();
-            if (currentAdapter != null) {
-                currentAdapter.setOrganizerViewerUid(organizerUid);
-            }
-            if (pastAdapter != null) {
-                pastAdapter.setOrganizerViewerUid(organizerUid);
-            }
-
-            eventService.getAllEvents(events -> {
+            profileService.getUserProfile(organizerUid, profile -> {
                 if (!isAdded()) return;
-
-                allOrganizerEvents.clear();
-                for (com.example.helios.model.Event e : events) {
-                    if (isManagedByCurrentOrganizer(e)) {
-                        allOrganizerEvents.add(e);
+                boolean organizerAccessRevoked = profile != null && profile.isOrganizerAccessRevoked();
+                if (createEventButton != null) {
+                    createEventButton.setEnabled(!organizerAccessRevoked);
+                    createEventButton.setAlpha(organizerAccessRevoked ? 0.5f : 1f);
+                }
+                if (organizerAccessRevoked) {
+                    allOrganizerEvents.clear();
+                    currentEvents.clear();
+                    pastEvents.clear();
+                    if (currentAdapter != null) {
+                        currentAdapter.replaceEvents(currentEvents);
                     }
+                    if (pastAdapter != null) {
+                        pastAdapter.replaceEvents(pastEvents);
+                    }
+                    updateEmptyStates();
+                    Toast.makeText(requireContext(),
+                            "Organizer access is restricted for this profile.",
+                            Toast.LENGTH_LONG).show();
+                    return;
                 }
 
-                String query = searchEditText != null && searchEditText.getText() != null
-                        ? searchEditText.getText().toString()
-                        : "";
+                if (currentAdapter != null) {
+                    currentAdapter.setOrganizerViewerUid(organizerUid);
+                }
+                if (pastAdapter != null) {
+                    pastAdapter.setOrganizerViewerUid(organizerUid);
+                }
 
-                applyOrganizerFilter(query);
+                eventService.getAllEvents(events -> {
+                    if (!isAdded()) return;
 
+                    allOrganizerEvents.clear();
+                    for (com.example.helios.model.Event e : events) {
+                        if (isManagedByCurrentOrganizer(e)) {
+                            allOrganizerEvents.add(e);
+                        }
+                    }
+
+                    String query = searchEditText != null && searchEditText.getText() != null
+                            ? searchEditText.getText().toString()
+                            : "";
+
+                    applyOrganizerFilter(query);
+
+                }, error -> {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(),
+                            "Failed to load organizer events: " + error.getMessage(),
+                            Toast.LENGTH_LONG).show();
+                });
             }, error -> {
                 if (!isAdded()) return;
                 Toast.makeText(requireContext(),
-                        "Failed to load organizer events: " + error.getMessage(),
+                        "Failed to load organizer profile: " + error.getMessage(),
                         Toast.LENGTH_LONG).show();
             });
 
@@ -206,10 +249,10 @@ public class OrganizeFragment extends Fragment {
         sortOrganizerEvents(pastEvents, false);
 
         if (currentAdapter != null) {
-            currentAdapter.notifyDataSetChanged();
+            currentAdapter.replaceEvents(currentEvents);
         }
         if (pastAdapter != null) {
-            pastAdapter.notifyDataSetChanged();
+            pastAdapter.replaceEvents(pastEvents);
         }
 
         updateEmptyStates();
@@ -296,7 +339,7 @@ public class OrganizeFragment extends Fragment {
      * @return The lowercase string, or an empty string if the input was null.
      */
     private String safeLower(String value) {
-        return value == null ? "" : value.toLowerCase(Locale.CANADA);
+        return HeliosText.safeLower(value);
     }
 
     /**
@@ -317,10 +360,8 @@ public class OrganizeFragment extends Fragment {
                     "Missing event id.", Toast.LENGTH_SHORT).show();
             return;
         }
-        Bundle args = new Bundle();
-        args.putString("arg_event_id", event.getEventId());
         NavHostFragment.findNavController(this)
-                .navigate(R.id.manageEventFragment, args);
+                .navigate(R.id.manageEventFragment, EventNavArgs.forEventId(event.getEventId()));
     }
 
     private void acceptCoOrganizerInvite(@NonNull Event event) {

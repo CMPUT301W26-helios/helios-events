@@ -3,22 +3,22 @@
 
     <item
         android:id="@+id/organizeFragment"
-        android:icon="@android:drawable/ic_menu_revert"
+        android:icon="@drawable/ic_nav_my_events"
         android:title="My Events" />
 
     <item
         android:id="@+id/manageEventFragment"
-        android:icon="@android:drawable/ic_menu_manage"
+        android:icon="@drawable/ic_nav_manage"
         android:title="Manage" />
 
     <item
         android:id="@+id/viewEventQrFragment"
-        android:icon="@android:drawable/ic_menu_share"
+        android:icon="@drawable/ic_nav_qr_code"
         android:title="QR Code" />
 
     <item
         android:id="@+id/notifyEntrantsFragment"
-        android:icon="@android:drawable/ic_popup_reminder"
+        android:icon="@drawable/ic_nav_notifications"
         android:title="Notify" />
 
 </menu>

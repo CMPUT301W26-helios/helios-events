@@ -1,46 +1,50 @@
 package com.example.helios.ui.event;
 
-import android.net.Uri;
+import android.Manifest;
+import android.app.Activity;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.IntentSenderRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.example.helios.HeliosApplication;
 import com.example.helios.R;
 import com.example.helios.model.Event;
-import com.example.helios.model.EventComment;
-import com.example.helios.model.UserProfile;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
-import com.example.helios.service.CommentService;
 import com.example.helios.service.EntrantEventService;
 import com.example.helios.service.EventService;
-import com.example.helios.service.ProfileService;
 import com.example.helios.service.WaitingListService;
+import com.example.helios.ui.common.EventNavArgs;
+import com.example.helios.ui.common.HeliosChipFactory;
+import com.example.helios.ui.common.HeliosLocation;
+import com.example.helios.ui.common.HeliosText;
+import com.example.helios.ui.common.HeliosUi;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.CancellationTokenSource;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.google.android.material.button.MaterialButton;
-import com.google.firebase.firestore.ListenerRegistration;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.color.MaterialColors;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
@@ -65,32 +69,25 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         return sheet;
     }
 
-    private final EventService eventService = new EventService();
-    private final EntrantEventService entrantEventService = new EntrantEventService();
-    private final CommentService commentService = new CommentService();
-    private final ProfileService profileService = new ProfileService();
-    private final WaitingListService waitingListService = new WaitingListService();
-
-    private final SimpleDateFormat dateFormat =
-            new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
-    private final SimpleDateFormat timeFormat =
-            new SimpleDateFormat("h:mm a", Locale.getDefault());
+    private EventService eventService;
+    private EntrantEventService entrantEventService;
+    private WaitingListService waitingListService;
 
     private ImageView ivPoster;
     private TextView tvName;
     private TextView tvDate;
     private TextView tvTimeStart;
     private TextView tvTimeEnd;
+    private ChipGroup cgEventTags;
     private TextView tvLocation;
     private TextView tvDescription;
+    private View descriptionCard;
     private TextView tvCapacity;
+    private TextView tvWaitlistCount;
+    private TextView tvLotteryGuidelinesLabel;
+    private TextView tvLotteryGuidelines;
+    private View lotteryGuidelinesCard;
     private MaterialButton btnWaitingList;
-
-    private RecyclerView rvComments;
-    private EditText etCommentBody;
-    private MaterialButton btnPostComment;
-    private CheckBox cbPinComment;
-    private TextView tvReplyingTo;
 
     private String eventId;
     private boolean hideJoinButton = false;
@@ -99,17 +96,30 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
     @Nullable
     private String currentUserUid;
-    private boolean currentUserAdmin = false;
     @Nullable
-    private EventComment replyingToComment;
-
-    private EventCommentsAdapter commentsAdapter;
-    private ListenerRegistration topLevelCommentsRegistration;
-    private final Map<String, ListenerRegistration> replyRegistrations = new HashMap<>();
-    private final Set<String> likedCommentIds = new HashSet<>();
+    private EventCommentsSection commentsSection;
+    @Nullable
+    private FusedLocationProviderClient locationClient;
+    @Nullable
+    private Runnable pendingLocationAction;
+    private final ActivityResultLauncher<String[]> locationPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+                    this::handleLocationPermissionResult);
+    private final ActivityResultLauncher<IntentSenderRequest> locationSettingsLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(),
+                    result -> handleLocationSettingsResolutionResult(result.getResultCode() == Activity.RESULT_OK));
 
     public EventDetailsBottomSheet() {
         super(R.layout.sheet_event_details);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        HeliosApplication application = HeliosApplication.from(requireContext());
+        eventService = application.getEventService();
+        entrantEventService = application.getEntrantEventService();
+        waitingListService = application.getWaitingListService();
     }
 
     @Override
@@ -119,6 +129,12 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         View bottomSheet = getDialog().findViewById(
                 com.google.android.material.R.id.design_bottom_sheet);
         if (bottomSheet == null) return;
+
+        int sheetSurfaceColor = MaterialColors.getColor(
+                bottomSheet,
+                com.google.android.material.R.attr.colorSurface
+        );
+        bottomSheet.setBackgroundTintList(ColorStateList.valueOf(sheetSurfaceColor));
 
         ViewGroup.LayoutParams lp = bottomSheet.getLayoutParams();
         lp.height = ViewGroup.LayoutParams.MATCH_PARENT;
@@ -140,23 +156,23 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         tvDate = view.findViewById(R.id.text_event_date);
         tvTimeStart = view.findViewById(R.id.text_event_starting_time);
         tvTimeEnd = view.findViewById(R.id.text_event_ending_time);
+        cgEventTags = view.findViewById(R.id.cg_event_tags);
         tvLocation = view.findViewById(R.id.text_event_location);
         tvDescription = view.findViewById(R.id.text_event_description);
+        descriptionCard = view.findViewById(R.id.description_card);
         tvCapacity = view.findViewById(R.id.text_event_capacity);
+        tvWaitlistCount = view.findViewById(R.id.tvWaitlistCount);
+        tvLotteryGuidelinesLabel = view.findViewById(R.id.tvLotteryGuidelinesLabel);
+        tvLotteryGuidelines = view.findViewById(R.id.tvLotteryGuidelines);
+        lotteryGuidelinesCard = view.findViewById(R.id.lottery_guidelines_card);
         btnWaitingList = view.findViewById(R.id.button_primary_action);
-
-        rvComments = view.findViewById(R.id.rv_event_comments);
-        etCommentBody = view.findViewById(R.id.input_comment_body);
-        btnPostComment = view.findViewById(R.id.button_post_comment);
-        cbPinComment = view.findViewById(R.id.cb_pin_comment);
-        tvReplyingTo = view.findViewById(R.id.text_replying_to);
 
         View close = view.findViewById(R.id.button_close);
         if (close != null) close.setOnClickListener(v -> dismiss());
 
         Bundle args = getArguments();
         if (args != null) {
-            eventId = args.getString(ARG_EVENT_ID);
+            eventId = EventNavArgs.getEventId(args);
             hideJoinButton = args.getBoolean(ARG_HIDE_JOIN_BUTTON, false);
         }
 
@@ -166,7 +182,24 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
             return;
         }
 
-        setupCommentsUi();
+        locationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+
+        commentsSection = new EventCommentsSection(
+                this,
+                eventId,
+                HeliosApplication.from(requireContext()).getCommentService(),
+                HeliosApplication.from(requireContext()).getProfileService(),
+                view.findViewById(R.id.rv_event_comments),
+                view.findViewById(R.id.input_comment_body),
+                view.findViewById(R.id.button_post_comment),
+                view.findViewById(R.id.cb_pin_comment),
+                view.findViewById(R.id.text_replying_to)
+        );
+        commentsSection.loadCurrentUser(uid -> {
+            currentUserUid = uid;
+            updateWaitingListButton();
+        });
+        commentsSection.subscribe();
 
         if (btnWaitingList != null) {
             if (hideJoinButton) {
@@ -177,15 +210,16 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
             }
         }
 
-        loadCurrentUserForComments();
-        subscribeTopLevelComments();
         loadEvent();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        clearCommentListeners();
+        if (commentsSection != null) {
+            commentsSection.clear();
+            commentsSection = null;
+        }
     }
 
     private void loadEvent() {
@@ -201,8 +235,8 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
             loadedEvent = event;
             bindEvent(event);
-            if (commentsAdapter != null) {
-                commentsAdapter.setOrganizerUid(event.getOrganizerUid());
+            if (commentsSection != null) {
+                commentsSection.bindOrganizer(event.getOrganizerUid());
             }
 
             if (!hideJoinButton) {
@@ -221,336 +255,79 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
     private void bindEvent(@NonNull Event event) {
         if (tvName != null)
-            tvName.setText(nonEmptyOr(event.getTitle(), "Untitled Event"));
+            tvName.setText(EventUiFormatter.getTitle(event));
 
         if (tvDate != null) {
-            long start = event.getStartTimeMillis();
-            tvDate.setText(start > 0 ? dateFormat.format(new Date(start)) : "Date TBD");
+            tvDate.setText(EventUiFormatter.getDateLabel(event));
         }
 
         if (tvTimeStart != null) {
-            long start = event.getStartTimeMillis();
-            tvTimeStart.setText(start > 0 ? timeFormat.format(new Date(start)) : "TBD");
+            tvTimeStart.setText(EventUiFormatter.getStartTimeLabel(event));
         }
 
         if (tvTimeEnd != null) {
-            long end = event.getEndTimeMillis();
-            tvTimeEnd.setText(end > 0 ? timeFormat.format(new Date(end)) : "TBD");
+            tvTimeEnd.setText(EventUiFormatter.getEndTimeLabel(event));
         }
 
         if (tvLocation != null) {
-            String loc = nonEmptyOr(event.getLocationName(), null);
-            if (loc == null) loc = nonEmptyOr(event.getAddress(), "No location");
-            tvLocation.setText(loc);
+            tvLocation.setText(EventUiFormatter.getLocationDetailLabel(event));
         }
 
-        if (tvDescription != null)
-            tvDescription.setText(nonEmptyOr(event.getDescription(), ""));
+        if (tvDescription != null) {
+            String description = event.getDescription();
+            if (description != null && !description.trim().isEmpty()) {
+                tvDescription.setText(description.trim());
+                if (descriptionCard != null) {
+                    descriptionCard.setVisibility(View.VISIBLE);
+                }
+            } else if (descriptionCard != null) {
+                descriptionCard.setVisibility(View.GONE);
+            }
+        }
+
+        if (cgEventTags != null) {
+            cgEventTags.removeAllViews();
+            List<String> displayTags = EventUiFormatter.getDisplayTags(event);
+            for (String tag : displayTags) {
+                cgEventTags.addView(HeliosChipFactory.createAssistChip(
+                        requireContext(),
+                        "#" + tag
+                ));
+            }
+            cgEventTags.setVisibility(displayTags.isEmpty() ? View.GONE : View.VISIBLE);
+        }
+
+        if (tvLotteryGuidelinesLabel != null && tvLotteryGuidelines != null) {
+            String guidelines = event.getLotteryGuidelines();
+            if (guidelines != null && !guidelines.trim().isEmpty()) {
+                if (lotteryGuidelinesCard != null) {
+                    lotteryGuidelinesCard.setVisibility(View.VISIBLE);
+                }
+                tvLotteryGuidelinesLabel.setVisibility(View.VISIBLE);
+                tvLotteryGuidelines.setVisibility(View.VISIBLE);
+                tvLotteryGuidelines.setText(guidelines);
+            } else {
+                if (lotteryGuidelinesCard != null) {
+                    lotteryGuidelinesCard.setVisibility(View.GONE);
+                }
+                tvLotteryGuidelinesLabel.setVisibility(View.GONE);
+                tvLotteryGuidelines.setVisibility(View.GONE);
+            }
+        }
 
         if (ivPoster != null) {
             String posterImageId = event.getPosterImageId();
             if (posterImageId != null && !posterImageId.trim().isEmpty()) {
-                try {
-                    ivPoster.setImageURI(Uri.parse(posterImageId));
-                    if (ivPoster.getDrawable() == null)
-                        ivPoster.setImageResource(R.drawable.elder_dance_poster_sample);
-                } catch (Exception ignored) {
-                    ivPoster.setImageResource(R.drawable.elder_dance_poster_sample);
-                }
+                Glide.with(this)
+                        .load(posterImageId)
+                        .fitCenter()
+                        .placeholder(R.drawable.placeholder_event)
+                        .error(R.drawable.placeholder_event)
+                        .into(ivPoster);
             } else {
-                ivPoster.setImageResource(R.drawable.elder_dance_poster_sample);
+                ivPoster.setImageResource(R.drawable.placeholder_event);
             }
         }
-    }
-
-    private void setupCommentsUi() {
-        if (rvComments == null) return;
-
-        commentsAdapter = new EventCommentsAdapter(new EventCommentsAdapter.CommentActionListener() {
-            @Override
-            public void onReply(@NonNull EventComment comment) {
-                onReplyPressed(comment);
-            }
-
-            @Override
-            public void onLikeToggle(@NonNull EventComment comment, boolean currentlyLiked) {
-                onLikePressed(comment, currentlyLiked);
-            }
-
-            @Override
-            public void onDelete(@NonNull EventComment comment) {
-                showDeleteCommentDialog(comment);
-            }
-        });
-
-        rvComments.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvComments.setNestedScrollingEnabled(false);
-        rvComments.setAdapter(commentsAdapter);
-
-        if (btnPostComment != null) {
-            btnPostComment.setOnClickListener(v -> onPostCommentPressed());
-        }
-
-        clearReplyTarget();
-    }
-
-    private void loadCurrentUserForComments() {
-        profileService.bootstrapCurrentUser(requireContext(), result -> {
-            if (!isAdded()) return;
-            UserProfile profile = result.getProfile();
-            currentUserUid = profile.getUid();
-            currentUserAdmin = profile.isAdmin();
-
-            if (commentsAdapter != null) {
-                commentsAdapter.setCurrentUser(currentUserUid, currentUserAdmin);
-            }
-            refreshLikeStates();
-            updateWaitingListButton();
-        }, error -> {
-            if (!isAdded()) return;
-            toast("Comment profile unavailable: " + error.getMessage());
-        });
-    }
-
-    private void subscribeTopLevelComments() {
-        if (eventId == null) return;
-
-        if (topLevelCommentsRegistration != null) {
-            topLevelCommentsRegistration.remove();
-            topLevelCommentsRegistration = null;
-        }
-
-        topLevelCommentsRegistration = commentService.subscribeTopLevelComments(eventId,
-                comments -> {
-                    if (!isAdded() || commentsAdapter == null) return;
-                    commentsAdapter.setTopLevelComments(comments);
-                    syncReplyListeners(comments);
-                    refreshLikeStates();
-                },
-                error -> {
-                    if (!isAdded()) return;
-                    toast("Failed to load comments: " + error.getMessage());
-                });
-    }
-
-    private void syncReplyListeners(@NonNull List<EventComment> topLevelComments) {
-        Set<String> activeParentIds = new HashSet<>();
-        for (EventComment comment : topLevelComments) {
-            String commentId = trimToNull(comment.getCommentId());
-            if (commentId != null) {
-                activeParentIds.add(commentId);
-            }
-        }
-
-        List<String> staleParentIds = new ArrayList<>();
-        for (String parentId : replyRegistrations.keySet()) {
-            if (!activeParentIds.contains(parentId)) {
-                staleParentIds.add(parentId);
-            }
-        }
-        for (String staleId : staleParentIds) {
-            ListenerRegistration registration = replyRegistrations.remove(staleId);
-            if (registration != null) {
-                registration.remove();
-            }
-            if (commentsAdapter != null) {
-                commentsAdapter.setReplies(staleId, new ArrayList<>());
-            }
-        }
-
-        for (String parentId : activeParentIds) {
-            if (replyRegistrations.containsKey(parentId)) continue;
-
-            ListenerRegistration registration = commentService.subscribeReplies(eventId, parentId,
-                    replies -> {
-                        if (!isAdded() || commentsAdapter == null) return;
-                        commentsAdapter.setReplies(parentId, replies);
-                        refreshLikeStates();
-                    },
-                    error -> {
-                        if (!isAdded()) return;
-                        toast("Failed to load replies: " + error.getMessage());
-                    });
-
-            replyRegistrations.put(parentId, registration);
-        }
-    }
-
-    private void onPostCommentPressed() {
-        if (eventId == null || etCommentBody == null || btnPostComment == null) return;
-
-        String commentText = etCommentBody.getText() == null ? null : etCommentBody.getText().toString();
-        String parentId = replyingToComment != null ? replyingToComment.getCommentId() : null;
-        boolean pin = cbPinComment != null
-                && cbPinComment.getVisibility() == View.VISIBLE
-                && cbPinComment.isChecked()
-                && parentId == null;
-
-        btnPostComment.setEnabled(false);
-
-        if (pin) {
-            commentService.postPinnedOrganizerComment(
-                    requireContext(),
-                    eventId,
-                    commentText,
-                    created -> {
-                        if (!isAdded()) return;
-                        if (cbPinComment != null) cbPinComment.setChecked(false);
-                        etCommentBody.setText("");
-                        clearReplyTarget();
-                        btnPostComment.setEnabled(true);
-                    },
-                    error -> {
-                        if (!isAdded()) return;
-                        btnPostComment.setEnabled(true);
-                        toast("Post failed: " + error.getMessage());
-                    }
-            );
-        } else {
-            commentService.postComment(
-                    requireContext(),
-                    eventId,
-                    commentText,
-                    parentId,
-                    createdComment -> {
-                        if (!isAdded()) return;
-                        etCommentBody.setText("");
-                        clearReplyTarget();
-                        btnPostComment.setEnabled(true);
-                    },
-                    error -> {
-                        if (!isAdded()) return;
-                        btnPostComment.setEnabled(true);
-                        toast("Post failed: " + error.getMessage());
-                    }
-            );
-        }
-    }
-
-    private void onReplyPressed(@NonNull EventComment comment) {
-        if (!comment.isTopLevel()) {
-            toast("You can only reply to top-level comments.");
-            return;
-        }
-
-        replyingToComment = comment;
-        if (cbPinComment != null) {
-            cbPinComment.setVisibility(View.GONE);
-            cbPinComment.setChecked(false);
-        }
-        if (tvReplyingTo != null) {
-            String label = nonEmptyOr(comment.getAuthorNameSnapshot(), "Anonymous");
-            tvReplyingTo.setText("Replying to " + label + " - Tap to cancel");
-            tvReplyingTo.setVisibility(View.VISIBLE);
-            tvReplyingTo.setOnClickListener(v -> clearReplyTarget());
-        }
-
-        if (etCommentBody != null) {
-            etCommentBody.requestFocus();
-            etCommentBody.setHint("Write a reply...");
-        }
-    }
-
-    private void clearReplyTarget() {
-        replyingToComment = null;
-
-        if (tvReplyingTo != null) {
-            tvReplyingTo.setVisibility(View.GONE);
-            tvReplyingTo.setText("");
-            tvReplyingTo.setOnClickListener(null);
-        }
-
-        if (etCommentBody != null) {
-            etCommentBody.setHint("Add a comment...");
-        }
-
-        if (cbPinComment != null) {
-            boolean canPin = loadedEvent != null
-                    && currentUserUid != null
-                    && currentUserUid.equals(loadedEvent.getOrganizerUid());
-            cbPinComment.setVisibility(canPin ? View.VISIBLE : View.GONE);
-            cbPinComment.setEnabled(canPin);
-        }
-    }
-
-    private void onLikePressed(@NonNull EventComment comment, boolean currentlyLiked) {
-        String commentId = trimToNull(comment.getCommentId());
-        if (eventId == null || commentId == null) return;
-
-        commentService.toggleLike(requireContext(), eventId, commentId, currentlyLiked,
-                willLike -> {
-                    if (!isAdded()) return;
-                    if (willLike) {
-                        likedCommentIds.add(commentId);
-                    } else {
-                        likedCommentIds.remove(commentId);
-                    }
-                    if (commentsAdapter != null) {
-                        commentsAdapter.setLikedCommentIds(new HashSet<>(likedCommentIds));
-                    }
-                },
-                error -> {
-                    if (!isAdded()) return;
-                    toast("Like failed: " + error.getMessage());
-                });
-    }
-
-    private void refreshLikeStates() {
-        if (!isAdded() || commentsAdapter == null || eventId == null || currentUserUid == null) return;
-
-        List<String> visibleCommentIds = commentsAdapter.getAllVisibleCommentIds();
-        if (visibleCommentIds.isEmpty()) {
-            likedCommentIds.clear();
-            commentsAdapter.setLikedCommentIds(new HashSet<>());
-            return;
-        }
-
-        commentService.loadCurrentUserLikeStates(requireContext(), eventId, visibleCommentIds,
-                likedIds -> {
-                    if (!isAdded() || commentsAdapter == null) return;
-                    likedCommentIds.clear();
-                    likedCommentIds.addAll(likedIds);
-                    commentsAdapter.setLikedCommentIds(new HashSet<>(likedCommentIds));
-                },
-                error -> {
-                    if (!isAdded()) return;
-                    toast("Could not refresh like states: " + error.getMessage());
-                });
-    }
-
-    private void showDeleteCommentDialog(@NonNull EventComment comment) {
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Delete comment")
-                .setMessage("Delete this comment permanently?")
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                .setPositiveButton("Delete", (dialog, which) -> deleteComment(comment))
-                .show();
-    }
-
-    private void deleteComment(@NonNull EventComment comment) {
-        if (eventId == null) return;
-
-        commentService.deleteComment(requireContext(), eventId, comment,
-                unused -> {
-                    if (!isAdded()) return;
-                    toast("Comment deleted.");
-                },
-                error -> {
-                    if (!isAdded()) return;
-                    toast("Delete failed: " + error.getMessage());
-                });
-    }
-
-    private void clearCommentListeners() {
-        if (topLevelCommentsRegistration != null) {
-            topLevelCommentsRegistration.remove();
-            topLevelCommentsRegistration = null;
-        }
-
-        for (ListenerRegistration registration : replyRegistrations.values()) {
-            registration.remove();
-        }
-        replyRegistrations.clear();
     }
 
     private void refreshWaitingListState() {
@@ -589,7 +366,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                 return;
             }
 
-            if (currentUserUid.equals(loadedEvent.getOrganizerUid()) || loadedEvent.isCoOrganizer(currentUserUid)) {
+            if (isCurrentUserOrganizerForEvent()) {
                 hideActionButtons();
                 btnWaitingList.setVisibility(View.VISIBLE);
                 btnWaitingList.setText("You are organizing this event");
@@ -621,7 +398,7 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
             btnWaitingList.setText("Leave Private Event");
             return;
         } else if (currentEntry != null && currentEntry.getStatus() == WaitingListStatus.ACCEPTED) {
-            btnWaitingList.setText("✅ Invitation Accepted");
+            btnWaitingList.setText("Invitation accepted");
             btnWaitingList.setEnabled(false);
         } else if (loadedEvent != null
                 && loadedEvent.isPrivateEvent()
@@ -691,6 +468,10 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         currentEntry.setStatus(WaitingListStatus.DECLINED);
         currentEntry.setRespondedAtMillis(System.currentTimeMillis());
         saveEntryResponse("Invitation declined.");
+        if (loadedEvent != null && loadedEvent.getEventId() != null) {
+            waitingListService.autoInviteReplacement(loadedEvent.getEventId(),
+                    invited -> {}, error -> {});
+        }
     }
 
     private void saveEntryResponse(String successMsg) {
@@ -793,11 +574,22 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
         if (loadedEvent == null || tvCapacity == null) return;
         entrantEventService.getFilledSlotsCount(eventId, filled -> {
             if (!isAdded()) return;
-            tvCapacity.setText("Waiting list capacity: "
-                    + filled + " / " + loadedEvent.getCapacity());
+            tvCapacity.setText(filled + " of " + loadedEvent.getCapacity() + " spots filled");
+            if (tvWaitlistCount != null) {
+                Integer waitlistLimit = loadedEvent.getWaitlistLimit();
+                tvWaitlistCount.setVisibility(View.VISIBLE);
+                if (waitlistLimit != null) {
+                    tvWaitlistCount.setText("Waitlist: " + filled + " / " + waitlistLimit);
+                } else {
+                    tvWaitlistCount.setText("Waitlist: " + filled);
+                }
+            }
         }, error -> {
             if (!isAdded()) return;
-            tvCapacity.setText("Waiting list capacity: ? / " + loadedEvent.getCapacity());
+            tvCapacity.setText("Capacity unavailable");
+            if (tvWaitlistCount != null) {
+                tvWaitlistCount.setVisibility(View.GONE);
+            }
         });
     }
 
@@ -812,7 +604,108 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
     private void joinWaitingListConfirmed() {
         if (btnWaitingList != null) btnWaitingList.setEnabled(false);
-        entrantEventService.joinWaitingList(requireContext(), eventId,
+        if (loadedEvent != null && loadedEvent.isGeolocationRequired()) {
+            requestRequiredLocationThenJoin();
+            return;
+        }
+        performJoinWaitingList(null, null);
+    }
+
+    private void requestRequiredLocationThenJoin() {
+        if (!isAdded()) {
+            return;
+        }
+        pendingLocationAction = this::fetchRequiredLocationThenJoin;
+        requestLocationAccessAndServices();
+    }
+
+    private void requestLocationAccessAndServices() {
+        if (!isAdded()) {
+            return;
+        }
+        if (!HeliosLocation.hasAnyLocationPermission(requireContext())) {
+            locationPermissionLauncher.launch(HeliosLocation.LOCATION_PERMISSIONS);
+            return;
+        }
+        LocationServices.getSettingsClient(requireContext())
+                .checkLocationSettings(HeliosLocation.createLocationSettingsRequest(requireContext()))
+                .addOnSuccessListener(unused -> runPendingLocationAction())
+                .addOnFailureListener(error -> {
+                    if (!isAdded()) {
+                        return;
+                    }
+                    if (error instanceof ResolvableApiException) {
+                        locationSettingsLauncher.launch(new IntentSenderRequest.Builder(
+                                ((ResolvableApiException) error).getResolution()
+                        ).build());
+                        return;
+                    }
+                    clearPendingLocationAction();
+                    updateWaitingListButton();
+                    showLocationRequiredDialog(HeliosLocation.buildLocationServicesDisabledMessage("join this event"));
+                });
+    }
+
+    private void fetchRequiredLocationThenJoin() {
+        if (!isAdded()) {
+            return;
+        }
+        if (locationClient == null) {
+            locationClient = LocationServices.getFusedLocationProviderClient(requireActivity());
+        }
+        try {
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+            locationClient.getCurrentLocation(
+                            HeliosLocation.createCurrentLocationRequest(requireContext()),
+                            cancellationTokenSource.getToken()
+                    )
+                    .addOnSuccessListener(location -> {
+                        if (!isAdded()) return;
+                        if (location != null) {
+                            performJoinWaitingList(location.getLatitude(), location.getLongitude());
+                            return;
+                        }
+                        fetchLastKnownLocationThenJoin();
+                    })
+                    .addOnFailureListener(error -> {
+                        if (!isAdded()) return;
+                        fetchLastKnownLocationThenJoin();
+                    });
+        } catch (SecurityException e) {
+            onJoinWaitingListFailed(e);
+        }
+    }
+
+    private void fetchLastKnownLocationThenJoin() {
+        if (!isAdded() || locationClient == null) {
+            return;
+        }
+        try {
+            locationClient.getLastLocation()
+                    .addOnSuccessListener(location -> {
+                        if (!isAdded()) return;
+                        if (location != null) {
+                            performJoinWaitingList(location.getLatitude(), location.getLongitude());
+                            return;
+                        }
+                        onJoinWaitingListFailed(new IllegalStateException(
+                                HeliosLocation.buildLocationUnavailableMessage("join this event")
+                        ));
+                    })
+                    .addOnFailureListener(error -> {
+                        if (!isAdded()) return;
+                        onJoinWaitingListFailed(new IllegalStateException(
+                                HeliosLocation.buildLocationUnavailableMessage("join this event"),
+                                error
+                        ));
+                    });
+        } catch (SecurityException e) {
+            onJoinWaitingListFailed(e);
+        }
+    }
+
+    private void performJoinWaitingList(@Nullable Double latitude, @Nullable Double longitude) {
+        entrantEventService.joinWaitingList(eventId, latitude, longitude,
                 unused -> {
                     if (!isAdded()) return;
                     isCurrentlyOnWaitingList = true;
@@ -820,11 +713,76 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
                     refreshCapacityCount();
                     toast("Joined waiting list.");
                 },
-                error -> {
-                    if (!isAdded()) return;
-                    updateWaitingListButton();
-                    toast("Join failed: " + error.getMessage());
-                });
+                this::onJoinWaitingListFailed);
+    }
+
+    private void handleLocationPermissionResult(@NonNull Map<String, Boolean> grantResults) {
+        if (!isAdded()) {
+            return;
+        }
+        if (HeliosLocation.hasAnyLocationPermission(requireContext())) {
+            requestLocationAccessAndServices();
+            return;
+        }
+        clearPendingLocationAction();
+        updateWaitingListButton();
+        showLocationRequiredDialog(HeliosLocation.buildPermissionDeniedMessage("join this event"));
+    }
+
+    private void handleLocationSettingsResolutionResult(boolean enabled) {
+        if (!isAdded()) {
+            return;
+        }
+        if (enabled) {
+            requestLocationAccessAndServices();
+            return;
+        }
+        clearPendingLocationAction();
+        updateWaitingListButton();
+        showLocationRequiredDialog(HeliosLocation.buildLocationServicesDisabledMessage("join this event"));
+    }
+
+    private void showLocationRequiredDialog(@NonNull String baseMessage) {
+        if (!isAdded()) {
+            return;
+        }
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Location Required")
+                .setMessage(buildLocationRequiredMessage(baseMessage))
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    @NonNull
+    private String buildLocationRequiredMessage(@NonNull String baseMessage) {
+        if (loadedEvent == null) {
+            return baseMessage;
+        }
+        String geofenceSummary = EventUiFormatter.getGeofenceSummary(loadedEvent);
+        if (geofenceSummary == null) {
+            return baseMessage;
+        }
+        return baseMessage + " This event keeps entrants within the configured "
+                + geofenceSummary.toLowerCase() + '.';
+    }
+
+    private void onJoinWaitingListFailed(@NonNull Exception error) {
+        if (!isAdded()) return;
+        clearPendingLocationAction();
+        updateWaitingListButton();
+        toast("Join failed: " + error.getMessage());
+    }
+
+    private void runPendingLocationAction() {
+        Runnable action = pendingLocationAction;
+        pendingLocationAction = null;
+        if (action != null) {
+            action.run();
+        }
+    }
+
+    private void clearPendingLocationAction() {
+        pendingLocationAction = null;
     }
 
     private void leaveWaitingList() {
@@ -854,6 +812,10 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void onWaitingListButtonPressed() {
+        if (isCurrentUserOrganizerForEvent()) {
+            updateWaitingListButton();
+            return;
+        }
         if (isCurrentlyOnWaitingList) {
             leaveWaitingList();
         } else {
@@ -863,7 +825,14 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
     private void setLoading(boolean loading) {
         if (tvName != null && loading) tvName.setText("Loading...");
-        if (btnWaitingList != null && !hideJoinButton) btnWaitingList.setEnabled(!loading);
+        if (btnWaitingList == null || hideJoinButton) {
+            return;
+        }
+        if (loading) {
+            btnWaitingList.setEnabled(false);
+            return;
+        }
+        updateWaitingListButton();
     }
 
     private void notifyInvitationResponseChanged() {
@@ -871,19 +840,22 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     }
 
     private void toast(String msg) {
-        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+        HeliosUi.toast(this, msg);
+    }
+
+    private boolean isCurrentUserOrganizerForEvent() {
+        return currentUserUid != null
+                && loadedEvent != null
+                && (currentUserUid.equals(loadedEvent.getOrganizerUid())
+                || loadedEvent.isCoOrganizer(currentUserUid));
     }
 
     @Nullable
     private String trimToNull(@Nullable String value) {
-        if (value == null) return null;
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
+        return HeliosText.trimToNull(value);
     }
 
     private String nonEmptyOr(String value, String fallback) {
-        if (value == null) return fallback;
-        String t = value.trim();
-        return t.isEmpty() ? fallback : t;
+        return HeliosText.nonEmptyOr(value, fallback);
     }
 }

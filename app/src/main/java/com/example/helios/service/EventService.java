@@ -3,6 +3,7 @@ package com.example.helios.service;
 import androidx.annotation.NonNull;
 
 import com.example.helios.data.FirebaseRepository;
+import com.example.helios.data.EventRepository;
 import com.example.helios.model.Event;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -17,21 +18,17 @@ import java.util.List;
  */
 /**
  * Service class that provides business logic for managing events.
- * It interacts with the {@link FirebaseRepository} to perform CRUD operations on events.
+ * It interacts with the {@link EventRepository} to perform CRUD operations on events.
  */
 public class EventService {
 
-    private final FirebaseRepository repository;
+    private final EventRepository repository;
 
-    /**
-     * Initializes the EventService with a new FirebaseRepository instance.
-     */
     public EventService() {
         this(new FirebaseRepository());
     }
 
-    // Package-private so tests in the same package can inject a mock.
-    EventService(@NonNull FirebaseRepository repository) {
+    public EventService(@NonNull EventRepository repository) {
         this.repository = repository;
     }
 

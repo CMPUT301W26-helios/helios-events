@@ -1,5 +1,6 @@
 package com.example.helios.service;
 
+import com.example.helios.data.WaitingListRepository;
 import com.example.helios.data.FirebaseRepository;
 import com.example.helios.model.WaitingListEntry;
 import com.example.helios.model.WaitingListStatus;
@@ -29,7 +30,7 @@ public class WaitingListServiceTest {
 
     @Test
     public void getEntriesForEvent_passesEventIdAndReturnsEntries() {
-        FirebaseRepository repository = mock(FirebaseRepository.class);
+        WaitingListRepository repository = mock(WaitingListRepository.class);
 
         List<WaitingListEntry> expectedEntries = new ArrayList<>();
         expectedEntries.add(new WaitingListEntry());

@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2FBF7"
+    android:background="?attr/colorSurface"
     android:padding="24dp">
 
     <include layout="@layout/include_helios_brand_header" />
@@ -28,7 +28,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:text="Loading..."
-                android:textColor="#1D1B20" />
+                android:textColor="?attr/colorOnSurface" />
         </FrameLayout>
 
         <TextView
@@ -37,7 +37,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="Loading your profile..."
-            android:textColor="#1D1B20"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp" />
     </LinearLayout>
 

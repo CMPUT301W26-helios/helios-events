@@ -5,6 +5,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.helios.data.CommentRepository;
 import com.example.helios.data.FirebaseRepository;
 import com.example.helios.model.Event;
 import com.example.helios.model.EventComment;
@@ -21,9 +22,27 @@ import java.util.Set;
 public class CommentService {
     private static final int MAX_COMMENT_LENGTH = 500;
 
-    private final FirebaseRepository repository = new FirebaseRepository();
-    private final ProfileService profileService = new ProfileService();
-    private final EventService eventService = new EventService();
+    private final CommentRepository repository;
+    private final ProfileService profileService;
+    private final EventService eventService;
+
+    public CommentService() {
+        this(new FirebaseRepository());
+    }
+
+    public CommentService(@NonNull FirebaseRepository repository) {
+        this(repository, new ProfileService(repository), new EventService(repository));
+    }
+
+    public CommentService(
+            @NonNull CommentRepository repository,
+            @NonNull ProfileService profileService,
+            @NonNull EventService eventService
+    ) {
+        this.repository = repository;
+        this.profileService = profileService;
+        this.eventService = eventService;
+    }
 
     @NonNull
     public ListenerRegistration subscribeTopLevelComments(
@@ -67,10 +86,11 @@ public class CommentService {
             UserProfile profile = result.getProfile();
             String uid = profile.getUid();
             String authorName = nonEmptyOr(profile.getDisplayNameOrFallback(), "Anonymous");
+            String authorProfileImageUrl = normalize(profile.getProfileImageUrl());
 
             String parentId = normalize(parentCommentId);
             if (parentId == null) {
-                createComment(eventId, uid, authorName, cleanedBody, null, false, onSuccess, onFailure);
+                createComment(eventId, uid, authorName, authorProfileImageUrl, cleanedBody, null, false, onSuccess, onFailure);
                 return;
             }
 
@@ -87,7 +107,7 @@ public class CommentService {
                     onFailure.onFailure(new IllegalArgumentException("Cannot reply to deleted comment."));
                     return;
                 }
-                createComment(eventId, uid, authorName, cleanedBody, parentId, false, onSuccess, onFailure);
+                createComment(eventId, uid, authorName, authorProfileImageUrl, cleanedBody, parentId, false, onSuccess, onFailure);
             }, onFailure);
         }, onFailure);
     }
@@ -114,6 +134,7 @@ public class CommentService {
             UserProfile profile = result.getProfile();
             String uid = profile.getUid();
             String authorName = nonEmptyOr(profile.getDisplayNameOrFallback(), "Organizer");
+            String authorProfileImageUrl = normalize(profile.getProfileImageUrl());
 
             eventService.getEventById(eventId, event -> {
                 if (event == null) {
@@ -125,19 +146,22 @@ public class CommentService {
                     return;
                 }
 
-                repository.getTopLevelCommentsOnce(eventId, comments -> {
+                repository.getTopLevelCommentsOnce(eventId, existingComments -> {
                     long now = System.currentTimeMillis();
-                    for (EventComment c : comments) {
-                        if (c == null) continue;
-                        if (!c.isTopLevel()) continue;
-                        if (!c.isPinned()) continue;
-                        if (!uid.equals(c.getAuthorUid())) continue;
+                    List<EventComment> toUnpin = new ArrayList<>();
+                    for (EventComment c : existingComments) {
+                        if (c == null || !c.isTopLevel() || !c.isPinned() || !uid.equals(c.getAuthorUid())) continue;
                         c.setPinned(false);
                         c.setUpdatedAtMillis(now);
-                        repository.updateComment(eventId, c, unused -> {}, e -> {});
+                        toUnpin.add(c);
                     }
 
-                    createComment(eventId, uid, authorName, cleanedBody, null, true, onSuccess, onFailure);
+                    // Build the new comment object (ID assigned by repository before writing).
+                    EventComment newComment = buildComment(eventId, uid, authorName, authorProfileImageUrl, cleanedBody, null, true);
+
+                    // Atomic batch: unpin previous + create new. A failure stops the whole batch,
+                    // preventing the orphaned two-pinned-comments state the previous code allowed.
+                    repository.setPinnedComment(eventId, toUnpin, newComment, onSuccess, onFailure);
                 }, onFailure);
             }, onFailure);
         }, onFailure);
@@ -164,6 +188,13 @@ public class CommentService {
                 onSuccess,
                 onFailure
         ), onFailure);
+    }
+
+    public void getAllCommentsForAdmin(
+            @NonNull OnSuccessListener<List<EventComment>> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.getAllComments(onSuccess, onFailure);
     }
 
     public void deleteComment(
@@ -234,21 +265,21 @@ public class CommentService {
         ), onFailure);
     }
 
-    private void createComment(
+    private EventComment buildComment(
             @NonNull String eventId,
             @NonNull String uid,
             @NonNull String authorName,
+            @Nullable String authorProfileImageUrl,
             @NonNull String body,
             @Nullable String parentCommentId,
-            boolean pinned,
-            @NonNull OnSuccessListener<EventComment> onSuccess,
-            @NonNull OnFailureListener onFailure
+            boolean pinned
     ) {
         long now = System.currentTimeMillis();
         EventComment comment = new EventComment();
         comment.setEventId(eventId);
         comment.setAuthorUid(uid);
         comment.setAuthorNameSnapshot(authorName);
+        comment.setAuthorProfileImageUrlSnapshot(authorProfileImageUrl);
         comment.setBody(body);
         comment.setParentCommentId(parentCommentId);
         comment.setCreatedAtMillis(now);
@@ -256,8 +287,21 @@ public class CommentService {
         comment.setLikeCount(0);
         comment.setDeleted(false);
         comment.setPinned(pinned);
+        return comment;
+    }
 
-        repository.addComment(eventId, comment, onSuccess, onFailure);
+    private void createComment(
+            @NonNull String eventId,
+            @NonNull String uid,
+            @NonNull String authorName,
+            @Nullable String authorProfileImageUrl,
+            @NonNull String body,
+            @Nullable String parentCommentId,
+            boolean pinned,
+            @NonNull OnSuccessListener<EventComment> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        repository.addComment(eventId, buildComment(eventId, uid, authorName, authorProfileImageUrl, body, parentCommentId, pinned), onSuccess, onFailure);
     }
 
     @Nullable

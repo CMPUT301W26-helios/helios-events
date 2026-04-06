@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/helios_background"
+    android:background="?attr/colorSurface"
     android:fillViewport="true"
     android:clipToPadding="false"
     android:paddingBottom="120dp"
@@ -13,31 +13,17 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="24dp">
+        android:paddingStart="24dp"
+        android:paddingTop="16dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="24dp">
 
-        <ImageView
-            android:id="@+id/helios_brand_logo"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
-            android:contentDescription="Helios logo"
-            android:src="@drawable/helios_logo_v1"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_create_event_title"
+        <include
+            android:id="@+id/include_event_setup_header"
+            layout="@layout/include_submenu_header"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginEnd="8dp"
-            android:fontFamily="sans-serif-black"
-            android:text="Create Event"
-            android:textColor="@color/helios_text_primary"
-            android:textSize="42sp"
-            app:layout_constraintEnd_toStartOf="@id/helios_brand_logo"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -51,113 +37,159 @@
             android:padding="18dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_create_event_title">
+            app:layout_constraintTop_toBottomOf="@id/include_event_setup_header">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Event Name:"
-                android:textColor="@color/helios_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="@dimen/helios_label_size"
                 android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edit_event_name"
+                style="@style/Widget.Helios.Input.SubtleHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/bg_helios_input"
-                android:hint="Dance Class for Elders"
-                android:inputType="textCapSentences"
-                android:minHeight="48dp"
-                android:paddingStart="12dp"
-                android:paddingTop="10dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="10dp"
-                android:textColor="@color/helios_text_primary"
-                android:textColorHint="@color/helios_text_hint" />
+                android:hint="Event name"
+                android:inputType="textCapSentences" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Maximum # of Entrants (Optional):"
-                android:textColor="@color/helios_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="@dimen/helios_label_size"
                 android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edit_max_entrants"
+                style="@style/Widget.Helios.Input.SubtleHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/bg_helios_input"
-                android:hint="## - Ex. 25"
-                android:inputType="number"
-                android:minHeight="48dp"
-                android:paddingStart="12dp"
-                android:paddingTop="10dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="10dp"
-                android:textColor="@color/helios_text_primary"
-                android:textColorHint="@color/helios_text_hint" />
+                android:hint="Optional"
+                android:inputType="number" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Waitlist Limit (Optional):"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/edit_waitlist_limit"
+                style="@style/Widget.Helios.Input.SubtleHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:hint="Optional"
+                android:inputType="number" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Venue Name:"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/edit_event_location_name"
+                style="@style/Widget.Helios.Input.SubtleHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:hint="Venue name"
+                android:inputType="textCapWords" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Street Address:"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/edit_event_address"
+                style="@style/Widget.Helios.Input.SubtleHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:hint="Street address"
+                android:inputType="textPostalAddress|textCapWords" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Event Description:"
-                android:textColor="@color/helios_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="@dimen/helios_label_size"
                 android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edit_event_description"
+                style="@style/Widget.Helios.Input.SubtleHint"
                 android:layout_width="match_parent"
                 android:layout_height="120dp"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/bg_helios_input"
                 android:gravity="top|start"
-                android:hint="blah blah blah"
-                android:inputType="textMultiLine"
-                android:paddingStart="12dp"
-                android:paddingTop="10dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="10dp"
-                android:textColor="@color/helios_text_primary"
-                android:textColorHint="@color/helios_text_hint" />
+                android:hint="Brief description"
+                android:inputType="textMultiLine" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Interests/Tags (seperate using camma):"
-                android:textColor="@color/helios_text_primary"
+                android:text="Lottery Guidelines:"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="@dimen/helios_label_size"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/edit_lottery_guidelines"
+                style="@style/Widget.Helios.Input.SubtleHint"
+                android:layout_width="match_parent"
+                android:layout_height="96dp"
+                android:layout_marginTop="6dp"
+                android:gravity="top|start"
+                android:hint="Optional notes"
+                android:inputType="textCapSentences|textMultiLine" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Interests/Tags (separate with commas):"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="@dimen/helios_label_size"
                 android:textStyle="bold" />
 
             <EditText
                 android:id="@+id/edit_event_tags"
+                style="@style/Widget.Helios.Input.SubtleHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:background="@drawable/bg_helios_input"
-                android:hint="Education, Fun, Sports"
-                android:inputType="textCapWords"
-                android:minHeight="48dp"
-                android:paddingStart="12dp"
-                android:paddingTop="10dp"
-                android:paddingEnd="12dp"
-                android:paddingBottom="10dp"
-                android:textColor="@color/helios_text_primary"
-                android:textColorHint="@color/helios_text_hint" />
+                android:hint="Tags"
+                android:inputType="textCapWords" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Set Registration Date:"
-                android:textColor="@color/helios_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="@dimen/helios_label_size"
                 android:textStyle="bold" />
 
@@ -175,8 +207,8 @@
                     android:background="@drawable/bg_filter_chip"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:text="March 1, 2025"
-                    android:textColor="@color/helios_text_primary" />
+                    android:text="Start date"
+                    android:textColor="?attr/colorOutline" />
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -184,7 +216,7 @@
                     android:layout_marginHorizontal="6dp"
                     android:gravity="center"
                     android:text="-"
-                    android:textColor="@color/helios_text_primary" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/tv_registration_end"
@@ -194,8 +226,8 @@
                     android:background="@drawable/bg_filter_chip"
                     android:gravity="center"
                     android:padding="10dp"
-                    android:text="March 5, 2025"
-                    android:textColor="@color/helios_text_primary" />
+                    android:text="End date"
+                    android:textColor="?attr/colorOutline" />
             </LinearLayout>
 
             <TextView
@@ -203,7 +235,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Require Geolocation:"
-                android:textColor="@color/helios_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="@dimen/helios_label_size"
                 android:textStyle="bold" />
 
@@ -223,7 +255,7 @@
                     android:background="@drawable/bg_toggle_left_active"
                     android:gravity="center"
                     android:text="On"
-                    android:textColor="@color/helios_text_primary" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/tv_geo_off"
@@ -233,14 +265,93 @@
                     android:background="@drawable/bg_toggle_right_inactive"
                     android:gravity="center"
                     android:text="Off"
-                    android:textColor="@color/helios_text_primary" />
+                    android:textColor="?attr/colorOnSurface" />
             </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_geofence_fields"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_helios_form_card"
+                android:orientation="vertical"
+                android:padding="14dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Geofence Center and Radius"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/text_geofence_helper"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="Use your current location, or enter coordinates manually if needed."
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_use_current_location"
+                    style="@style/Widget.Helios.Button.Secondary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Use Current Location" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_toggle_manual_coordinates"
+                    style="@style/Widget.Helios.Button.Secondary.Compact"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Show Manual Coordinates" />
+
+                <LinearLayout
+                    android:id="@+id/layout_manual_coordinates_fields"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <EditText
+                        android:id="@+id/edit_geofence_latitude"
+                        style="@style/Widget.Helios.Input.SubtleHint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="Latitude"
+                        android:inputType="numberDecimal|numberSigned" />
+
+                    <EditText
+                        android:id="@+id/edit_geofence_longitude"
+                        style="@style/Widget.Helios.Input.SubtleHint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:hint="Longitude"
+                        android:inputType="numberDecimal|numberSigned" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/edit_geofence_radius"
+                    style="@style/Widget.Helios.Input.SubtleHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:hint="Radius in meters"
+                    android:inputType="number" />
+            </LinearLayout>
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Private Event (hidden from listings):"
-                android:textColor="@color/helios_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="@dimen/helios_label_size"
                 android:textStyle="bold" />
 
@@ -260,7 +371,7 @@
                     android:background="@drawable/bg_toggle_left_inactive"
                     android:gravity="center"
                     android:text="Private"
-                    android:textColor="@color/helios_text_primary" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/tv_private_off"
@@ -270,15 +381,15 @@
                     android:background="@drawable/bg_toggle_right_active"
                     android:gravity="center"
                     android:text="Public"
-                    android:textColor="@color/helios_text_primary" />
+                    android:textColor="?attr/colorOnSurface" />
 
             </LinearLayout>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Attach/Upload An Image/Visual"
-                android:textColor="@color/helios_text_primary"
+                android:text="Event Poster"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="@dimen/helios_label_size" />
 
             <LinearLayout
@@ -290,19 +401,31 @@
 
                 <ImageView
                     android:id="@+id/iv_upload_image"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
                     android:background="@drawable/bg_helios_input"
-                    android:padding="8dp"
-                    android:src="@android:drawable/ic_menu_upload"
-                    app:tint="@color/helios_text_primary" />
+                    android:contentDescription="Selected event poster"
+                    android:cropToPadding="true"
+                    android:paddingStart="12dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="16dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/placeholder_event" />
+
+                <ProgressBar
+                    android:id="@+id/progress_poster_upload"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Image/File: PNG, JPG, PDF"
-                    android:textColor="@color/helios_text_hint"
+                    android:text="Tap the poster to choose a PNG or JPG image."
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>
@@ -321,15 +444,13 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_cancel_back"
-                style="@style/Widget.Helios.Button.Secondary"
+                style="@style/Widget.Helios.Button.Danger"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:minHeight="@dimen/helios_button_height"
-                android:text="Cancel - Back"
-                android:textColor="#B3261E"
-                app:backgroundTint="#FFB4AB" />
+                android:text="Cancel - Back" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_next_qr"

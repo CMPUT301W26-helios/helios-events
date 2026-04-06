@@ -4,32 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/helios_background"
+    android:background="?attr/colorSurface"
     tools:context=".ui.nav.OrganizerQrFragment">
 
-    <ImageView
-        android:id="@+id/helios_brand_logo"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
-        android:layout_marginTop="36dp"
-        android:layout_marginEnd="64dp"
-        android:contentDescription="Helios logo"
-        android:src="@drawable/helios_logo_v1"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/tv_qr_title"
+    <include
+        android:id="@+id/include_qr_header"
+        layout="@layout/include_submenu_header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="8dp"
-        android:fontFamily="sans-serif-black"
-        android:text="QR Code\nand Preview"
-        android:textColor="@color/helios_text_primary"
-        android:textSize="42sp"
-        app:layout_constraintEnd_toStartOf="@id/helios_brand_logo"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -42,7 +28,7 @@
         android:layout_marginTop="20dp"
         app:cardCornerRadius="28dp"
         app:cardElevation="0dp"
-        app:layout_constraintTop_toBottomOf="@id/tv_qr_title"
+        app:layout_constraintTop_toBottomOf="@id/include_qr_header"
         app:layout_constraintBottom_toTopOf="@id/layout_qr_bottom_actions"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -59,7 +45,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Generated QR:"
-                android:textColor="@color/helios_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold"
                 android:textSize="@dimen/helios_label_size"
                 app:layout_constraintStart_toStartOf="parent"
@@ -71,9 +57,9 @@
                 android:layout_height="0dp"
                 android:layout_marginTop="16dp"
                 android:adjustViewBounds="true"
-                android:background="@color/helios_surface"
+                android:background="?attr/colorSurface"
                 android:scaleType="centerInside"
-                android:src="@android:drawable/ic_menu_gallery"
+                android:src="@drawable/ic_image"
                 app:layout_constraintBottom_toTopOf="@id/layout_qr_inline_actions"
                 app:layout_constraintDimensionRatio="1:1"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -88,22 +74,49 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:gravity="center"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/image_qr_preview">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_preview_event_page"
+                    style="@style/Widget.Helios.Button.Primary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="#C5E1E0"
-                    app:cornerRadius="24dp"
                     android:minHeight="@dimen/helios_button_height"
-                    android:text="Preview Event Page"
-                    android:textAllCaps="false"
-                    android:textColor="@color/helios_text_primary" />
+                    android:text="Preview Event Page" />
+
+                <LinearLayout
+                    android:id="@+id/layout_qr_utility_actions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/button_copy_qr_value"
+                        style="@style/Widget.Helios.Button.Secondary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_weight="1"
+                        android:minHeight="@dimen/helios_button_height"
+                        android:text="Copy Code" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/button_save_qr_image"
+                        style="@style/Widget.Helios.Button.Secondary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:minHeight="@dimen/helios_button_height"
+                        android:text="Save Image" />
+                </LinearLayout>
             </LinearLayout>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -113,7 +126,7 @@
     <!-- Red Back Button for viewing existing event QR codes -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_qr_back_view"
-        style="@style/Widget.Helios.Button.Secondary"
+        style="@style/Widget.Helios.Button.Danger"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
@@ -122,12 +135,11 @@
         android:minHeight="@dimen/helios_button_height"
         android:text="Back to Manage Menu"
         android:visibility="gone"
-        app:backgroundTint="#FFB4AB"
         app:cornerRadius="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:textColor="#B3261E" />
+        />
 
     <LinearLayout
         android:id="@+id/layout_qr_bottom_actions"
@@ -145,14 +157,12 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_qr_cancel_back"
-            style="@style/Widget.Helios.Button.Secondary"
+            style="@style/Widget.Helios.Button.Danger"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
             android:minHeight="@dimen/helios_button_height"
-            app:backgroundTint="#FFB4AB"
-            android:textColor="#B3261E"
             android:text="Cancel - Back" />
 
         <com.google.android.material.button.MaterialButton

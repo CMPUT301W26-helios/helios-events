@@ -1,5 +1,6 @@
 package com.example.helios.service;
 
+import com.example.helios.data.EventRepository;
 import com.example.helios.data.FirebaseRepository;
 import com.example.helios.model.Event;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -26,7 +27,7 @@ public class EventServiceTest {
 
     @Test
     public void getAllEvents_returnsRepositoryEvents() {
-        FirebaseRepository repository = mock(FirebaseRepository.class);
+        EventRepository repository = mock(EventRepository.class);
 
         List<Event> expectedEvents = new ArrayList<>();
         expectedEvents.add(new Event());

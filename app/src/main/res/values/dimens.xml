@@ -7,6 +7,8 @@
 
     <dimen name="helios_logo_width">92dp</dimen>
     <dimen name="helios_logo_height">92dp</dimen>
+    <dimen name="helios_header_icon_size">28dp</dimen>
+    <dimen name="helios_header_icon_spacing">10dp</dimen>
 
     <dimen name="helios_brand_title_size">48sp</dimen>
     <dimen name="helios_brand_subtitle_size">26sp</dimen>
@@ -14,6 +16,13 @@
     <dimen name="helios_heading_size">26sp</dimen>
     <dimen name="helios_subheading_size">15sp</dimen>
     <dimen name="helios_label_size">14sp</dimen>
+    <dimen name="helios_bottom_nav_label_size">11sp</dimen>
+    <dimen name="helios_bottom_nav_label_line_height">14sp</dimen>
+    <dimen name="helios_bottom_nav_min_height">68dp</dimen>
+    <dimen name="helios_bottom_nav_padding_top">8dp</dimen>
+    <dimen name="helios_bottom_nav_padding_bottom">8dp</dimen>
+    <dimen name="helios_bottom_nav_item_padding_top">6dp</dimen>
+    <dimen name="helios_bottom_nav_item_padding_bottom">6dp</dimen>
 
     <dimen name="helios_button_width">228dp</dimen>
     <dimen name="helios_button_height">48dp</dimen>

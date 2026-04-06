@@ -7,12 +7,16 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.helios.R;
 import com.example.helios.model.UserProfile;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -44,8 +48,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         void onViewEvents(@NonNull UserProfile user);
     }
 
-    private final List<UserProfile> users;
-    private final Set<String> organizerUids;
+    private final List<UserProfile> users = new ArrayList<>();
+    private final Set<String> organizerUids = new HashSet<>();
     private final OnUserDeleteListener onDelete;
     private final OnViewEventsListener onViewEvents;
 
@@ -64,10 +68,9 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             @NonNull OnUserDeleteListener onDelete,
             @NonNull OnViewEventsListener onViewEvents
     ) {
-        this.users = users;
-        this.organizerUids = organizerUids;
         this.onDelete = onDelete;
         this.onViewEvents = onViewEvents;
+        replaceUsers(users, organizerUids);
     }
 
     @NonNull
@@ -88,7 +91,11 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         // Elevate the role label when the user has also created events.
         String baseRole = user.getRole() != null ? user.getRole() : "user";
         boolean isOrganizer = organizerUids.contains(user.getUid());
-        if (isOrganizer && "user".equals(baseRole)) {
+        if (user.isOrganizerAccessRevoked()) {
+            holder.tvRole.setText("admin".equals(baseRole)
+                    ? "admin | organizer restricted"
+                    : "user | organizer restricted");
+        } else if (isOrganizer && "user".equals(baseRole)) {
             holder.tvRole.setText("user & organizer");
         } else if (isOrganizer && "admin".equals(baseRole)) {
             holder.tvRole.setText("admin & organizer");
@@ -102,6 +109,24 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
 
     @Override
     public int getItemCount() { return users.size(); }
+
+    public void replaceUsers(
+            @NonNull List<UserProfile> updatedUsers,
+            @NonNull Set<String> updatedOrganizerUids
+    ) {
+        List<UserProfile> previous = new ArrayList<>(users);
+        List<UserProfile> next = new ArrayList<>(updatedUsers);
+        Set<String> previousOrganizerUids = new HashSet<>(organizerUids);
+        Set<String> nextOrganizerUids = new HashSet<>(updatedOrganizerUids);
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(
+                new UserDiff(previous, next, previousOrganizerUids, nextOrganizerUids)
+        );
+        users.clear();
+        users.addAll(next);
+        organizerUids.clear();
+        organizerUids.addAll(nextOrganizerUids);
+        diffResult.dispatchUpdatesTo(this);
+    }
 
     /**
      * ViewHolder class for user items.
@@ -122,6 +147,59 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             tvRole = itemView.findViewById(R.id.tv_user_role);
             btnDelete = itemView.findViewById(R.id.btn_delete_user);
             btnViewEvents = itemView.findViewById(R.id.btn_view_events);
+        }
+    }
+
+    private static final class UserDiff extends DiffUtil.Callback {
+        private final List<UserProfile> oldItems;
+        private final List<UserProfile> newItems;
+        private final Set<String> oldOrganizerUids;
+        private final Set<String> newOrganizerUids;
+
+        private UserDiff(
+                @NonNull List<UserProfile> oldItems,
+                @NonNull List<UserProfile> newItems,
+                @NonNull Set<String> oldOrganizerUids,
+                @NonNull Set<String> newOrganizerUids
+        ) {
+            this.oldItems = oldItems;
+            this.newItems = newItems;
+            this.oldOrganizerUids = oldOrganizerUids;
+            this.newOrganizerUids = newOrganizerUids;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldItems.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newItems.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            UserProfile oldItem = oldItems.get(oldItemPosition);
+            UserProfile newItem = newItems.get(newItemPosition);
+            String oldUid = oldItem.getUid();
+            String newUid = newItem.getUid();
+            return oldUid != null && oldUid.equals(newUid);
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            UserProfile oldItem = oldItems.get(oldItemPosition);
+            UserProfile newItem = newItems.get(newItemPosition);
+            return equalsNullable(oldItem.getName(), newItem.getName())
+                    && equalsNullable(oldItem.getEmail(), newItem.getEmail())
+                    && equalsNullable(oldItem.getRole(), newItem.getRole())
+                    && oldItem.isOrganizerAccessRevoked() == newItem.isOrganizerAccessRevoked()
+                    && oldOrganizerUids.contains(oldItem.getUid()) == newOrganizerUids.contains(newItem.getUid());
+        }
+
+        private boolean equalsNullable(@Nullable String left, @Nullable String right) {
+            return left == null ? right == null : left.equals(right);
         }
     }
 }

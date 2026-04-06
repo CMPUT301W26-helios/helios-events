@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_refresh_geolocation_sandbox"
+        android:title="Refresh clustered sandbox" />
+    <item
+        android:id="@+id/menu_refresh_geolocation_regional_sandbox"
+        android:title="Refresh regional spread sandbox" />
+    <item
+        android:id="@+id/menu_open_geolocation_entrant_map"
+        android:title="Open entrant map" />
+</menu>

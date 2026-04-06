@@ -3,6 +3,9 @@ package com.example.helios.service;
 import androidx.annotation.NonNull;
 
 import com.example.helios.data.FirebaseRepository;
+import com.example.helios.data.NotificationRepository;
+import com.example.helios.data.UserRepository;
+import com.example.helios.data.WaitingListRepository;
 import com.example.helios.model.Event;
 import com.example.helios.model.NotificationAudience;
 import com.example.helios.model.NotificationRecord;
@@ -30,15 +33,26 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  */
 public class OrganizerNotificationService {
-    private final FirebaseRepository repository;
+    private final WaitingListRepository waitingListRepository;
+    private final NotificationRepository notificationRepository;
+    private final UserRepository userRepository;
 
     public OrganizerNotificationService() {
         this(new FirebaseRepository());
     }
 
-    // Package-private test seam.
-    OrganizerNotificationService(@NonNull FirebaseRepository repository) {
-        this.repository = repository;
+    public OrganizerNotificationService(@NonNull FirebaseRepository repository) {
+        this(repository, repository, repository);
+    }
+
+    public OrganizerNotificationService(
+            @NonNull WaitingListRepository waitingListRepository,
+            @NonNull NotificationRepository notificationRepository,
+            @NonNull UserRepository userRepository
+    ) {
+        this.waitingListRepository = waitingListRepository;
+        this.notificationRepository = notificationRepository;
+        this.userRepository = userRepository;
     }
 
 
@@ -70,7 +84,7 @@ public class OrganizerNotificationService {
             @NonNull OnSuccessListener<NotificationSendResult> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        repository.getAllWaitingListEntries(eventId, entries -> {
+        waitingListRepository.getAllWaitingListEntries(eventId, entries -> {
             Set<String> recipientUids = new HashSet<>();
             for (WaitingListEntry entry : entries) {
                 if (entry == null || entry.getEntrantUid() == null || entry.getStatus() == null) continue;
@@ -79,30 +93,9 @@ public class OrganizerNotificationService {
                 }
             }
 
-            if (recipientUids.isEmpty()) {
-                onSuccess.onSuccess(new NotificationSendResult(0));
-                return;
-            }
-
-            List<NotificationRecord> records = new ArrayList<>();
-            for (String uid : recipientUids) {
-                records.add(new NotificationRecord(
-                        UUID.randomUUID().toString(),
-                        eventId,
-                        organizerUid,
-                        uid,
-                        audience,
-                        title,
-                        message,
-                        System.currentTimeMillis()
-                ));
-            }
-
-            repository.saveNotificationsBatch(
-                    records,
-                    unused -> onSuccess.onSuccess(new NotificationSendResult(records.size())),
-                    onFailure
-            );
+            // Delegate to sendToRecipients so notification preferences are checked
+            // consistently with automated messages (draw results, cancellations, etc.).
+            sendToRecipients(organizerUid, eventId, audience, title, message, recipientUids, onSuccess, onFailure);
         }, onFailure);
     }
 
@@ -140,7 +133,7 @@ public class OrganizerNotificationService {
         AtomicBoolean failed = new AtomicBoolean(false);
 
         for (String uid: recipientUids) {
-            repository.getUser(uid, user -> {
+            userRepository.getUser(uid, user -> {
                 //Check if user exists and has notifications enabled
                 if (user != null && user.isNotificationsEnabled()) {
                     records.add(new NotificationRecord(
@@ -157,7 +150,7 @@ public class OrganizerNotificationService {
 
                 //Once every user lookup finished, save all records in one batch
                 if (remaining.decrementAndGet() == 0 && !failed.get()) {
-                    repository.saveNotificationsBatch(
+                    notificationRepository.saveNotificationsBatch(
                             records,
                             unused -> onSuccess.onSuccess(new NotificationSendResult(records.size())),
                             onFailure
@@ -201,20 +194,23 @@ public class OrganizerNotificationService {
         entry.setCancelledAtMillis(System.currentTimeMillis());
         entry.setStatusReason(reason);
 
-        repository.updateWaitingListEntry(
+        waitingListRepository.updateWaitingListEntry(
                 event.getEventId(),
                 entry.getEntrantUid(),
                 entry,
                 unused -> {
                     Set<String> recipients = new HashSet<>();
                     recipients.add(entry.getEntrantUid());
+                    String eventTitle = describeEvent(event);
 
                     sendToRecipients(
                             organizerUid,
                             event.getEventId(),
                             NotificationAudience.CANCELLED,
-                            "Registration cancelled for " + event.getTitle(),
-                            "Your registration was cancelled. Reason: " + reason,
+                            titleForEvent("Registration cancelled", eventTitle),
+                            "Your spot for " + eventTitle
+                                    + " was cancelled. Reason: " + reason
+                                    + ". Open the event for the latest details.",
                             recipients,
                             result -> onSuccess.onSuccess(null),
                             onFailure
@@ -245,6 +241,7 @@ public class OrganizerNotificationService {
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
+        String eventTitle = describeEvent(event);
         Set<String> invitedUids = new HashSet<>();
         for (WaitingListEntry entry : invitedEntries) {
             invitedUids.add(entry.getEntrantUid());
@@ -259,15 +256,17 @@ public class OrganizerNotificationService {
                 organizerUid,
                 event.getEventId(),
                 NotificationAudience.INVITED,
-                "You've been selected for " + event.getTitle(),
-                "A draw occurred and you were selected. Open the event to accept or decline.",
+                titleForEvent("Invitation ready", eventTitle),
+                "You were selected in the latest draw for " + eventTitle
+                        + ". Open the event to accept or decline your invitation.",
                 invitedUids,
                 invitedResult -> sendToRecipients(
                         organizerUid,
                         event.getEventId(),
                         NotificationAudience.NOT_SELECTED,
-                        "Draw result for " + event.getTitle(),
-                        "A draw occurred and you were not selected this round.",
+                        titleForEvent("Draw update", eventTitle),
+                        "You were not selected in the latest draw for " + eventTitle
+                                + ". If more spots open, the organizer can invite more entrants.",
                         notSelectedUids,
                         notSelectedResult -> onSuccess.onSuccess(null),
                         onFailure
@@ -288,8 +287,9 @@ public class OrganizerNotificationService {
                 event.getEventId(),
                 recipientUid,
                 NotificationAudience.CO_ORGANIZER_INVITE,
-                "Co-organizer invitation",
-                "You were invited to co-organize " + event.getTitle() + ". Open the event to accept or decline.",
+                titleForEvent("Co-organizer invite", describeEvent(event)),
+                "Open " + describeEvent(event)
+                        + " to review the event and accept or decline the co-organizer invite.",
                 onSuccess,
                 onFailure
         );
@@ -307,11 +307,79 @@ public class OrganizerNotificationService {
                 event.getEventId(),
                 recipientUid,
                 NotificationAudience.PRIVATE_EVENT_INVITE,
-                "Private event invitation",
-                "You were invited to " + event.getTitle() + ". Open the event to accept or decline.",
+                titleForEvent("Private event invite", describeEvent(event)),
+                "Open " + describeEvent(event)
+                        + " to review the event and accept or decline your invitation.",
                 onSuccess,
                 onFailure
         );
+    }
+
+    public void notifyReplacementInvite(
+            @NonNull String organizerUid,
+            @NonNull Event event,
+            @NonNull String recipientUid,
+            @NonNull OnSuccessListener<NotificationSendResult> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        sendToSingleRecipient(
+                organizerUid,
+                event.getEventId(),
+                recipientUid,
+                NotificationAudience.INVITED,
+                titleForEvent("Replacement invitation ready", describeEvent(event)),
+                "A spot opened up for " + describeEvent(event)
+                        + ". Open the event to accept or decline your invitation.",
+                onSuccess,
+                onFailure
+        );
+    }
+
+    public void notifyEventCancelled(
+            @NonNull String organizerUid,
+            @NonNull Event event,
+            @NonNull List<WaitingListEntry> entries,
+            @NonNull OnSuccessListener<NotificationSendResult> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        Set<String> recipientUids = new HashSet<>();
+        for (WaitingListEntry entry : entries) {
+            if (entry == null || entry.getEntrantUid() == null) {
+                continue;
+            }
+            recipientUids.add(entry.getEntrantUid());
+        }
+        sendToRecipients(
+                organizerUid,
+                event.getEventId(),
+                NotificationAudience.CANCELLED,
+                titleForEvent("Event cancelled", describeEvent(event)),
+                describeEvent(event) + " was cancelled by the organizer and will no longer take place.",
+                recipientUids,
+                onSuccess,
+                onFailure
+        );
+    }
+
+    public void logEventAudit(
+            @NonNull String actorUid,
+            @NonNull Event event,
+            @NonNull String title,
+            @NonNull String message,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        NotificationRecord record = new NotificationRecord(
+                UUID.randomUUID().toString(),
+                event.getEventId(),
+                actorUid,
+                null,
+                NotificationAudience.AUDIENCE,
+                title,
+                message,
+                System.currentTimeMillis()
+        );
+        notificationRepository.saveNotification(record, onSuccess, onFailure);
     }
 
     /**
@@ -361,5 +429,22 @@ public class OrganizerNotificationService {
             return status == WaitingListStatus.CANCELLED;
         }
         return false;
+    }
+
+    @NonNull
+    private String describeEvent(@NonNull Event event) {
+        String title = event.getTitle();
+        if (title == null || title.trim().isEmpty()) {
+            return "this event";
+        }
+        return title.trim();
+    }
+
+    @NonNull
+    private String titleForEvent(@NonNull String prefix, @NonNull String eventTitle) {
+        if ("this event".equals(eventTitle)) {
+            return prefix;
+        }
+        return prefix + ": " + eventTitle;
     }
 }

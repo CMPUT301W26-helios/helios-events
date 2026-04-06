@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
     android:layout_marginVertical="8dp"
-    app:cardBackgroundColor="@color/helios_surface"
+    app:cardBackgroundColor="?attr/colorSurface"
     app:cardCornerRadius="20dp"
     app:cardElevation="2dp">
 
@@ -25,7 +25,7 @@
                 android:layout_width="0dp"
                 android:layout_height="1dp"
                 android:layout_weight="1"
-                android:background="@color/helios_border_light" />
+                android:background="?attr/colorOutline" />
 
             <TextView
                 android:id="@+id/tv_coorganizer_invite_icon"
@@ -36,7 +36,7 @@
                 android:background="@drawable/bg_event_role_badge"
                 android:gravity="center"
                 android:text="!"
-                android:textColor="@color/helios_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -44,7 +44,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/co_organizer_invite_title"
-                android:textColor="@color/helios_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
@@ -53,7 +53,7 @@
                 android:layout_height="1dp"
                 android:layout_marginStart="12dp"
                 android:layout_weight="1"
-                android:background="@color/helios_border_light" />
+                android:background="?attr/colorOutline" />
         </LinearLayout>
 
         <TextView
@@ -63,7 +63,7 @@
             android:layout_marginTop="18dp"
             android:gravity="center"
             android:text="Event title"
-            android:textColor="@color/helios_text_primary"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="20sp"
             android:textStyle="bold" />
 

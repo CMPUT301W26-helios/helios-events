@@ -18,7 +18,7 @@
             android:layout_height="36dp"
             android:background="@drawable/ic_avatar_placeholder"
             android:contentDescription="@null"
-            android:src="@android:drawable/ic_menu_myplaces" />
+            android:src="@drawable/ic_person" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -38,7 +38,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Author"
-                    android:textColor="@color/helios_text_primary"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -51,8 +51,24 @@
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
                     android:text="Organizer"
-                    android:textColor="@color/helios_text_hint"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/text_comment_pinned"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_comment_pinned_badge"
+                    android:paddingStart="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="3dp"
+                    android:text="Pinned"
+                    android:textColor="?attr/colorOnTertiaryContainer"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
                     android:visibility="gone" />
 
                 <TextView
@@ -61,7 +77,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:text="1h ago"
-                    android:textColor="@color/helios_text_hint"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp" />
 
                 <View
@@ -76,7 +92,7 @@
                     android:paddingStart="8dp"
                     android:paddingEnd="8dp"
                     android:text="Delete"
-                    android:textColor="@color/helios_text_hint"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="13sp"
                     android:visibility="gone" />
             </LinearLayout>
@@ -87,7 +103,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:text="Comment text"
-                android:textColor="@color/helios_text_primary"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="18sp" />
 
             <LinearLayout
@@ -118,7 +134,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:text="0"
-                        android:textColor="@color/helios_text_hint"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="14sp" />
                 </LinearLayout>
 
@@ -141,7 +157,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:text="Reply"
-                        android:textColor="@color/helios_text_hint"
+                        android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>

@@ -6,7 +6,9 @@ import androidx.annotation.NonNull;
 
 import com.example.helios.auth.AuthDeviceService;
 import com.example.helios.auth.InstallationIdProvider;
+import com.example.helios.data.EventRepository;
 import com.example.helios.data.FirebaseRepository;
+import com.example.helios.data.UserRepository;
 import com.example.helios.model.UserProfile;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -54,26 +56,41 @@ public class ProfileService {
     }
 
     private final AuthDeviceService authDeviceService;
-    private final FirebaseRepository repository;
+    private final UserRepository userRepository;
+    private final EventRepository eventRepository;
     private final InstallationIdSource installationIdSource;
 
-    /** Initializes the ProfileService with default dependencies. */
     public ProfileService() {
+        this(new FirebaseRepository());
+    }
+
+    public ProfileService(@NonNull FirebaseRepository repository) {
         this(
                 new AuthDeviceService(),
-                new FirebaseRepository(),
+                repository,
+                repository,
                 InstallationIdProvider::getInstallationId
         );
+    }
+
+    public ProfileService(
+            @NonNull AuthDeviceService authDeviceService,
+            @NonNull UserRepository userRepository,
+            @NonNull EventRepository eventRepository
+    ) {
+        this(authDeviceService, userRepository, eventRepository, InstallationIdProvider::getInstallationId);
     }
 
     // Package-private test seam
     ProfileService(
             @NonNull AuthDeviceService authDeviceService,
-            @NonNull FirebaseRepository repository,
+            @NonNull UserRepository userRepository,
+            @NonNull EventRepository eventRepository,
             @NonNull InstallationIdSource installationIdSource
     ) {
         this.authDeviceService = authDeviceService;
-        this.repository = repository;
+        this.userRepository = userRepository;
+        this.eventRepository = eventRepository;
         this.installationIdSource = installationIdSource;
     }
 
@@ -95,30 +112,24 @@ public class ProfileService {
             String uid = firebaseUser.getUid();
             String installationId = installationIdSource.getInstallationId(context);
 
-            repository.isAdminInstallation(installationId, isAdmin -> {
+            userRepository.isAdminInstallation(installationId, isAdmin -> {
                 String desiredRole = isAdmin ? "admin" : "user";
 
-                repository.getUser(uid, existingProfile -> {
+                userRepository.getUser(uid, existingProfile -> {
                     if (existingProfile == null) {
                         createDefaultProfile(uid, installationId, desiredRole, onSuccess, onFailure);
                         return;
                     }
 
-                    boolean needsUpdate = false;
-
-                    if (!desiredRole.equals(existingProfile.getRole())) {
-                        existingProfile.setRole(desiredRole);
-                        needsUpdate = true;
-                    }
-
-                    if (existingProfile.getInstallationId() == null
-                            || !installationId.equals(existingProfile.getInstallationId())) {
-                        existingProfile.setInstallationId(installationId);
-                        needsUpdate = true;
-                    }
+                    boolean needsUpdate = repairBootstrapProfile(
+                            existingProfile,
+                            uid,
+                            installationId,
+                            desiredRole
+                    );
 
                     if (needsUpdate) {
-                        repository.updateUser(
+                        userRepository.updateUser(
                                 existingProfile,
                                 unused -> onSuccess.onSuccess(new BootstrapResult(existingProfile, false)),
                                 onFailure
@@ -168,7 +179,42 @@ public class ProfileService {
             profile.setEmail(email);
             profile.setPhone(phone);
 
-            repository.updateUser(
+            userRepository.updateUser(
+                    profile,
+                    unused -> onSuccess.onSuccess(profile),
+                    onFailure
+            );
+        }, onFailure);
+    }
+
+    /**
+     * Completes the current user's profile and replaces the stored profile photo URL.
+     *
+     * @param context         The application context.
+     * @param name            The user's name.
+     * @param email           The user's email address.
+     * @param phone           The user's phone number.
+     * @param profileImageUrl The uploaded profile image URL.
+     * @param onSuccess       Callback receiving the updated UserProfile.
+     * @param onFailure       Callback for failed operation.
+     */
+    public void completeCurrentProfileWithPhoto(
+            @NonNull Context context,
+            @NonNull String name,
+            @NonNull String email,
+            String phone,
+            String profileImageUrl,
+            @NonNull OnSuccessListener<UserProfile> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        bootstrapCurrentUser(context, result -> {
+            UserProfile profile = result.getProfile();
+            profile.setName(name);
+            profile.setEmail(email);
+            profile.setPhone(phone);
+            profile.setProfileImageUrl(profileImageUrl);
+
+            userRepository.updateUser(
                     profile,
                     unused -> onSuccess.onSuccess(profile),
                     onFailure
@@ -192,6 +238,39 @@ public class ProfileService {
     }
 
     /**
+     * Updates only the current user's stored profile image URL.
+     *
+     * @param context         The application context.
+     * @param profileImageUrl The uploaded profile image URL.
+     * @param onSuccess       Callback receiving the updated UserProfile.
+     * @param onFailure       Callback for failed operation.
+     */
+    public void updateCurrentProfilePhoto(
+            @NonNull Context context,
+            String profileImageUrl,
+            @NonNull OnSuccessListener<UserProfile> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        // A photo update only needs the current UID — skip the admin_devices round-trip
+        // that bootstrapCurrentUser always performs. Two Firestore calls instead of three.
+        authDeviceService.ensureSignedIn(firebaseUser -> {
+            String uid = firebaseUser.getUid();
+            userRepository.getUser(uid, profile -> {
+                if (profile == null) {
+                    onFailure.onFailure(new IllegalStateException("User profile not found."));
+                    return;
+                }
+                profile.setProfileImageUrl(profileImageUrl);
+                userRepository.updateUser(
+                        profile,
+                        unused -> onSuccess.onSuccess(profile),
+                        onFailure
+                );
+            }, onFailure);
+        }, onFailure);
+    }
+
+    /**
      * Retrieves a user profile by UID.
      *
      * @param uid       The unique identifier of the user.
@@ -203,7 +282,7 @@ public class ProfileService {
             @NonNull OnSuccessListener<UserProfile> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        repository.getUser(uid, onSuccess, onFailure);
+        userRepository.getUser(uid, onSuccess, onFailure);
     }
 
     /**
@@ -233,11 +312,37 @@ public class ProfileService {
                 installationId
         );
 
-        repository.saveUser(
+        userRepository.saveUser(
                 newProfile,
                 unused -> onSuccess.onSuccess(new BootstrapResult(newProfile, true)),
                 onFailure
         );
+    }
+
+    private boolean repairBootstrapProfile(
+            @NonNull UserProfile profile,
+            @NonNull String uid,
+            @NonNull String installationId,
+            @NonNull String desiredRole
+    ) {
+        boolean needsUpdate = false;
+
+        if (!uid.equals(profile.getUid())) {
+            profile.setUid(uid);
+            needsUpdate = true;
+        }
+
+        if (!desiredRole.equals(profile.getRole())) {
+            profile.setRole(desiredRole);
+            needsUpdate = true;
+        }
+
+        if (!installationId.equals(profile.getInstallationId())) {
+            profile.setInstallationId(installationId);
+            needsUpdate = true;
+        }
+
+        return needsUpdate;
     }
 
     /**
@@ -270,7 +375,7 @@ public class ProfileService {
             @NonNull OnSuccessListener<List<UserProfile>> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        repository.getAllUsers(onSuccess, onFailure);
+        userRepository.getAllUsers(onSuccess, onFailure);
     }
 
     /**
@@ -303,9 +408,9 @@ public class ProfileService {
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
-        repository.deleteEventsByOrganizer(
+        eventRepository.deleteEventsByOrganizer(
                 uid,
-                unused -> repository.deleteUser(uid, onSuccess, onFailure),
+                unused -> userRepository.deleteUser(uid, onSuccess, onFailure),
                 onFailure
         );
     }
@@ -326,7 +431,31 @@ public class ProfileService {
     ) {
         authDeviceService.ensureSignedIn(firebaseUser -> {
             String uid = firebaseUser.getUid();
-            repository.setNotificationsMuted(uid, muted, onSuccess, onFailure);
+            userRepository.setNotificationsMuted(uid, muted, onSuccess, onFailure);
+        }, onFailure);
+    }
+
+    /**
+     * Updates whether organizer access is blocked for the given user profile.
+     *
+     * @param uid       The unique identifier of the user to update.
+     * @param revoked   True to block organizer access, false to restore it.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
+    public void setOrganizerAccessRevoked(
+            @NonNull String uid,
+            boolean revoked,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        userRepository.getUser(uid, profile -> {
+            if (profile == null) {
+                onFailure.onFailure(new IllegalArgumentException("User profile not found."));
+                return;
+            }
+            profile.setOrganizerAccessRevoked(revoked);
+            userRepository.updateUser(profile, onSuccess, onFailure);
         }, onFailure);
     }
 }

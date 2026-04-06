@@ -1,87 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@color/helios_background">
+    android:background="?attr/colorSurface">
 
-    <TextView
-        android:layout_width="match_parent"
+    <include
+        android:id="@+id/include_notify_header"
+        layout="@layout/include_submenu_header"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Notify Entrants"
-        android:textColor="@color/helios_text_primary"
-        android:textSize="28sp"
-        android:textStyle="bold" />
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/et_notification_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/sv_form_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="12dp"
         android:layout_marginTop="12dp"
-        android:background="@drawable/bg_helios_form_card"
-        android:hint="Notification title"
-        android:padding="12dp"
-        android:textColor="@color/helios_text_primary"
-        android:textColorHint="@color/helios_text_hint" />
+        android:layout_marginEnd="12dp"
+        app:layout_constraintBottom_toTopOf="@id/btn_send_notification"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/include_notify_header">
 
-    <EditText
-        android:id="@+id/et_notification_body"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/bg_helios_form_card"
-        android:gravity="top"
-        android:hint="Message"
-        android:inputType="textMultiLine|textCapSentences"
-        android:minLines="4"
-        android:padding="12dp"
-        android:textColor="@color/helios_text_primary"
-        android:textColorHint="@color/helios_text_hint" />
-
-    <RadioGroup
-        android:id="@+id/rg_notification_audience"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp">
-
-        <RadioButton
-            android:id="@+id/rb_audience_waiting"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="Waiting List Entrants"
-            android:textColor="@color/helios_text_primary" />
+            android:background="@drawable/bg_container"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <RadioButton
-            android:id="@+id/rb_audience_selected"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Selected Entrants"
-            android:textColor="@color/helios_text_primary" />
+            <EditText
+                android:id="@+id/et_notification_title"
+                style="@style/Widget.Helios.Input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Notification title" />
 
-        <RadioButton
-            android:id="@+id/rb_audience_cancelled"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Cancelled Entrants"
-            android:textColor="@color/helios_text_primary" />
-    </RadioGroup>
+            <EditText
+                android:id="@+id/et_notification_body"
+                style="@style/Widget.Helios.Input"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="top"
+                android:hint="Message"
+                android:inputType="textMultiLine|textCapSentences"
+                android:minLines="4" />
+
+            <RadioGroup
+                android:id="@+id/rg_notification_audience"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp">
+
+                <RadioButton
+                    android:id="@+id/rb_audience_waiting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    android:text="Waiting List Entrants"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <RadioButton
+                    android:id="@+id/rb_audience_selected"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Selected Entrants"
+                    android:textColor="?attr/colorOnSurface" />
+
+                <RadioButton
+                    android:id="@+id/rb_audience_cancelled"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cancelled Entrants"
+                    android:textColor="?attr/colorOnSurface" />
+            </RadioGroup>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_send_notification"
         style="@style/Widget.Helios.Button.Primary"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Send Notification" />
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="24dp"
+        android:minHeight="@dimen/helios_button_height"
+        android:text="Send Notification"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_cancel_notification"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Back"
-        android:textColor="@color/helios_text_primary" />
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
