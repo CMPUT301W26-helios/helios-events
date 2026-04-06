@@ -14,6 +14,8 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+
 import com.example.helios.HeliosApplication;
 import com.example.helios.R;
 import com.example.helios.ui.common.HeliosHeaderBranding;
@@ -146,11 +148,34 @@ public abstract class ThemedActivity extends AppCompatActivity {
             }
         }
 
+        if (view instanceof BottomNavigationView) {
+            // BottomNav has complex internal labels; re-traversing ensures they are caught
+            // even if they were added/modified after the initial pass.
+            BottomNavigationView bnv = (BottomNavigationView) view;
+            bnv.post(() -> applyPreferredFontRecursively(bnv, typeface));
+        }
+
         if (!(view instanceof ViewGroup)) {
             return;
         }
 
         ViewGroup group = (ViewGroup) view;
+
+        // Register a listener for dynamically added children (like Chips in ProfileFragment)
+        if (group.getTag(R.id.tag_font_hierarchy_listener_registered) == null) {
+            group.setOnHierarchyChangeListener(new ViewGroup.OnHierarchyChangeListener() {
+                @Override
+                public void onChildViewAdded(View parent, View child) {
+                    applyPreferredFontRecursively(child, typeface);
+                }
+
+                @Override
+                public void onChildViewRemoved(View parent, View child) {
+                }
+            });
+            group.setTag(R.id.tag_font_hierarchy_listener_registered, Boolean.TRUE);
+        }
+
         for (int index = 0; index < group.getChildCount(); index++) {
             applyPreferredFontRecursively(group.getChildAt(index), typeface);
         }

@@ -58,6 +58,13 @@ public interface UserRepository {
             @NonNull OnFailureListener onFailure
     );
 
+    void setSignInBannerEnabled(
+            @NonNull String uid,
+            boolean enabled,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    );
+
     void isAdminInstallation(
             @NonNull String installationId,
             @NonNull OnSuccessListener<Boolean> onSuccess,

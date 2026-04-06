@@ -38,9 +38,9 @@ public class ProfileSetupActivityTest {
         try (ActivityScenario<ProfileSetupActivity> ignored =
                      launchInMode(ProfileSetupActivity.MODE_SETUP_REQUIRED)) {
 
-            onView(withId(R.id.profile_setup_title))
+            onView(withId(R.id.submenu_title))
                     .check(matches(withText("Profile Required")));
-            onView(withId(R.id.profile_setup_subtitle))
+            onView(withId(R.id.submenu_subtitle))
                     .check(matches(withText(
                             "Name and email are required before signing up for events or organizing them."
                     )));

@@ -11,9 +11,9 @@
         layout="@layout/include_submenu_header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -22,76 +22,103 @@
         android:id="@+id/cl_content_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="12dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/bg_container"
-        android:padding="16dp"
+        android:padding="12dp"
         app:layout_constraintBottom_toTopOf="@id/layout_draw_controls"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/include_entrant_header">
 
-        <EditText
-            android:id="@+id/et_search"
-            style="@style/Widget.Helios.Input"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_search"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:drawableEnd="@drawable/ic_search"
-            android:drawablePadding="10dp"
             android:hint="Search entrants"
-            android:inputType="text"
-            android:maxLines="1"
+            app:endIconDrawable="@drawable/ic_search"
+            app:endIconMode="custom"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Large">
 
-        <TextView
-            android:id="@+id/tv_draw_indicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="Draw completed"
-            android:textColor="?attr/colorTertiary"
-            android:textSize="13sp"
-            android:textStyle="bold"
-            android:visibility="gone"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/et_search" />
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_search"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1"
+                android:paddingVertical="10dp"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView
-            android:id="@+id/tv_list_header"
+        <LinearLayout
+            android:id="@+id/ll_header_row"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:text="Waiting List"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="18sp"
-            android:textStyle="bold"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_draw_indicator" />
+            app:layout_constraintTop_toBottomOf="@id/til_search">
+
+            <TextView
+                android:id="@+id/tv_list_header"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Waiting List"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_draw_indicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_indicator_pill"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:text="Draw completed"
+                android:textColor="?attr/colorTertiary"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tv_info_stats"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="12sp"
+                tools:text="15 entrants" />
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/ll_filters"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="6dp"
             android:orientation="horizontal"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_list_header">
+            app:layout_constraintTop_toBottomOf="@id/ll_header_row">
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/cg_status"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:chipSpacingHorizontal="6dp"
+                app:chipSpacingHorizontal="4dp"
+                app:selectionRequired="true"
                 app:singleLine="true"
-                app:singleSelection="true"
-                app:selectionRequired="true">
+                app:singleSelection="true">
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_invited"
@@ -99,9 +126,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Selected"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     app:checkedIconVisible="false"
-                    app:chipMinHeight="34dp"
+                    app:chipMinHeight="32dp"
                     app:ensureMinTouchTargetSize="false" />
 
                 <com.google.android.material.chip.Chip
@@ -110,9 +137,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Pool"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     app:checkedIconVisible="false"
-                    app:chipMinHeight="34dp"
+                    app:chipMinHeight="32dp"
                     app:ensureMinTouchTargetSize="false" />
 
                 <com.google.android.material.chip.Chip
@@ -121,40 +148,28 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Cancelled"
-                    android:textSize="13sp"
+                    android:textSize="12sp"
                     app:checkedIconVisible="false"
-                    app:chipMinHeight="34dp"
+                    app:chipMinHeight="32dp"
                     app:ensureMinTouchTargetSize="false" />
             </com.google.android.material.chip.ChipGroup>
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/tv_info_stats"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="13sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ll_filters"
-            tools:text="2 of 15 selected entrants have accepted" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_entrants"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="6dp"
             app:layout_constraintBottom_toTopOf="@id/layout_actions_container"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_info_stats" />
+            app:layout_constraintTop_toBottomOf="@id/ll_filters" />
 
         <LinearLayout
             android:id="@+id/layout_actions_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="4dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -172,18 +187,18 @@
                     style="@style/Widget.Helios.Button.Secondary.Compact"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
+                    android:layout_marginEnd="4dp"
                     android:layout_weight="1"
-                    android:text="Delete Selected" />
+                    android:text="Delete" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_redraw_replacement"
                     style="@style/Widget.Helios.Button.Primary.Compact"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="4dp"
                     android:layout_weight="1"
-                    android:text="Draw Replacements" />
+                    android:text="Draw Replace" />
             </LinearLayout>
 
             <LinearLayout
@@ -198,9 +213,9 @@
                     style="@style/Widget.Helios.Button.Danger.Compact"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
+                    android:layout_marginEnd="4dp"
                     android:layout_weight="1"
-                    android:text="Cancel Selected Mode"
+                    android:text="Remove Entrants"
                     android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton
@@ -208,9 +223,9 @@
                     style="@style/Widget.Helios.Button.Primary.Compact"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="4dp"
                     android:layout_weight="1"
-                    android:text="Export Final List" />
+                    android:text="Export CSV" />
             </LinearLayout>
         </LinearLayout>
 
@@ -220,40 +235,62 @@
         android:id="@+id/layout_draw_controls"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="12dp"
         android:background="@drawable/bg_container"
         android:orientation="vertical"
-        android:padding="16dp"
+        android:padding="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <TextView
-            android:id="@+id/tv_draw_controls_title"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:id="@+id/layout_draw_controls_header"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Invited target"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_draw_controls_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Draw Controls"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_toggle_draw_controls"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="0dp"
+                app:icon="@drawable/ic_expand_more"
+                app:iconSize="20dp"
+                app:iconTint="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tv_draw_controls_helper"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Set how many entrants should currently hold invitations for this event."
+            android:layout_marginTop="2dp"
+            android:text="Input how many entrants should be drawn."
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="13sp" />
+            android:textSize="11sp"
+            android:visibility="gone" />
 
         <LinearLayout
+            android:id="@+id/layout_draw_controls_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:visibility="gone">
 
             <EditText
                 android:id="@+id/et_draw_count"
@@ -263,14 +300,17 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:inputType="number"
-                android:text="0" />
+                android:minHeight="40dp"
+                android:paddingVertical="4dp"
+                android:text="0"
+                android:textSize="14sp" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_draw"
-                style="@style/Widget.Helios.Button.Primary"
+                style="@style/Widget.Helios.Button.Primary.Compact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="8dp"
                 android:text="Update Draw" />
         </LinearLayout>
     </LinearLayout>

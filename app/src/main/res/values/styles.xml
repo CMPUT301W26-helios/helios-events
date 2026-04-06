@@ -49,18 +49,32 @@
         <item name="android:textStyle">bold</item>
     </style>
 
-    <style name="Widget.Helios.Card.Surface" parent="Widget.Material3.CardView.Elevated">
+    <style name="Widget.Helios.CardView" parent="CardView">
+        <item name="cardBackgroundColor">?attr/colorSurfaceVariant</item>
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">2dp</item>
+    </style>
+
+    <style name="Widget.Helios.MaterialCardView" parent="Widget.Material3.CardView.Elevated">
         <item name="cardBackgroundColor">?attr/colorSurface</item>
-        <item name="cardCornerRadius">20dp</item>
         <item name="cardElevation">0dp</item>
         <item name="strokeColor">?attr/colorOutline</item>
         <item name="strokeWidth">1dp</item>
+        <item name="cardCornerRadius">24dp</item>
     </style>
 
-    <style name="Widget.Helios.Card.SecondaryContainer" parent="Widget.Material3.CardView.Elevated">
+    <style name="Widget.Helios.Card.Surface" parent="Widget.Helios.MaterialCardView" />
+
+    <style name="Widget.Helios.Card.ProfileSection" parent="Widget.Helios.MaterialCardView">
+        <item name="android:layout_marginStart">16dp</item>
+        <item name="android:layout_marginTop">16dp</item>
+        <item name="android:layout_marginEnd">16dp</item>
+    </style>
+
+    <style name="Widget.Helios.Card.SecondaryContainer" parent="Widget.Helios.MaterialCardView">
         <item name="cardBackgroundColor">?attr/colorSecondaryContainer</item>
         <item name="cardCornerRadius">28dp</item>
-        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">0dp</item>
     </style>
 
     <style name="Widget.Helios.Input" parent="@android:style/Widget.EditText">

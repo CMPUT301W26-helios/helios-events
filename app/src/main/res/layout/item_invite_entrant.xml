@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
@@ -7,6 +8,15 @@
     android:gravity="center_vertical"
     android:orientation="horizontal"
     android:padding="12dp">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/iv_invite_user_avatar"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_marginEnd="12dp"
+        android:padding="2dp"
+        android:src="@drawable/ic_avatar_person_placeholder"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -19,22 +29,26 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="?attr/colorOnSurface"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tv_invite_user_contact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
+            android:alpha="0.7"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="12sp" />
+            android:textSize="11sp" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_invite_user"
-        style="@style/Widget.Helios.Button.Primary"
+        style="@style/Widget.Helios.Button.Primary.Compact"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Invite" />
+        android:layout_marginStart="8dp"
+        android:minHeight="36dp"
+        android:text="Invite"
+        android:textSize="12sp" />
 
 </LinearLayout>

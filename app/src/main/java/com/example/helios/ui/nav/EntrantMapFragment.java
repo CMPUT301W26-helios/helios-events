@@ -491,7 +491,7 @@ public class EntrantMapFragment extends Fragment implements OnMapReadyCallback {
             // API_KEY
             // com.google.android.geo.API_KEY
             // OR: MAPS_API_KEY
-            toast(apiKey);
+            //toast(apiKey);
 
             String normalized = apiKey.trim();
             return !normalized.isEmpty()

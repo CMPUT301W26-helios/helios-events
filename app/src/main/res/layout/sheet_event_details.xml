@@ -65,6 +65,7 @@
         </LinearLayout>
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/card_event_poster"
             android:layout_width="match_parent"
             android:layout_height="188dp"
             android:layout_marginTop="16dp"
@@ -76,10 +77,30 @@
                 android:id="@+id/image_event_poster"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:adjustViewBounds="true"
-                android:padding="18dp"
-                android:scaleType="fitCenter"
+                android:scaleType="centerCrop"
+                android:paddingVertical="12dp"
                 android:src="@drawable/placeholder_event" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btn_maximize_poster"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="12dp"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="2dp"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp">
+
+                <ImageView
+                    android:id="@+id/iv_maximize_icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="8dp"
+                    android:src="@drawable/ic_maximize"
+                    app:tint="?attr/colorOnSurface" />
+            </com.google.android.material.card.MaterialCardView>
         </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout

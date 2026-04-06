@@ -38,6 +38,7 @@ public class ManageEventFragment extends Fragment {
     @Nullable private String eventId;
     @Nullable private Event loadedEvent;
     @Nullable private String currentUserUid;
+    @Nullable private com.example.helios.model.UserProfile currentUserProfile;
     private boolean openEventPostingOnLoad;
 
     public ManageEventFragment() {
@@ -106,6 +107,8 @@ public class ManageEventFragment extends Fragment {
                     : "Manage Entrants and Run Draw");
             updateDeleteEventVisibility(deleteEventButton);
 
+            updateButtonVisibilities();
+
             if (openEventPostingOnLoad) {
                 openEventPostingOnLoad = false;
                 view.post(this::openEventPosting);
@@ -117,10 +120,15 @@ public class ManageEventFragment extends Fragment {
                     Toast.LENGTH_LONG).show();
         });
 
-        profileService.ensureSignedIn(firebaseUser -> {
-            currentUserUid = firebaseUser.getUid();
-            updateDeleteEventVisibility(deleteEventButton);
-        }, error -> currentUserUid = null);
+        profileService.loadCurrentProfile(requireContext(), profile -> {
+            if (!isAdded()) return;
+            currentUserProfile = profile;
+            currentUserUid = profile != null ? profile.getUid() : null;
+            updateButtonVisibilities();
+        }, error -> {
+            currentUserUid = null;
+            currentUserProfile = null;
+        });
 
         viewPageButton.setOnClickListener(v -> {
             openEventPosting();
@@ -157,6 +165,39 @@ public class ManageEventFragment extends Fragment {
                         .navigate(R.id.editEventFragment, EventNavArgs.forEventId(eventId));
             }
         });
+
+        updateButtonVisibilities();
+    }
+
+    private void updateButtonVisibilities() {
+        View view = getView();
+        if (view == null) return;
+
+        MaterialButton deleteEventButton = view.findViewById(R.id.button_delete_event);
+        MaterialButton editButton = view.findViewById(R.id.button_edit_event);
+        MaterialButton invitePrivateEntrantsButton = view.findViewById(R.id.button_invite_private_entrants);
+        MaterialButton assignCoOrganizerButton = view.findViewById(R.id.button_assign_coorganizer);
+
+        boolean isOrganizer = loadedEvent != null && currentUserUid != null 
+                && currentUserUid.equals(loadedEvent.getOrganizerUid());
+        boolean isAdmin = currentUserProfile != null && currentUserProfile.isAdmin();
+        boolean hasControl = isOrganizer || isAdmin;
+
+        if (deleteEventButton != null) {
+            deleteEventButton.setVisibility(hasControl ? View.VISIBLE : View.GONE);
+        }
+        if (editButton != null) {
+            editButton.setVisibility(hasControl ? View.VISIBLE : View.GONE);
+        }
+        if (assignCoOrganizerButton != null) {
+            assignCoOrganizerButton.setVisibility(hasControl ? View.VISIBLE : View.GONE);
+        }
+        // Invite button should only show for private events AND if user has control
+        if (invitePrivateEntrantsButton != null) {
+            invitePrivateEntrantsButton.setVisibility(
+                    (loadedEvent != null && loadedEvent.isPrivateEvent() && hasControl) 
+                    ? View.VISIBLE : View.GONE);
+        }
     }
 
     private void openEventPosting() {
@@ -194,10 +235,7 @@ public class ManageEventFragment extends Fragment {
     }
 
     private void updateDeleteEventVisibility(@NonNull MaterialButton deleteEventButton) {
-        boolean canDelete = loadedEvent != null
-                && currentUserUid != null
-                && currentUserUid.equals(loadedEvent.getOrganizerUid());
-        deleteEventButton.setVisibility(canDelete ? View.VISIBLE : View.GONE);
+        // Handled by updateButtonVisibilities
     }
 
     private void showDeleteEventConfirmDialog(@NonNull MaterialButton deleteEventButton) {
@@ -221,9 +259,10 @@ public class ManageEventFragment extends Fragment {
             Toast.makeText(requireContext(), "Event not loaded yet.", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (currentUserUid == null || !currentUserUid.equals(loadedEvent.getOrganizerUid())) {
+        boolean isAdmin = currentUserProfile != null && currentUserProfile.isAdmin();
+        if (!isAdmin && (currentUserUid == null || !currentUserUid.equals(loadedEvent.getOrganizerUid()))) {
             Toast.makeText(requireContext(),
-                    "Only the event organizer can delete this event.",
+                    "Only the event organizer or an admin can delete this event.",
                     Toast.LENGTH_SHORT).show();
             return;
         }

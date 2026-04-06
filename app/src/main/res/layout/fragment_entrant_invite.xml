@@ -10,9 +10,9 @@
         layout="@layout/include_submenu_header"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -22,8 +22,9 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="12dp"
+        android:layout_marginBottom="12dp"
         android:background="@drawable/bg_container"
         android:padding="12dp"
         app:layout_constraintBottom_toTopOf="@id/btn_user_picker_done"
@@ -31,40 +32,61 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/include_user_picker_header">
 
-        <TextView
-            android:id="@+id/tv_user_picker_subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Search by name, email, or phone."
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="13sp"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <EditText
-            android:id="@+id/et_user_picker_search"
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_user_picker_search"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
             android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_marginTop="8dp"
-            android:background="@drawable/bg_search_bar"
-            android:drawableEnd="@drawable/ic_search"
-            android:drawablePadding="8dp"
-            android:hint="Search entrants..."
-            android:paddingHorizontal="12dp"
-            android:textSize="14sp"
+            android:layout_height="wrap_content"
+            android:hint="Search entrants"
+            app:endIconDrawable="@drawable/ic_search"
+            app:endIconMode="custom"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_user_picker_subtitle" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Large">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_user_picker_search"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:maxLines="1"
+                android:paddingVertical="10dp"
+                android:textSize="14sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/tv_user_picker_subtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Search by name, email, or phone."
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="11sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/til_user_picker_search" />
 
         <TextView
             android:id="@+id/tv_user_picker_empty"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="32dp"
             android:gravity="center"
             android:text="No matching users found."
             android:textColor="?attr/colorOnSurfaceVariant"
             android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/et_user_picker_search" />
+            app:layout_constraintTop_toBottomOf="@id/tv_user_picker_subtitle" />
+
+        <ProgressBar
+            android:id="@+id/pb_user_picker"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginTop="32dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_user_picker_subtitle" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_user_picker_users"
@@ -74,7 +96,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/et_user_picker_search" />
+            app:layout_constraintTop_toBottomOf="@id/tv_user_picker_subtitle" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -84,7 +106,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:layout_marginEnd="12dp"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="16dp"
         android:minHeight="@dimen/helios_button_height"
         android:text="Done"
         app:layout_constraintBottom_toBottomOf="parent"

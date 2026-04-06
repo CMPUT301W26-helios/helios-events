@@ -72,6 +72,7 @@ public class EventUserPickerFragment extends Fragment {
     private TextView emptyView;
     private TextView titleView;
     private TextView subtitleView;
+    private android.widget.ProgressBar progressBar;
 
     private UserAdapter adapter;
 
@@ -116,6 +117,7 @@ public class EventUserPickerFragment extends Fragment {
         emptyView = view.findViewById(R.id.tv_user_picker_empty);
         RecyclerView recyclerView = view.findViewById(R.id.rv_user_picker_users);
         MaterialButton doneButton = view.findViewById(R.id.btn_user_picker_done);
+        progressBar = view.findViewById(R.id.pb_user_picker);
 
         adapter = new UserAdapter(
                 filteredUsers,
@@ -181,8 +183,10 @@ public class EventUserPickerFragment extends Fragment {
     }
 
     private void loadUsers() {
+        if (progressBar != null) progressBar.setVisibility(View.VISIBLE);
         profileService.getAllProfiles(users -> {
             if (!isAdded()) return;
+            if (progressBar != null) progressBar.setVisibility(View.GONE);
             allUsers.clear();
 
             Set<String> blocked = new HashSet<>();
@@ -196,7 +200,12 @@ public class EventUserPickerFragment extends Fragment {
                 allUsers.add(user);
             }
             applyFilter(searchInput.getText() == null ? "" : searchInput.getText().toString());
-        }, e -> toast("Failed to load users: " + e.getMessage()));
+        }, e -> {
+            if (isAdded()) {
+                if (progressBar != null) progressBar.setVisibility(View.GONE);
+                toast("Failed to load users: " + e.getMessage());
+            }
+        });
     }
 
     private void applyFilter(@NonNull String rawQuery) {
@@ -207,14 +216,16 @@ public class EventUserPickerFragment extends Fragment {
             String name = safeLower(user.getName());
             String email = safeLower(user.getEmail());
             String phone = safeLower(user.getPhone());
+            String uid = safeLower(user.getUid());
             if (query.isEmpty()
                     || name.contains(query)
                     || email.contains(query)
-                    || phone.contains(query)) {
+                    || phone.contains(query)
+                    || uid.contains(query)) {
                 filteredUsers.add(user);
             }
         }
-        adapter.replaceUsers(filteredUsers);
+        adapter.replaceUsers(new ArrayList<>(filteredUsers));
         emptyView.setVisibility(filteredUsers.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
@@ -376,12 +387,12 @@ public class EventUserPickerFragment extends Fragment {
         private final CoOrganizerStateResolver coOrganizerStateResolver;
 
         UserAdapter(
-                @NonNull List<UserProfile> users,
+                @NonNull List<UserProfile> initialUsers,
                 boolean coOrganizerMode,
                 @NonNull OnAction onAction,
                 @NonNull CoOrganizerStateResolver coOrganizerStateResolver
         ) {
-            this.users = users;
+            this.users = new ArrayList<>(initialUsers);
             this.coOrganizerMode = coOrganizerMode;
             this.onAction = onAction;
             this.coOrganizerStateResolver = coOrganizerStateResolver;
@@ -413,6 +424,14 @@ public class EventUserPickerFragment extends Fragment {
             holder.contactView.setText(contact);
             bindActionButton(holder.actionButton, user);
             holder.actionButton.setOnClickListener(v -> onAction.onAction(user));
+
+            String imageUrl = user.getProfileImageUrl();
+            com.bumptech.glide.Glide.with(holder.avatarView)
+                    .load(imageUrl)
+                    .placeholder(R.drawable.ic_avatar_person_placeholder)
+                    .error(R.drawable.ic_avatar_person_placeholder)
+                    .circleCrop()
+                    .into(holder.avatarView);
         }
 
         private void bindActionButton(@NonNull MaterialButton button, @NonNull UserProfile user) {
@@ -475,12 +494,14 @@ public class EventUserPickerFragment extends Fragment {
         }
 
         static class VH extends RecyclerView.ViewHolder {
+            final com.google.android.material.imageview.ShapeableImageView avatarView;
             final TextView nameView;
             final TextView contactView;
             final MaterialButton actionButton;
 
             VH(@NonNull View itemView) {
                 super(itemView);
+                avatarView = itemView.findViewById(R.id.iv_invite_user_avatar);
                 nameView = itemView.findViewById(R.id.tv_invite_user_name);
                 contactView = itemView.findViewById(R.id.tv_invite_user_contact);
                 actionButton = itemView.findViewById(R.id.btn_invite_user);
@@ -521,7 +542,8 @@ public class EventUserPickerFragment extends Fragment {
                 UserProfile newItem = newItems.get(newItemPosition);
                 return equalsNullable(oldItem.getName(), newItem.getName())
                         && equalsNullable(oldItem.getEmail(), newItem.getEmail())
-                        && equalsNullable(oldItem.getPhone(), newItem.getPhone());
+                        && equalsNullable(oldItem.getPhone(), newItem.getPhone())
+                        && equalsNullable(oldItem.getProfileImageUrl(), newItem.getProfileImageUrl());
             }
 
             private boolean equalsNullable(@Nullable String left, @Nullable String right) {

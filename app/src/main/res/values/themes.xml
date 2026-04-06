@@ -25,6 +25,8 @@
         <item name="colorOutline">#707973</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
+        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
 
     <style name="Theme.Helios.Midnight" parent="Theme.Material3.DayNight.NoActionBar">
@@ -51,6 +53,8 @@
         <item name="colorOutline">#8A938D</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
+        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
 
     <style name="Theme.Helios.Sunrise" parent="Theme.Material3.DayNight.NoActionBar">
@@ -77,6 +81,8 @@
         <item name="colorOutline">#87726A</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
+        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
 
     <style name="Theme.Helios.Ocean" parent="Theme.Material3.DayNight.NoActionBar">
@@ -103,6 +109,8 @@
         <item name="colorOutline">#71787E</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
+        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
 
     <style name="Theme.Helios.Blossom" parent="Theme.Material3.DayNight.NoActionBar">
@@ -129,6 +137,36 @@
         <item name="colorOutline">#7F747A</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
+        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
+    </style>
+    
+    <style name="Theme.Helios.Discordant" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/discord_blurple</item>
+        <item name="colorOnPrimary">@color/discord_white</item>
+        <item name="colorPrimaryContainer">@color/discord_blurple</item>
+        <item name="colorOnPrimaryContainer">@color/discord_white</item>
+        <item name="colorSecondary">@color/discord_light_grey</item>
+        <item name="colorOnSecondary">@color/discord_mid_grey</item>
+        <item name="colorSecondaryContainer">@color/discord_dark_grey</item>
+        <item name="colorOnSecondaryContainer">@color/discord_white</item>
+        <item name="colorTertiary">@color/discord_green</item>
+        <item name="colorOnTertiary">@color/discord_mid_grey</item>
+        <item name="colorTertiaryContainer">@color/discord_dark_grey</item>
+        <item name="colorOnTertiaryContainer">@color/discord_green</item>
+        <item name="colorError">@color/discord_red</item>
+        <item name="colorOnError">@color/discord_white</item>
+        <item name="colorErrorContainer">@color/discord_red</item>
+        <item name="colorOnErrorContainer">@color/discord_white</item>
+        <item name="colorSurface">@color/discord_mid_grey</item>
+        <item name="colorOnSurface">@color/discord_white</item>
+        <item name="colorSurfaceVariant">@color/discord_dark_grey</item>
+        <item name="colorOnSurfaceVariant">@color/discord_light_grey</item>
+        <item name="colorOutline">@color/discord_black</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
+        <item name="cardViewStyle">@style/Widget.Helios.CardView</item>
+        <item name="materialCardViewStyle">@style/Widget.Helios.MaterialCardView</item>
     </style>
 
     <style name="Theme.Helios.Accessibility.ColorBlind" parent="ThemeOverlay.Material3">

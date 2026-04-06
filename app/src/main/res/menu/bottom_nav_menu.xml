@@ -19,7 +19,7 @@
     <item
         android:id="@+id/notificationsFragment"
         android:icon="@drawable/ic_nav_notifications"
-        android:title="Notifications" />
+        android:title="Notifs" />
     <item
         android:id="@+id/adminFragment"
         android:icon="@drawable/ic_nav_admin"

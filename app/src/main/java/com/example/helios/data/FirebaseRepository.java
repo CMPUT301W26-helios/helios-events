@@ -213,6 +213,16 @@ public class FirebaseRepository
             @NonNull OnSuccessListener<Void> onSuccess,
             @NonNull OnFailureListener onFailure
     ) {
+        setNotificationsMuted(uid, true, onSuccess, onFailure);
+    }
+
+    @Override
+    public void setNotificationsMuted(
+            @NonNull String uid,
+            boolean muted,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
         if (!isNonEmpty(uid)) {
             onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
             return;
@@ -220,7 +230,26 @@ public class FirebaseRepository
 
         users()
                 .document(uid)
-                .update("notificationsEnabled", false)
+                .update("notificationsEnabled", !muted)
+                .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    @Override
+    public void setSignInBannerEnabled(
+            @NonNull String uid,
+            boolean enabled,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        if (!isNonEmpty(uid)) {
+            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
+            return;
+        }
+
+        users()
+                .document(uid)
+                .update("signInBannerEnabled", enabled)
                 .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
@@ -1368,31 +1397,7 @@ public class FirebaseRepository
                 .addOnFailureListener(onFailure);
     }
 
-    /**
-     * Updates the notification mute status for a user.
-     *
-     * @param uid       The unique identifier of the user.
-     * @param muted     True to mute notifications, false to enable.
-     * @param onSuccess Callback for successful operation.
-     * @param onFailure Callback for failed operation.
-     */
-    @Override
-    public void setNotificationsMuted(
-            @NonNull String uid,
-            boolean muted,
-            @NonNull OnSuccessListener<Void> onSuccess,
-            @NonNull OnFailureListener onFailure
-    ) {
-        if (!isNonEmpty(uid)) {
-            onFailure.onFailure(new IllegalArgumentException("UID must not be empty."));
-            return;
-        }
-        users()
-                .document(uid)
-                .update("notificationsEnabled", !muted)
-                .addOnSuccessListener(onSuccess)
-                .addOnFailureListener(onFailure);
-    }
+
 
     @NonNull
     private CollectionReference users() {

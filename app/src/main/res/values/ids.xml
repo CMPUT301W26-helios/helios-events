@@ -1,3 +1,4 @@
 <resources>
     <item name="tag_font_listener_registered" type="id" />
+    <item name="tag_font_hierarchy_listener_registered" type="id" />
 </resources>

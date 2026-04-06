@@ -18,6 +18,7 @@ public class UserProfile {
     private String fcmToken;
     private String profileImageUrl;
     private boolean organizerAccessRevoked;
+    private boolean signInBannerEnabled = true;
 
     /**
      * Default constructor required for Firestore deserialization.
@@ -46,6 +47,7 @@ public class UserProfile {
         this.role = role;
         this.notificationsEnabled = notificationsEnabled;
         this.installationId = installationId;
+        this.signInBannerEnabled = true;
     }
 
     /**
@@ -153,6 +155,20 @@ public class UserProfile {
      */
     public void setOrganizerAccessRevoked(boolean organizerAccessRevoked) {
         this.organizerAccessRevoked = organizerAccessRevoked;
+    }
+
+    /**
+     * @return True if the sign-in banner should be displayed at the top of the screen.
+     */
+    public boolean isSignInBannerEnabled() {
+        return signInBannerEnabled;
+    }
+
+    /**
+     * @param signInBannerEnabled Whether the sign-in banner should be displayed.
+     */
+    public void setSignInBannerEnabled(boolean signInBannerEnabled) {
+        this.signInBannerEnabled = signInBannerEnabled;
     }
 
     /**

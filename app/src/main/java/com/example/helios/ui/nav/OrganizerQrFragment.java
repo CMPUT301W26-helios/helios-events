@@ -24,8 +24,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.constraintlayout.widget.ConstraintSet;
 import androidx.fragment.app.Fragment;
 import androidx.core.content.ContextCompat;
 import androidx.navigation.fragment.NavHostFragment;
@@ -81,6 +79,7 @@ public class OrganizerQrFragment extends Fragment {
     @Nullable private MaterialButton copyQrValueButton;
     @Nullable private MaterialButton saveQrImageButton;
     @Nullable private View qrUtilityActions;
+    @Nullable private MaterialButton previewEventButton;
 
     private final ActivityResultLauncher<String> storagePermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
@@ -161,10 +160,7 @@ public class OrganizerQrFragment extends Fragment {
         TextView labelView = view.findViewById(R.id.tv_generated_qr_label);
         qrImage = view.findViewById(R.id.image_qr_preview);
         View bottomActions = view.findViewById(R.id.layout_qr_bottom_actions);
-        View previewEventButton = view.findViewById(R.id.button_preview_event_page);
-        View inlineActions = view.findViewById(R.id.layout_qr_inline_actions);
-        View cardView = view.findViewById(R.id.cv_qr_box);
-        View innerLayout = view.findViewById(R.id.layout_qr_card_inner);
+        previewEventButton = view.findViewById(R.id.button_preview_event_page);
         qrUtilityActions = view.findViewById(R.id.layout_qr_utility_actions);
 
         MaterialButton cancelButton = view.findViewById(R.id.button_qr_cancel_back);
@@ -181,6 +177,15 @@ public class OrganizerQrFragment extends Fragment {
         if (saveQrImageButton != null) {
             saveQrImageButton.setOnClickListener(v -> saveQrImageRequested());
             saveQrImageButton.setEnabled(false);
+        }
+
+        if (previewEventButton != null) {
+            previewEventButton.setOnClickListener(v -> {
+                if (currentQrValue != null) {
+                    com.example.helios.ui.event.EventDetailsBottomSheet.newInstance(currentQrValue)
+                            .show(getParentFragmentManager(), "event_details");
+                }
+            });
         }
 
         if (mode == Mode.CREATE) {
@@ -219,36 +224,6 @@ public class OrganizerQrFragment extends Fragment {
                 viewModeBackButton.setVisibility(View.VISIBLE);
                 viewModeBackButton.setOnClickListener(v ->
                         NavHostFragment.findNavController(this).navigateUp());
-            }
-
-            if (innerLayout instanceof ConstraintLayout) {
-                ConstraintSet innerSet = new ConstraintSet();
-                innerSet.clone((ConstraintLayout) innerLayout);
-                innerSet.connect(R.id.image_qr_preview, ConstraintSet.BOTTOM,
-                        ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, 0);
-                innerSet.applyTo((ConstraintLayout) innerLayout);
-            }
-            if (innerLayout != null) {
-                ViewGroup.LayoutParams lp = innerLayout.getLayoutParams();
-                lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                innerLayout.setLayoutParams(lp);
-            }
-            if (cardView != null) {
-                ViewGroup.LayoutParams cardLp = cardView.getLayoutParams();
-                cardLp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
-                cardView.setLayoutParams(cardLp);
-            }
-            if (view instanceof ConstraintLayout) {
-                ConstraintSet set = new ConstraintSet();
-                set.clone((ConstraintLayout) view);
-                set.connect(
-                        R.id.cv_qr_box,
-                        ConstraintSet.BOTTOM,
-                        R.id.button_qr_back_view,
-                        ConstraintSet.TOP,
-                        getResources().getDimensionPixelSize(R.dimen.helios_screen_padding)
-                );
-                set.applyTo((ConstraintLayout) view);
             }
 
             if (eventIdForView == null || eventIdForView.trim().isEmpty()) {
@@ -373,6 +348,12 @@ public class OrganizerQrFragment extends Fragment {
     }
 
     private void updateQrUtilityButtons(boolean enabled) {
+        if (qrUtilityActions != null) {
+            qrUtilityActions.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        }
+        if (previewEventButton != null) {
+            previewEventButton.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        }
         if (copyQrValueButton != null) {
             copyQrValueButton.setEnabled(enabled);
         }
