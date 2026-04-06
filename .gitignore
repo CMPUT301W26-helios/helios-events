@@ -8,7 +8,6 @@
 .externalNativeBuild
 .cxx
 local.properties
-docs/javadoc/
 metadata.bin
 *.tmp
 *.temp
