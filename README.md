@@ -27,6 +27,6 @@ Entering an event waiting list creates an entry for a lottery draw, where organi
 (TODO!)
 
 ## License:
-(TBD)
+MIT License - Copyright (c) 2026 CMPUT301W26-helios
 
 
