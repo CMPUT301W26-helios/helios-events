@@ -22,10 +22,10 @@
         android:layout_marginEnd="16dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/submenu_back_button"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="@id/submenu_back_button"
+        app:layout_constraintBottom_toBottomOf="@id/submenu_back_button">
 
         <ImageView
             android:id="@+id/ivHeaderHeliosIcon"
@@ -51,11 +51,11 @@
         android:id="@+id/submenu_subtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:textColor="?attr/colorOnSurfaceVariant"
         android:textSize="13sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/submenu_title_container"
-        app:layout_constraintTop_toBottomOf="@id/submenu_back_button" />
+        app:layout_constraintTop_toBottomOf="@id/submenu_title_container" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
