@@ -45,9 +45,21 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
         void onViewOrganizer(@NonNull Event event);
     }
 
+    /**
+     * Listener interface for handling the click event on an event item.
+     */
+    public interface OnEventClickListener {
+        /**
+         * Called when an event item is clicked.
+         * @param event The event associated with the clicked item.
+         */
+        void onEventClick(@NonNull Event event);
+    }
+
     private final List<Event> events = new ArrayList<>();
     private final OnEventDeleteListener onDelete;
     private final OnViewOrganizerListener onViewOrganizer;
+    private final OnEventClickListener onEventClick;
 
     /**
      * Constructs an AdminEventAdapter.
@@ -55,14 +67,17 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
      * @param events          The list of events to display.
      * @param onDelete        The listener for delete button clicks.
      * @param onViewOrganizer The listener for "View Organizer" button clicks.
+     * @param onEventClick    The listener for item click events.
      */
     public AdminEventAdapter(
             @NonNull List<Event> events,
             @NonNull OnEventDeleteListener onDelete,
-            @NonNull OnViewOrganizerListener onViewOrganizer
+            @NonNull OnViewOrganizerListener onViewOrganizer,
+            @NonNull OnEventClickListener onEventClick
     ) {
         this.onDelete = onDelete;
         this.onViewOrganizer = onViewOrganizer;
+        this.onEventClick = onEventClick;
         replaceEvents(events);
     }
 
@@ -87,6 +102,7 @@ public class AdminEventAdapter extends RecyclerView.Adapter<AdminEventAdapter.Vi
 
         holder.btnDelete.setOnClickListener(v -> onDelete.onEventDelete(event));
         holder.btnViewOrganizer.setOnClickListener(v -> onViewOrganizer.onViewOrganizer(event));
+        holder.itemView.setOnClickListener(v -> onEventClick.onEventClick(event));
     }
 
     @Override

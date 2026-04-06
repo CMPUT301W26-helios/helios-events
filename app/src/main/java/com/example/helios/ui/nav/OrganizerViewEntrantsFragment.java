@@ -12,13 +12,12 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.core.content.FileProvider;
-
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -79,9 +78,21 @@ public class OrganizerViewEntrantsFragment extends Fragment {
 
     private TextView tvDrawIndicator, tvListHeader, tvInfoStats, tvHeaderTitle, tvHeaderSubtitle;
     private View llFilters, layoutDrawControls, layoutDeclinedActions, layoutInvitedActions;
-    private EditText etSearch;
-    private EditText etDrawCount;
-    private MaterialButton btnDraw, btnRemoveEntrant;
+    private View layoutDrawControlsHeader, layoutDrawControlsInput;
+    private TextView tvDrawControlsHelper;
+    private MaterialButton btnDraw, btnRemoveEntrant, btnToggleDrawControls;
+    private EditText etSearch, etDrawCount;
+    private boolean drawControlsExpanded = false;
+
+    private String pendingCsvContent;
+    private final ActivityResultLauncher<String> createDocumentLauncher =
+            registerForActivityResult(new ActivityResultContracts.CreateDocument("text/csv"), uri -> {
+                if (uri != null && pendingCsvContent != null) {
+                    writeCsvToUri(uri, pendingCsvContent);
+                }
+                pendingCsvContent = null;
+            });
+
     private ChipGroup cgStatus;
     private OrganizerNotificationService organizerNotificationService;
 
@@ -129,13 +140,20 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         layoutDrawControls = view.findViewById(R.id.layout_draw_controls);
         layoutDeclinedActions = view.findViewById(R.id.layout_declined_actions);
         layoutInvitedActions = view.findViewById(R.id.layout_invited_actions);
+        layoutDrawControlsHeader = view.findViewById(R.id.layout_draw_controls_header);
+        layoutDrawControlsInput = view.findViewById(R.id.layout_draw_controls_input);
+        tvDrawControlsHelper = view.findViewById(R.id.tv_draw_controls_helper);
+        btnToggleDrawControls = view.findViewById(R.id.btn_toggle_draw_controls);
         etSearch = view.findViewById(R.id.et_search);
         etDrawCount = view.findViewById(R.id.et_draw_count);
         btnDraw = view.findViewById(R.id.btn_draw);
         btnRemoveEntrant = view.findViewById(R.id.btn_remove_entrant);
         cgStatus = view.findViewById(R.id.cg_status);
+
         tvHeaderTitle.setText("Manage Entrants");
         tvHeaderSubtitle.setText("Review invited entrants, the replacement pool, and cancelled responses.");
+        tvHeaderSubtitle.setSingleLine(true);
+        tvHeaderSubtitle.setEllipsize(android.text.TextUtils.TruncateAt.END);
         updateRemoveEntrantButtonState();
     }
 
@@ -173,6 +191,15 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         view.findViewById(R.id.btn_redraw_replacement).setOnClickListener(v -> redrawReplacements());
         btnRemoveEntrant.setOnClickListener(v -> toggleRemoveEntrantMode());
         view.findViewById(R.id.btn_export).setOnClickListener(v -> exportFinalList());
+        btnToggleDrawControls.setOnClickListener(v -> toggleDrawControls());
+        layoutDrawControlsHeader.setOnClickListener(v -> toggleDrawControls());
+    }
+
+    private void toggleDrawControls() {
+        drawControlsExpanded = !drawControlsExpanded;
+        tvDrawControlsHelper.setVisibility(drawControlsExpanded ? View.VISIBLE : View.GONE);
+        layoutDrawControlsInput.setVisibility(drawControlsExpanded ? View.VISIBLE : View.GONE);
+        btnToggleDrawControls.setIconResource(drawControlsExpanded ? R.drawable.ic_expand_less : R.drawable.ic_expand_more);
     }
 
     /**
@@ -217,9 +244,8 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         tvDrawIndicator.setVisibility(drawn ? View.VISIBLE : View.GONE);
         tvDrawIndicator.setText(drawn ? "Draw completed" : "Draw pending");
         llFilters.setVisibility(statusViewEnabled ? View.VISIBLE : View.GONE);
-        tvListHeader.setText(statusViewEnabled ? "Selected entrants" : "Waiting list");
+        tvListHeader.setText(statusViewEnabled ? "Selected" : "Waiting");
         layoutDrawControls.setVisibility(View.VISIBLE);
-        layoutInvitedActions.setVisibility(View.GONE);
         btnDraw.setText(drawn ? "Update Draw" : "Run Draw");
 
         if (statusViewEnabled && cgStatus.getCheckedChipId() == View.NO_ID) {
@@ -270,18 +296,15 @@ public class OrganizerViewEntrantsFragment extends Fragment {
 
         if (invitedFilter) {
             long confirmed = filtered.stream().filter(e -> e.getStatus() == WaitingListStatus.ACCEPTED).count();
-            tvInfoStats.setText(confirmed + " of " + filtered.size() + " selected entrants have accepted");
-            tvInfoStats.setVisibility(View.VISIBLE);
+            tvInfoStats.setText(confirmed + "/" + filtered.size() + " accepted");
         } else if (statusViewEnabled && selectedChipId == R.id.chip_waitlisted) {
-            tvInfoStats.setText(filtered.size() + " entrants remain in the replacement pool");
-            tvInfoStats.setVisibility(View.VISIBLE);
+            tvInfoStats.setText(filtered.size() + " in pool");
         } else if (statusViewEnabled && selectedChipId == R.id.chip_declined) {
-            tvInfoStats.setText("Select cancelled or declined entrants, then delete them or draw replacements.");
-            tvInfoStats.setVisibility(View.VISIBLE);
+            tvInfoStats.setText(filtered.size() + " cancelled");
         } else {
-            tvInfoStats.setText(filtered.size() + " entrants are still waiting for the first draw");
-            tvInfoStats.setVisibility(View.VISIBLE);
+            tvInfoStats.setText(filtered.size() + " waiting");
         }
+        tvInfoStats.setVisibility(View.VISIBLE);
 
         for (WaitingListEntry entry : filtered) {
             displayList.add(new EntrantDisplayModel(
@@ -353,15 +376,15 @@ public class OrganizerViewEntrantsFragment extends Fragment {
 
     private void updateHeaderForSelection(boolean statusViewEnabled, int selectedChipId) {
         if (!statusViewEnabled) {
-            tvListHeader.setText("Waiting list");
+            tvListHeader.setText("Waiting");
             return;
         }
         if (selectedChipId == R.id.chip_invited) {
-            tvListHeader.setText("Selected entrants");
+            tvListHeader.setText("Selected");
         } else if (selectedChipId == R.id.chip_waitlisted) {
-            tvListHeader.setText("Replacement pool");
+            tvListHeader.setText("Pool");
         } else if (selectedChipId == R.id.chip_declined) {
-            tvListHeader.setText("Cancelled and declined");
+            tvListHeader.setText("Cancelled");
         } else {
             tvListHeader.setText("Entrants");
         }
@@ -602,6 +625,9 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         removeEntrantMode = !removeEntrantMode;
         updateRemoveEntrantButtonState();
         adapter.notifyItemRangeChanged(0, adapter.getItemCount());
+        if (removeEntrantMode) {
+            toast("Tap an entrant to remove them from the list");
+        }
     }
 
     /**
@@ -609,7 +635,7 @@ public class OrganizerViewEntrantsFragment extends Fragment {
      */
     private void updateRemoveEntrantButtonState() {
         if (btnRemoveEntrant == null) return;
-        btnRemoveEntrant.setText(removeEntrantMode ? "Done Cancelling" : "Cancel Entrants");
+        btnRemoveEntrant.setText(removeEntrantMode ? "Done" : "Remove Entrants");
     }
 
     /**
@@ -773,30 +799,26 @@ public class OrganizerViewEntrantsFragment extends Fragment {
         }
 
         try {
-            File cacheDir = requireContext().getCacheDir();
             String eventTitle = event != null && event.getTitle() != null
                     ? event.getTitle().replaceAll("[^a-zA-Z0-9]", "_") : "event";
-            File csvFile = new File(cacheDir, "enrolled_" + eventTitle + ".csv");
-            FileWriter writer = new FileWriter(csvFile);
-            writer.write(csv.toString());
-            writer.flush();
-            writer.close();
+            String filename = "enrolled_" + eventTitle + ".csv";
 
-            Uri uri = FileProvider.getUriForFile(
-                    requireContext(),
-                    requireContext().getPackageName() + ".fileprovider",
-                    csvFile
-            );
+            pendingCsvContent = csv.toString();
+            createDocumentLauncher.launch(filename);
 
-            Intent shareIntent = new Intent(Intent.ACTION_SEND);
-            shareIntent.setType("text/csv");
-            shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
-            shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Enrolled list – " + (event != null ? event.getTitle() : "event"));
-            shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            startActivity(Intent.createChooser(shareIntent, "Export enrolled list"));
+        } catch (Exception e) {
+            toast("Export setup failed: " + e.getMessage());
+        }
+    }
 
+    private void writeCsvToUri(@NonNull Uri uri, @NonNull String content) {
+        try (OutputStream os = requireContext().getContentResolver().openOutputStream(uri)) {
+            if (os != null) {
+                os.write(content.getBytes(StandardCharsets.UTF_8));
+                toast("CSV saved successfully");
+            }
         } catch (IOException e) {
-            toast("Export failed: " + e.getMessage());
+            toast("Failed to save file: " + e.getMessage());
         }
     }
 

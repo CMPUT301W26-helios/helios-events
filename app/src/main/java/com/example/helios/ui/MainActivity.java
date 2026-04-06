@@ -59,6 +59,7 @@ public class MainActivity extends ThemedActivity {
 
     private TextView bannerText;
     private TextView bannerRole;
+    private View bannerView;
 
     private UserProfile cachedProfile = null;
     private Boolean cachedProfileComplete = null; // null = unknown
@@ -85,9 +86,9 @@ public class MainActivity extends ThemedActivity {
         bottomNav = findViewById(R.id.bottom_nav);
         bottomNavOrganizer = findViewById(R.id.bottom_nav_organizer);
 
-        View banner = findViewById(R.id.include_user_banner);
-        bannerText = banner.findViewById(R.id.user_banner_text);
-        bannerRole = banner.findViewById(R.id.user_banner_role);
+        bannerView = findViewById(R.id.include_user_banner);
+        bannerText = bannerView.findViewById(R.id.user_banner_text);
+        bannerRole = bannerView.findViewById(R.id.user_banner_role);
 
         navHostFragment =
                 (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
@@ -442,6 +443,8 @@ public class MainActivity extends ThemedActivity {
             if (name == null) name = "Anonymous";
             bannerText.setText("Signed in as: " + name);
             bannerRole.setText(profile.isAdmin() ? "admin" : "user");
+
+            bannerView.setVisibility(profile.isSignInBannerEnabled() ? View.VISIBLE : View.GONE);
 
             // Toggle Admin menu visibility
             MenuItem adminItem = bottomNav.getMenu().findItem(R.id.adminFragment);

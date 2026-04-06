@@ -48,10 +48,22 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         void onViewEvents(@NonNull UserProfile user);
     }
 
+    /**
+     * Listener interface for handling the click event on a user item.
+     */
+    public interface OnUserClickListener {
+        /**
+         * Called when a user item is clicked.
+         * @param user The user profile associated with the clicked item.
+         */
+        void onUserClick(@NonNull UserProfile user);
+    }
+
     private final List<UserProfile> users = new ArrayList<>();
     private final Set<String> organizerUids = new HashSet<>();
     private final OnUserDeleteListener onDelete;
     private final OnViewEventsListener onViewEvents;
+    private final OnUserClickListener onUserClick;
 
     /**
      * Constructs a UserAdapter.
@@ -61,15 +73,18 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
      *                      "user & organizer" instead of plain "user" in the role label.
      * @param onDelete      The listener for delete button clicks.
      * @param onViewEvents  The listener for "View Events" button clicks.
+     * @param onUserClick   The listener for user item clicks.
      */
     public UserAdapter(
             @NonNull List<UserProfile> users,
             @NonNull Set<String> organizerUids,
             @NonNull OnUserDeleteListener onDelete,
-            @NonNull OnViewEventsListener onViewEvents
+            @NonNull OnViewEventsListener onViewEvents,
+            @NonNull OnUserClickListener onUserClick
     ) {
         this.onDelete = onDelete;
         this.onViewEvents = onViewEvents;
+        this.onUserClick = onUserClick;
         replaceUsers(users, organizerUids);
     }
 
@@ -105,6 +120,7 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
 
         holder.btnDelete.setOnClickListener(v -> onDelete.onUserDelete(user));
         holder.btnViewEvents.setOnClickListener(v -> onViewEvents.onViewEvents(user));
+        holder.itemView.setOnClickListener(v -> onUserClick.onUserClick(user));
     }
 
     @Override

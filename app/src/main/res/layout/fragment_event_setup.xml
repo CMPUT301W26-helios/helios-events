@@ -406,11 +406,8 @@
                     android:background="@drawable/bg_helios_input"
                     android:contentDescription="Selected event poster"
                     android:cropToPadding="true"
-                    android:paddingStart="12dp"
-                    android:paddingTop="16dp"
-                    android:paddingEnd="12dp"
-                    android:paddingBottom="16dp"
-                    android:scaleType="fitCenter"
+                    android:paddingVertical="12dp"
+                    android:scaleType="centerCrop"
                     android:src="@drawable/placeholder_event" />
 
                 <ProgressBar

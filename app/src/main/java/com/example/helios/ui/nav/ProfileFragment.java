@@ -75,6 +75,7 @@ public class ProfileFragment extends Fragment {
     private SwitchMaterial switchLargeText;
     private SwitchMaterial switchLargeTouchTargets;
     private SwitchMaterial switchHeaderHeliosIcon;
+    private SwitchMaterial switchSignInBanner;
     private AccessibilityPreferences accessibilityPreferences;
     private HeliosUiPreferences uiPreferences;
     private HeliosThemeManager themeManager;
@@ -130,6 +131,7 @@ public class ProfileFragment extends Fragment {
         switchLargeText = view.findViewById(R.id.switchLargeText);
         switchLargeTouchTargets = view.findViewById(R.id.switchLargeTouchTargets);
         switchHeaderHeliosIcon = view.findViewById(R.id.switchHeaderHeliosIcon);
+        switchSignInBanner = view.findViewById(R.id.switchSignInBanner);
         tvHeaderIconSummary = view.findViewById(R.id.tv_header_icon_summary);
         accessibilityPreferences = HeliosApplication.from(requireContext()).getAccessibilityPreferences();
         uiPreferences = HeliosApplication.from(requireContext()).getUiPreferences();
@@ -549,6 +551,30 @@ public class ProfileFragment extends Fragment {
             }
         }
         bindProfileImage(profileImageUrl);
+        bindSignInBannerPreference(profile);
+    }
+
+    private void bindSignInBannerPreference(@NonNull UserProfile profile) {
+        if (switchSignInBanner == null) return;
+
+        switchSignInBanner.setOnCheckedChangeListener(null);
+        switchSignInBanner.setChecked(profile.isSignInBannerEnabled());
+        switchSignInBanner.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            profileService.setSignInBannerEnabled(requireContext(), isChecked,
+                    unused -> {
+                        if (!isAdded()) return;
+                        Toast.makeText(getContext(),
+                                isChecked ? "Banner enabled." : "Banner disabled.",
+                                Toast.LENGTH_SHORT).show();
+                    },
+                    error -> {
+                        if (!isAdded()) return;
+                        switchSignInBanner.setChecked(!isChecked); // Revert UI
+                        Toast.makeText(getContext(),
+                                "Failed to update banner preference: " + error.getMessage(),
+                                Toast.LENGTH_LONG).show();
+                    });
+        });
     }
 
     /**

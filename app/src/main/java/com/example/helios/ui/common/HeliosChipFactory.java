@@ -1,6 +1,7 @@
 package com.example.helios.ui.common;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.content.res.ColorStateList;
 import android.view.View;
 
@@ -8,6 +9,7 @@ import androidx.annotation.NonNull;
 
 import com.example.helios.HeliosApplication;
 import com.example.helios.service.AccessibilityPreferences;
+import com.example.helios.ui.theme.HeliosThemeManager;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.color.MaterialColors;
 
@@ -108,6 +110,9 @@ public final class HeliosChipFactory {
 
     private static void applyBaseStyle(@NonNull Context context, @NonNull Chip chip) {
         float density = context.getResources().getDisplayMetrics().density;
+        HeliosThemeManager themeManager = HeliosApplication.from(context).getThemeManager();
+        chip.setTypeface(themeManager.getTypeface());
+
         AccessibilityPreferences accessibilityPreferences =
                 HeliosApplication.from(context).getAccessibilityPreferences();
         boolean largeTouchTargets = accessibilityPreferences.isLargeTouchTargetsMode();

@@ -4,6 +4,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.transition.TransitionManager;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -88,6 +90,9 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
     private TextView tvLotteryGuidelines;
     private View lotteryGuidelinesCard;
     private MaterialButton btnWaitingList;
+    private View cardPoster;
+    private ImageView ivMaximizeIcon;
+    private boolean isImageExpanded = false;
 
     private String eventId;
     private boolean hideJoinButton = false;
@@ -169,6 +174,17 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
         View close = view.findViewById(R.id.button_close);
         if (close != null) close.setOnClickListener(v -> dismiss());
+
+        cardPoster = view.findViewById(R.id.card_event_poster);
+        ivMaximizeIcon = view.findViewById(R.id.iv_maximize_icon);
+        View btnMaximize = view.findViewById(R.id.btn_maximize_poster);
+
+        if (ivPoster != null) {
+            ivPoster.setOnClickListener(v -> toggleImageExpansion());
+        }
+        if (btnMaximize != null) {
+            btnMaximize.setOnClickListener(v -> toggleImageExpansion());
+        }
 
         Bundle args = getArguments();
         if (args != null) {
@@ -857,5 +873,31 @@ public class EventDetailsBottomSheet extends BottomSheetDialogFragment {
 
     private String nonEmptyOr(String value, String fallback) {
         return HeliosText.nonEmptyOr(value, fallback);
+    }
+
+    private void toggleImageExpansion() {
+        if (cardPoster == null || ivPoster == null) return;
+
+        isImageExpanded = !isImageExpanded;
+
+        TransitionManager.beginDelayedTransition((ViewGroup) requireView());
+
+        ViewGroup.LayoutParams lp = cardPoster.getLayoutParams();
+        if (isImageExpanded) {
+            lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+            ivPoster.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            ivPoster.setAdjustViewBounds(true);
+            if (ivMaximizeIcon != null) {
+                ivMaximizeIcon.setImageResource(R.drawable.ic_minimize);
+            }
+        } else {
+            lp.height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 188, getResources().getDisplayMetrics());
+            ivPoster.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            ivPoster.setAdjustViewBounds(false);
+            if (ivMaximizeIcon != null) {
+                ivMaximizeIcon.setImageResource(R.drawable.ic_maximize);
+            }
+        }
+        cardPoster.setLayoutParams(lp);
     }
 }

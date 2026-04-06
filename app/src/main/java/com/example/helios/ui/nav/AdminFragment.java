@@ -2,6 +2,7 @@ package com.example.helios.ui.nav;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -51,6 +52,7 @@ import java.util.Set;
  * the notification audit log.
  */
 public class AdminFragment extends Fragment {
+    private static final String ARG_ORGANIZER_UID = "arg_organizer_uid";
 
     private EventService eventService;
     private ProfileService profileService;
@@ -60,43 +62,34 @@ public class AdminFragment extends Fragment {
     private AdminNotificationTestService notificationTestService;
     private CommentService commentService;
 
+    private final List<UserProfile> displayedOrganizers = new ArrayList<>();
     private final List<Event> allEvents = new ArrayList<>();
     private final List<Event> displayedEvents = new ArrayList<>();
     private final List<UserProfile> allUsers = new ArrayList<>();
     private final List<UserProfile> displayedUsers = new ArrayList<>();
-    private final List<Event> allImages = new ArrayList<>();
     private final List<Event> displayedImages = new ArrayList<>();
     private final List<EventComment> displayedComments = new ArrayList<>();
     private final List<NotificationRecord> displayedNotifications = new ArrayList<>();
     private final Set<String> organizerUids = new HashSet<>();
     private final Map<String, String> eventTitlesById = new HashMap<>();
 
-    private RecyclerView rvEvents;
-    private RecyclerView rvUsers;
-    private RecyclerView rvImages;
-    private RecyclerView rvComments;
-    private RecyclerView rvNotifications;
+    private RecyclerView rvUsers, rvOrganizers, rvEvents, rvImages, rvNotifications, rvComments;
+    private TextView tvNoUsers, tvNoOrganizers, tvNoEvents, tvNoImages, tvNoNotifications, tvNoComments;
+    private TextView btnTabUsers, btnTabOrganizers, btnTabEvents, btnTabImages, btnTabNotifications, btnTabComments, btnTabGeo;
+    private HorizontalScrollView tabContainer;
+    private android.widget.ImageView ivScrollLeft, ivScrollRight;
 
     private AdminEventAdapter eventAdapter;
     private UserAdapter userAdapter;
+    private UserAdapter organizerAdapter;
     private AdminImageAdapter imageAdapter;
     private AdminCommentAdapter commentAdapter;
     private AdminNotificationAdapter notificationAdapter;
 
-    private TextView tvNoImages;
-    private TextView tvNoComments;
-    private TextView tvNoNotifications;
     private TextView tvGeolocationLabStatus;
     private TextView tvGeolocationLabToggleState;
     private TextView tvNotificationLabStatus;
     private TextView tvNotificationLabToggleState;
-
-    private TextView btnTabEvents;
-    private TextView btnTabUsers;
-    private TextView btnTabImages;
-    private TextView btnTabComments;
-    private TextView btnTabGeo;
-    private TextView btnTabNotifications;
 
     private LinearLayout layoutGeoTab;
     private LinearLayout layoutNotificationsTab;
@@ -117,6 +110,10 @@ public class AdminFragment extends Fragment {
     @Nullable
     private AdminNotificationTestService.SandboxState notificationLabState;
 
+    private String filteredOrganizerUid;
+    private boolean isOrganizerMode;
+    private String organizerName;
+
     public AdminFragment() {
         super(R.layout.fragment_admin);
     }
@@ -124,10 +121,6 @@ public class AdminFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        TextView tvHeaderTitle = view.findViewById(R.id.tvScreenTitle);
-        if (tvHeaderTitle != null) {
-            tvHeaderTitle.setText("Admin Controls");
-        }
 
         HeliosApplication application = HeliosApplication.from(requireContext());
         eventService = application.getEventService();
@@ -138,22 +131,60 @@ public class AdminFragment extends Fragment {
         notificationTestService = application.getAdminNotificationTestService();
         commentService = application.getCommentService();
 
-        btnTabEvents = view.findViewById(R.id.btn_tab_events);
+        if (getArguments() != null) {
+            filteredOrganizerUid = getArguments().getString(ARG_ORGANIZER_UID);
+        }
+        isOrganizerMode = filteredOrganizerUid != null;
+
+        rvUsers = view.findViewById(R.id.rv_users);
+        rvOrganizers = view.findViewById(R.id.rv_organizers);
+        rvEvents = view.findViewById(R.id.rv_events);
+        rvImages = view.findViewById(R.id.rv_images);
+        rvNotifications = view.findViewById(R.id.rv_notifications);
+        rvComments = view.findViewById(R.id.rv_comments);
+
+        tvNoUsers = view.findViewById(R.id.tv_no_users);
+        tvNoOrganizers = view.findViewById(R.id.tv_no_organizers);
+        tvNoEvents = view.findViewById(R.id.tv_no_events);
+        tvNoImages = view.findViewById(R.id.tv_no_images);
+        tvNoNotifications = view.findViewById(R.id.tv_no_notifications);
+        tvNoComments = view.findViewById(R.id.tv_no_comments);
+
         btnTabUsers = view.findViewById(R.id.btn_tab_users);
+        btnTabOrganizers = view.findViewById(R.id.btn_tab_organizers);
+        btnTabEvents = view.findViewById(R.id.btn_tab_events);
         btnTabImages = view.findViewById(R.id.btn_tab_images);
+        btnTabNotifications = view.findViewById(R.id.btn_tab_notifications);
         btnTabComments = view.findViewById(R.id.btn_tab_comments);
         btnTabGeo = view.findViewById(R.id.btn_tab_geo);
-        btnTabNotifications = view.findViewById(R.id.btn_tab_notifications);
 
-        rvEvents = view.findViewById(R.id.rv_events);
-        rvUsers = view.findViewById(R.id.rv_users);
-        rvImages = view.findViewById(R.id.rv_images);
-        rvComments = view.findViewById(R.id.rv_comments);
-        rvNotifications = view.findViewById(R.id.rv_notifications);
+        tabContainer = view.findViewById(R.id.admin_tab_scroll);
+        ivScrollLeft = view.findViewById(R.id.iv_tab_scroll_left);
+        ivScrollRight = view.findViewById(R.id.iv_tab_scroll_right);
+        tabContainer.getViewTreeObserver().addOnGlobalLayoutListener(this::updateScrollHints);
+        tabContainer.setOnScrollChangeListener((v, scrollX, scrollY, oldScrollX, oldScrollY) -> updateScrollHints());
+        MaterialButton backButton = view.findViewById(R.id.submenu_back_button);
+        TextView titleView = view.findViewById(R.id.submenu_title);
 
-        tvNoImages = view.findViewById(R.id.tv_no_images);
-        tvNoComments = view.findViewById(R.id.tv_no_comments);
-        tvNoNotifications = view.findViewById(R.id.tv_no_notifications);
+        if (isOrganizerMode) {
+            titleView.setText("Organizer Audit");
+            btnTabUsers.setVisibility(View.GONE);
+            btnTabOrganizers.setVisibility(View.GONE);
+            btnTabEvents.setVisibility(View.GONE);
+            btnTabComments.setVisibility(View.GONE);
+            btnTabGeo.setVisibility(View.GONE);
+            backButton.setVisibility(View.VISIBLE);
+            backButton.setOnClickListener(v -> NavHostFragment.findNavController(this).navigateUp());
+        } else {
+            titleView.setText("Admin Controls");
+            backButton.setVisibility(View.GONE);
+            btnTabUsers.setVisibility(View.VISIBLE);
+            btnTabOrganizers.setVisibility(View.VISIBLE);
+            btnTabEvents.setVisibility(View.VISIBLE);
+            btnTabComments.setVisibility(View.VISIBLE);
+            btnTabGeo.setVisibility(View.VISIBLE);
+        }
+
         tvGeolocationLabStatus = view.findViewById(R.id.tv_geolocation_lab_status);
         tvGeolocationLabToggleState = view.findViewById(R.id.tv_geolocation_lab_toggle_state);
         tvNotificationLabStatus = view.findViewById(R.id.tv_notification_lab_status);
@@ -170,16 +201,35 @@ public class AdminFragment extends Fragment {
         btnNotificationLabSeed = view.findViewById(R.id.btn_notification_lab_seed);
         btnNotificationLabMenu = view.findViewById(R.id.btn_notification_lab_menu);
 
-        bindEventList();
-        bindUserList();
-        bindImageList();
-        bindCommentList();
-        bindNotificationList();
+        setupUserAdapters();
+        setupEventAdapter();
+        setupImageAdapter();
+        setupNotificationAdapter();
+        setupCommentAdapter();
+
+        rvUsers.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvUsers.setAdapter(userAdapter);
+        rvOrganizers.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvOrganizers.setAdapter(organizerAdapter);
+        rvEvents.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvEvents.setAdapter(eventAdapter);
+        rvImages.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvImages.setAdapter(imageAdapter);
+        rvNotifications.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvNotifications.setAdapter(notificationAdapter);
+        rvComments.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvComments.setAdapter(commentAdapter);
+
         bindTabs();
         bindGeolocationLab();
         bindNotificationLab();
 
-        showTab(Tab.EVENTS);
+        if (isOrganizerMode) {
+            showTab(Tab.NOTIFICATIONS);
+        } else {
+            showTab(Tab.EVENTS);
+        }
+
         loadEvents();
         loadUsers();
         loadImages();
@@ -187,286 +237,253 @@ public class AdminFragment extends Fragment {
         loadNotifications();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        loadEvents();
-        loadUsers();
-        loadImages();
-        loadComments();
-        loadNotifications();
+    private enum Tab {
+        USERS, ORGANIZERS, EVENTS, IMAGES, NOTIFICATIONS, COMMENTS, GEO
     }
 
-    private enum Tab { EVENTS, USERS, IMAGES, COMMENTS, GEO, NOTIFICATIONS }
-
-    private void bindEventList() {
+    private void setupEventAdapter() {
         eventAdapter = new AdminEventAdapter(
                 displayedEvents,
-                event -> {
-                    String eventId = event.getEventId();
-                    if (!isNonEmpty(eventId)) {
-                        toast("Event is missing an ID.");
-                        return;
-                    }
-                    new AlertDialog.Builder(requireContext())
-                            .setTitle("Delete Event")
-                            .setMessage("Are you sure you want to delete \"" + event.getTitle() + "\"? This cannot be undone.")
-                            .setPositiveButton("Delete", (dialog, which) -> deleteEvent(event))
-                            .setNegativeButton("Cancel", null)
-                            .show();
-                },
-                this::showOrganizerInfo
+                this::onEventDelete,
+                this::showOrganizerInfo,
+                this::onEventClick
         );
-        rvEvents.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvEvents.setAdapter(eventAdapter);
     }
 
-    private void bindUserList() {
+    private void onEventClick(@NonNull Event event) {
+        NavHostFragment.findNavController(this)
+                .navigate(R.id.manageEventFragment, EventNavArgs.forEventId(event.getEventId()));
+    }
+
+    private void setupUserAdapters() {
         userAdapter = new UserAdapter(
                 displayedUsers,
                 organizerUids,
-                user -> {
-                    String currentUid = HeliosApplication.from(requireContext())
-                            .getAuthDeviceService()
-                            .getCurrentUid();
-                    if (user.getUid() != null && user.getUid().equals(currentUid)) {
-                        toast("You cannot delete your own account.");
-                        return;
-                    }
-                    new AlertDialog.Builder(requireContext())
-                            .setTitle("Delete User")
-                            .setMessage("Are you sure you want to delete \"" + user.getName() + "\"? This cannot be undone.")
-                            .setPositiveButton("Delete", (dialog, which) -> deleteUser(user))
-                            .setNegativeButton("Cancel", null)
-                            .show();
-                },
-                this::showUserEvents
+                this::onUserDelete,
+                this::showUserEvents,
+                user -> {}
         );
-        rvUsers.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvUsers.setAdapter(userAdapter);
+
+        organizerAdapter = new UserAdapter(
+                displayedOrganizers,
+                organizerUids,
+                this::onUserDelete,
+                this::showUserEvents,
+                this::openOrganizerMedia
+        );
     }
 
-    private void bindImageList() {
-        imageAdapter = new AdminImageAdapter(displayedImages, event ->
+    private void openOrganizerMedia(@NonNull UserProfile organizer) {
+        Bundle args = new Bundle();
+        args.putString(ARG_ORGANIZER_UID, organizer.getUid());
+        NavHostFragment.findNavController(this)
+                .navigate(R.id.adminFragment, args);
+    }
+
+    private void setupImageAdapter() {
+        imageAdapter = new AdminImageAdapter(displayedImages, image ->
                 new AlertDialog.Builder(requireContext())
                         .setTitle("Delete Image")
-                        .setMessage("Permanently remove the poster from \"" +
-                                nonEmptyOr(event.getTitle(), "this event") + "\"? This cannot be undone.")
-                        .setPositiveButton("Delete", (dialog, which) -> deleteImage(event))
+                        .setMessage("Permanently remove this image? This cannot be undone.")
+                        .setPositiveButton("Delete", (dialog, which) -> deleteImage(image))
                         .setNegativeButton("Cancel", null)
                         .show()
         );
-        rvImages.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvImages.setAdapter(imageAdapter);
     }
 
-    private void bindNotificationList() {
+    private void setupNotificationAdapter() {
         notificationAdapter = new AdminNotificationAdapter(
                 displayedNotifications,
                 eventTitlesById,
                 this::confirmDeleteNotification
         );
-        rvNotifications.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvNotifications.setAdapter(notificationAdapter);
-        updateNoNotificationsState();
     }
 
-    private void bindCommentList() {
+    private void setupCommentAdapter() {
         commentAdapter = new AdminCommentAdapter(
                 displayedComments,
                 eventTitlesById,
                 this::confirmDeleteComment
         );
-        rvComments.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvComments.setAdapter(commentAdapter);
-        updateNoCommentsState();
+    }
+
+    private void updateScrollHints() {
+        android.view.View child = tabContainer.getChildAt(0);
+        if (child == null) return;
+        int scrollX = tabContainer.getScrollX();
+        int maxScroll = child.getWidth() - tabContainer.getWidth();
+        ivScrollLeft.animate().alpha(scrollX > 4 ? 0.75f : 0f).setDuration(150).start();
+        ivScrollRight.animate().alpha(scrollX < maxScroll - 4 ? 0.75f : 0f).setDuration(150).start();
     }
 
     private void bindTabs() {
-        btnTabEvents.setOnClickListener(v -> showTab(Tab.EVENTS));
         btnTabUsers.setOnClickListener(v -> showTab(Tab.USERS));
+        btnTabOrganizers.setOnClickListener(v -> showTab(Tab.ORGANIZERS));
+        btnTabEvents.setOnClickListener(v -> showTab(Tab.EVENTS));
         btnTabImages.setOnClickListener(v -> showTab(Tab.IMAGES));
+        btnTabNotifications.setOnClickListener(v -> showTab(Tab.NOTIFICATIONS));
         btnTabComments.setOnClickListener(v -> showTab(Tab.COMMENTS));
         btnTabGeo.setOnClickListener(v -> showTab(Tab.GEO));
-        btnTabNotifications.setOnClickListener(v -> showTab(Tab.NOTIFICATIONS));
     }
 
-    private void bindNotificationLab() {
-        if (layoutNotificationLabToggle != null) {
-            layoutNotificationLabToggle.setOnClickListener(v ->
-                    setNotificationLabExpanded(!notificationLabExpanded));
-        }
-        btnNotificationLabSeed.setOnClickListener(v -> refreshNotificationSandbox());
-        btnNotificationLabMenu.setOnClickListener(this::showNotificationLabMenu);
-        setNotificationLabExpanded(false);
-        updateNotificationLabStatus("Sandbox not prepared yet.");
+    private void showTab(@NonNull Tab currentTab) {
+        updateTabSelection(btnTabUsers, currentTab == Tab.USERS);
+        updateTabSelection(btnTabOrganizers, currentTab == Tab.ORGANIZERS);
+        updateTabSelection(btnTabEvents, currentTab == Tab.EVENTS);
+        updateTabSelection(btnTabImages, currentTab == Tab.IMAGES);
+        updateTabSelection(btnTabNotifications, currentTab == Tab.NOTIFICATIONS);
+        updateTabSelection(btnTabComments, currentTab == Tab.COMMENTS);
+        updateTabSelection(btnTabGeo, currentTab == Tab.GEO);
+
+        rvUsers.setVisibility(currentTab == Tab.USERS ? View.VISIBLE : View.GONE);
+        rvOrganizers.setVisibility(currentTab == Tab.ORGANIZERS ? View.VISIBLE : View.GONE);
+        rvEvents.setVisibility(currentTab == Tab.EVENTS ? View.VISIBLE : View.GONE);
+        rvImages.setVisibility(currentTab == Tab.IMAGES ? View.VISIBLE : View.GONE);
+        rvNotifications.setVisibility(currentTab == Tab.NOTIFICATIONS ? View.VISIBLE : View.GONE);
+        rvComments.setVisibility(currentTab == Tab.COMMENTS ? View.VISIBLE : View.GONE);
+        layoutGeoTab.setVisibility(currentTab == Tab.GEO ? View.VISIBLE : View.GONE);
+        layoutNotificationsTab.setVisibility(currentTab == Tab.NOTIFICATIONS ? View.VISIBLE : View.GONE);
+
+        tvNoUsers.setVisibility(currentTab == Tab.USERS && displayedUsers.isEmpty() ? View.VISIBLE : View.GONE);
+        tvNoOrganizers.setVisibility(currentTab == Tab.ORGANIZERS && displayedOrganizers.isEmpty() ? View.VISIBLE : View.GONE);
+        tvNoEvents.setVisibility(currentTab == Tab.EVENTS && displayedEvents.isEmpty() ? View.VISIBLE : View.GONE);
+        tvNoImages.setVisibility(currentTab == Tab.IMAGES && displayedImages.isEmpty() ? View.VISIBLE : View.GONE);
+        tvNoNotifications.setVisibility(currentTab == Tab.NOTIFICATIONS && displayedNotifications.isEmpty() ? View.VISIBLE : View.GONE);
+        tvNoComments.setVisibility(currentTab == Tab.COMMENTS && displayedComments.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
-    private void bindGeolocationLab() {
-        if (layoutGeolocationLabToggle != null) {
-            layoutGeolocationLabToggle.setOnClickListener(v ->
-                    setGeolocationLabExpanded(!geolocationLabExpanded));
-        }
-        if (btnGeolocationLabSeed != null) {
-            btnGeolocationLabSeed.setOnClickListener(v -> refreshGeolocationSandbox());
-        }
-        if (btnGeolocationLabMenu != null) {
-            btnGeolocationLabMenu.setOnClickListener(this::showGeolocationLabMenu);
-        }
-        setGeolocationLabExpanded(false);
-        updateGeolocationLabStatus("Sandbox not prepared yet.");
+    private void updateTabSelection(TextView tab, boolean selected) {
+        tab.setSelected(selected);
     }
 
-    private void setNotificationLabExpanded(boolean expanded) {
-        notificationLabExpanded = expanded;
-        if (layoutNotificationLabContent != null) {
-            layoutNotificationLabContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
-        }
-        if (tvNotificationLabToggleState != null) {
-            tvNotificationLabToggleState.setText(expanded ? "Hide" : "Show");
-        }
-    }
-
-    private void setGeolocationLabExpanded(boolean expanded) {
-        geolocationLabExpanded = expanded;
-        if (layoutGeolocationLabContent != null) {
-            layoutGeolocationLabContent.setVisibility(expanded ? View.VISIBLE : View.GONE);
-        }
-        if (tvGeolocationLabToggleState != null) {
-            tvGeolocationLabToggleState.setText(expanded ? "Hide" : "Show");
-        }
-    }
-
-    private void showTab(@NonNull Tab tab) {
-        rvEvents.setVisibility(tab == Tab.EVENTS ? View.VISIBLE : View.GONE);
-        rvUsers.setVisibility(tab == Tab.USERS ? View.VISIBLE : View.GONE);
-        rvImages.setVisibility(tab == Tab.IMAGES ? View.VISIBLE : View.GONE);
-        rvComments.setVisibility(tab == Tab.COMMENTS ? View.VISIBLE : View.GONE);
-        layoutGeoTab.setVisibility(tab == Tab.GEO ? View.VISIBLE : View.GONE);
-        layoutNotificationsTab.setVisibility(tab == Tab.NOTIFICATIONS ? View.VISIBLE : View.GONE);
-
-        updateNoImagesState(tab == Tab.IMAGES);
-        updateNoCommentsState(tab == Tab.COMMENTS);
-        updateNoNotificationsState(tab == Tab.NOTIFICATIONS);
-
-        btnTabEvents.setSelected(tab == Tab.EVENTS);
-        btnTabUsers.setSelected(tab == Tab.USERS);
-        btnTabImages.setSelected(tab == Tab.IMAGES);
-        btnTabComments.setSelected(tab == Tab.COMMENTS);
-        btnTabGeo.setSelected(tab == Tab.GEO);
-        btnTabNotifications.setSelected(tab == Tab.NOTIFICATIONS);
-
-        switch (tab) {
-            case EVENTS:
-                loadEvents();
-                break;
-            case USERS:
-                loadUsers();
-                break;
-            case IMAGES:
-                loadImages();
-                break;
-            case COMMENTS:
-                loadComments();
-                break;
-            case GEO:
-                break;
-            case NOTIFICATIONS:
-                loadNotifications();
-                break;
-        }
+    private void updateEmptyStates() {
+        tvNoUsers.setVisibility(rvUsers.getVisibility() == View.VISIBLE && displayedUsers.isEmpty() ? View.VISIBLE : View.GONE);
+        tvNoOrganizers.setVisibility(rvOrganizers.getVisibility() == View.VISIBLE && displayedOrganizers.isEmpty() ? View.VISIBLE : View.GONE);
+        tvNoEvents.setVisibility(rvEvents.getVisibility() == View.VISIBLE && displayedEvents.isEmpty() ? View.VISIBLE : View.GONE);
+        tvNoImages.setVisibility(rvImages.getVisibility() == View.VISIBLE && displayedImages.isEmpty() ? View.VISIBLE : View.GONE);
+        tvNoNotifications.setVisibility(rvNotifications.getVisibility() == View.VISIBLE && displayedNotifications.isEmpty() ? View.VISIBLE : View.GONE);
+        tvNoComments.setVisibility(rvComments.getVisibility() == View.VISIBLE && displayedComments.isEmpty() ? View.VISIBLE : View.GONE);
     }
 
     private void loadEvents() {
         eventService.getAllEvents(events -> {
-            if (!isAdded()) {
-                return;
-            }
-
+            if (!isAdded()) return;
             allEvents.clear();
             allEvents.addAll(events);
             displayedEvents.clear();
-            displayedEvents.addAll(allEvents);
-            rebuildEventMetadata();
+            if (isOrganizerMode) {
+                for (Event e : events) {
+                    if (filteredOrganizerUid.equals(e.getOrganizerUid())) displayedEvents.add(e);
+                }
+            } else {
+                displayedEvents.addAll(events);
+            }
             eventAdapter.replaceEvents(displayedEvents);
+            rebuildEventMetadata();
             userAdapter.replaceUsers(displayedUsers, organizerUids);
+            organizerAdapter.replaceUsers(displayedOrganizers, organizerUids);
             commentAdapter.replaceEventTitles(eventTitlesById);
             notificationAdapter.replaceEventTitles(eventTitlesById);
-        }, error -> {
-            if (!isAdded()) {
-                return;
-            }
-            toast("Failed to load events: " + error.getMessage());
-        });
+            updateEmptyStates();
+        }, e -> {});
     }
 
     private void loadUsers() {
         profileService.getAllProfiles(users -> {
-            if (!isAdded()) {
-                return;
-            }
+            if (!isAdded()) return;
             allUsers.clear();
             allUsers.addAll(users);
             displayedUsers.clear();
-            displayedUsers.addAll(allUsers);
+            displayedUsers.addAll(users);
             userAdapter.replaceUsers(displayedUsers, organizerUids);
-        }, error -> {
-            if (!isAdded()) {
-                return;
+            displayedOrganizers.clear();
+            for (UserProfile user : allUsers) {
+                if (organizerUids.contains(user.getUid())) {
+                    displayedOrganizers.add(user);
+                }
             }
-            toast("Failed to load users: " + error.getMessage());
-        });
+            organizerAdapter.replaceUsers(displayedOrganizers, organizerUids);
+            if (isOrganizerMode && filteredOrganizerUid != null) {
+                for (UserProfile user : allUsers) {
+                    if (filteredOrganizerUid.equals(user.getUid())) {
+                        organizerName = user.getName();
+                        updateTitleWithOrganizer();
+                        break;
+                    }
+                }
+            }
+            updateEmptyStates();
+        }, e -> {});
     }
 
     private void loadImages() {
-        imageService.getAllImages(events -> {
-            if (!isAdded()) {
-                return;
+        imageService.getAllImages(images -> {
+            if (!isAdded()) return;
+            List<Event> filtered = new ArrayList<>();
+            for (Event event : images) {
+                if (isOrganizerMode && filteredOrganizerUid != null) {
+                    if (filteredOrganizerUid.equals(event.getOrganizerUid())) {
+                        filtered.add(event);
+                    }
+                } else {
+                    filtered.add(event);
+                }
             }
-            allImages.clear();
-            allImages.addAll(events);
             displayedImages.clear();
-            displayedImages.addAll(allImages);
+            displayedImages.addAll(filtered);
             imageAdapter.replaceEvents(displayedImages);
-            updateNoImagesState();
-        }, error -> {
-            if (!isAdded()) {
-                return;
-            }
-            toast("Failed to load images: " + error.getMessage());
-        });
+            updateEmptyStates();
+        }, e -> {});
     }
 
     private void loadComments() {
         commentService.getAllCommentsForAdmin(comments -> {
-            if (!isAdded()) {
-                return;
-            }
+            if (!isAdded()) return;
             displayedComments.clear();
-            displayedComments.addAll(comments);
-            commentAdapter.replaceComments(displayedComments);
-            updateNoCommentsState();
-        }, error -> {
-            if (!isAdded()) {
-                return;
+            if (isOrganizerMode) {
+                for (EventComment c : comments) {
+                    String senderUid = c.getAuthorUid(); // Just for checking if we can filter by author too, but usually it's by event
+                    for (Event e : allEvents) {
+                        if (e.getEventId().equals(c.getEventId()) && filteredOrganizerUid.equals(e.getOrganizerUid())) {
+                            displayedComments.add(c);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                displayedComments.addAll(comments);
             }
-            toast("Failed to load comments: " + error.getMessage());
-        });
+            commentAdapter.replaceComments(displayedComments);
+            updateEmptyStates();
+        }, e -> {});
     }
 
     private void loadNotifications() {
         notificationRepository.getAllNotifications(records -> {
-            if (!isAdded()) {
-                return;
-            }
+            if (!isAdded()) return;
             displayedNotifications.clear();
-            displayedNotifications.addAll(records);
-            notificationAdapter.replaceNotifications(displayedNotifications);
-            updateNoNotificationsState();
-        }, error -> {
-            if (!isAdded()) {
-                return;
+            if (isOrganizerMode && filteredOrganizerUid != null) {
+                // Filter and Group
+                Map<String, NotificationRecord> grouped = new HashMap<>();
+                for (NotificationRecord record : records) {
+                    if (filteredOrganizerUid.equals(record.getSenderUid())) {
+                        // Grouping key: title + message + timestamp (approx)
+                        String key = record.getTitle() + "|" + record.getMessage() + "|" + record.getSentAtMillis();
+                        if (!grouped.containsKey(key)) {
+                            grouped.put(key, record);
+                        }
+                    }
+                }
+                List<NotificationRecord> groupedList = new ArrayList<>(grouped.values());
+                groupedList.sort((a, b) -> Long.compare(b.getSentAtMillis(), a.getSentAtMillis()));
+                displayedNotifications.addAll(groupedList);
+            } else {
+                displayedNotifications.addAll(records);
             }
+            notificationAdapter.replaceNotifications(displayedNotifications);
+            updateEmptyStates();
+        }, error -> {
+            if (!isAdded()) return;
             toast("Failed to load notifications: " + error.getMessage());
         });
     }
@@ -544,7 +561,7 @@ public class AdminFragment extends Fragment {
             }
             displayedComments.remove(comment);
             commentAdapter.replaceComments(displayedComments);
-            updateNoCommentsState();
+            updateEmptyStates();
             toast("Comment deleted.");
         }, error -> {
             if (!isAdded()) {
@@ -559,10 +576,9 @@ public class AdminFragment extends Fragment {
             if (!isAdded()) {
                 return;
             }
-            allImages.remove(event);
             displayedImages.remove(event);
             imageAdapter.replaceEvents(displayedImages);
-            updateNoImagesState();
+            updateEmptyStates();
             toast("Image deleted.");
         }, error -> {
             if (!isAdded()) {
@@ -593,7 +609,7 @@ public class AdminFragment extends Fragment {
             }
             displayedNotifications.remove(record);
             notificationAdapter.replaceNotifications(displayedNotifications);
-            updateNoNotificationsState();
+            updateEmptyStates();
             toast("Notification log entry deleted.");
         }, error -> {
             if (!isAdded()) {
@@ -601,6 +617,68 @@ public class AdminFragment extends Fragment {
             }
             toast("Delete failed: " + error.getMessage());
         });
+    }
+    private void bindGeolocationLab() {
+        if (layoutGeolocationLabToggle != null) {
+            layoutGeolocationLabToggle.setOnClickListener(v -> {
+                boolean isVisible = layoutGeolocationLabContent.getVisibility() == View.VISIBLE;
+                layoutGeolocationLabContent.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                tvGeolocationLabToggleState.setText(isVisible ? "Show" : "Hide");
+            });
+        }
+        if (btnGeolocationLabSeed != null) {
+            btnGeolocationLabSeed.setOnClickListener(v -> refreshGeolocationSandbox());
+        }
+        if (btnGeolocationLabMenu != null) {
+            btnGeolocationLabMenu.setOnClickListener(this::showGeolocationLabMenu);
+        }
+    }
+
+    private void bindNotificationLab() {
+        if (layoutNotificationLabToggle != null) {
+            layoutNotificationLabToggle.setOnClickListener(v -> {
+                boolean isVisible = layoutNotificationLabContent.getVisibility() == View.VISIBLE;
+                layoutNotificationLabContent.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                tvNotificationLabToggleState.setText(isVisible ? "Show" : "Hide");
+            });
+        }
+        if (btnNotificationLabSeed != null) {
+            btnNotificationLabSeed.setOnClickListener(v -> refreshNotificationSandbox());
+        }
+        if (btnNotificationLabMenu != null) {
+            btnNotificationLabMenu.setOnClickListener(this::showNotificationLabMenu);
+        }
+    }
+
+    private void onEventDelete(@NonNull Event event) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete Event")
+                .setMessage("Are you sure you want to delete this event and all its data?")
+                .setPositiveButton("Delete", (dialog, which) -> deleteEvent(event))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void onUserDelete(@NonNull UserProfile user) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Delete User")
+                .setMessage("Are you sure you want to delete this user and all their organized events?")
+                .setPositiveButton("Delete", (dialog, which) -> deleteUser(user))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void updateTitleWithOrganizer() {
+        if (isOrganizerMode && filteredOrganizerUid != null) {
+            profileService.getUserProfile(filteredOrganizerUid, profile -> {
+                if (!isAdded()) return;
+                String name = profile != null && profile.getName() != null ? profile.getName() : "Organizer";
+                TextView titleView = requireView().findViewById(R.id.submenu_title);
+                if (titleView != null) {
+                    titleView.setText("Audit: " + name);
+                }
+            }, error -> {});
+        }
     }
 
     private void refreshNotificationSandbox() {

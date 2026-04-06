@@ -311,6 +311,7 @@ public class ProfileService {
                 true,
                 installationId
         );
+        newProfile.setSignInBannerEnabled(true);
 
         userRepository.saveUser(
                 newProfile,
@@ -432,6 +433,26 @@ public class ProfileService {
         authDeviceService.ensureSignedIn(firebaseUser -> {
             String uid = firebaseUser.getUid();
             userRepository.setNotificationsMuted(uid, muted, onSuccess, onFailure);
+        }, onFailure);
+    }
+
+    /**
+     * Updates whether the sign-in banner is enabled for the current user.
+     *
+     * @param context   The application context.
+     * @param enabled   True to show the banner, false to hide it.
+     * @param onSuccess Callback for successful operation.
+     * @param onFailure Callback for failed operation.
+     */
+    public void setSignInBannerEnabled(
+            @NonNull Context context,
+            boolean enabled,
+            @NonNull OnSuccessListener<Void> onSuccess,
+            @NonNull OnFailureListener onFailure
+    ) {
+        authDeviceService.ensureSignedIn(firebaseUser -> {
+            String uid = firebaseUser.getUid();
+            userRepository.setSignInBannerEnabled(uid, enabled, onSuccess, onFailure);
         }, onFailure);
     }
 
