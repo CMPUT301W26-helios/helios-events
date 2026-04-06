@@ -24,7 +24,37 @@ Entering an event waiting list creates an entry for a lottery draw, where organi
 * Ensure administrators can moderate the platform with ease
 
 ## Repo Structure:
-(TODO!)
+
+```
+helios-events/
+├── app/                                  # Android application module
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/example/helios/
+│   │   │   │   ├── auth/                # Authentication logic
+│   │   │   │   ├── data/                # Data models and repositories
+│   │   │   │   ├── model/               # Domain models
+│   │   │   │   ├── service/             # Business logic services
+│   │   │   │   └── ui/                  # UI components and activities
+│   │   │   └── res/                     # Android resources (layouts, drawables, values)
+│   │   ├── test/                        # Unit tests
+│   │   └── androidTest/                 # Instrumented Android tests
+│   └── build.gradle.kts                 # App-level build configuration
+├── functions/                           # Firebase Cloud Functions (backend)
+├── docs/
+│   ├── javadoc/                         # Generated Java documentation
+│   └── UML/                             # UML diagrams and documentation
+├── build.gradle.kts                     # Root build configuration
+├── settings.gradle.kts                  # Gradle settings
+├── gradle.properties                    # Gradle properties
+├── local.properties                     # Local build properties
+└── README.md                            # This file
+```
+
+**Key Components:**
+- **app/** - Main Android application written in Java
+- **functions/** - Firebase Cloud Functions for backend services
+- **docs/** - Documentation including Javadocs and UML diagrams
 
 ## License:
 MIT License - Copyright (c) 2026 CMPUT301W26-helios
