@@ -1,0 +1,3360 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam ArrowFontSize 11
+skinparam packageTitleAlignment left
+hide empty members
+
+title Detailed class reference
+
+legend right
+  <back:#D6EAF8>UI</back>
+  <back:#D5F5E3>Service</back>
+  <back:#FAD7A0>Repository/Data</back>
+  <back:#E8DAEF>Auth/ViewModel</back>
+  <back:#FCF3CF>Model</back>
+  <back:#EAECEE>Utility/Other</back>
+endlegend
+
+package "com.example.helios" {
+class "HeliosApplication" as T164 <<application>> #F8F9F9 {
+  - TAG : String
+  - accessibilityPreferences : AccessibilityPreferences
+  - adminGeolocationTestService : AdminGeolocationTestService
+  - adminNotificationTestService : AdminNotificationTestService
+  - authDeviceService : AuthDeviceService
+  - commentService : CommentService
+  - entrantEventService : EntrantEventService
+  - eventService : EventService
+  - imageService : ImageService
+  - lotteryService : LotteryService
+  - organizerNotificationService : OrganizerNotificationService
+  - profileService : ProfileService
+  - repository : FirebaseRepository
+  - themeManager : HeliosThemeManager
+  - uiPreferences : HeliosUiPreferences
+  - waitingListService : WaitingListService
+  --
+  + HeliosApplication()
+  + from(Context) : HeliosApplication
+  + getAccessibilityPreferences() : AccessibilityPreferences
+  + getAdminGeolocationTestService() : AdminGeolocationTestService
+  + getAdminNotificationTestService() : AdminNotificationTestService
+  + getAuthDeviceService() : AuthDeviceService
+  + getCommentService() : CommentService
+  + getEntrantEventService() : EntrantEventService
+  + getEventService() : EventService
+  + getImageService() : ImageService
+  + getLotteryService() : LotteryService
+  + getNotificationRepository() : NotificationRepository
+  + getOrganizerNotificationService() : OrganizerNotificationService
+  + getProfileService() : ProfileService
+  + getRepository() : FirebaseRepository
+  + getThemeManager() : HeliosThemeManager
+  + getUiPreferences() : HeliosUiPreferences
+  + getWaitingListService() : WaitingListService
+  - initializeFcmTokenSync() : void
+  + onCreate() : void
+}
+
+}
+
+package "com.example.helios.auth" {
+class "AuthDeviceService" as T11 <<service>> #D5F5E3 {
+  - auth : FirebaseAuth
+  --
+  + AuthDeviceService()
+  + ensureSignedIn(OnSuccessListener<FirebaseUser>, OnFailureListener) : void
+  + getCurrentUid() : String
+  + getCurrentUser() : FirebaseUser
+  + signOut() : void
+}
+
+class "InstallationIdProvider" as T12 #E8DAEF {
+  - KEY_INSTALLATION_ID : String
+  - PREFS : String
+  --
+  - InstallationIdProvider()
+  + clearInstallationId(Context) : void
+  + getInstallationId(Context) : String
+}
+
+}
+
+package "com.example.helios.data" {
+interface "CommentRepository" as T13 <<repository>> #FAD7A0 {
+  ~ addComment(String, EventComment, OnSuccessListener<EventComment>, OnFailureListener) : void
+  ~ deleteCommentWithReplies(String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ deleteSingleCommentWithLikes(String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ getAllComments(OnSuccessListener<List<EventComment>>, OnFailureListener) : void
+  ~ getCommentById(String, String, OnSuccessListener<EventComment>, OnFailureListener) : void
+  ~ getLikeStatesForComments(String, String, List<String>, OnSuccessListener<Set<String>>, OnFailureListener) : void
+  ~ getTopLevelCommentsOnce(String, OnSuccessListener<List<EventComment>>, OnFailureListener) : void
+  ~ setPinnedComment(String, List<EventComment>, EventComment, OnSuccessListener<EventComment>, OnFailureListener) : void
+  ~ subscribeComments(String, String, OnSuccessListener<List<EventComment>>, OnFailureListener) : ListenerRegistration
+  ~ toggleCommentLike(String, String, String, boolean, OnSuccessListener<Boolean>, OnFailureListener) : void
+  ~ updateComment(String, EventComment, OnSuccessListener<Void>, OnFailureListener) : void
+}
+
+interface "EventRepository" as T14 <<repository>> #FAD7A0 {
+  ~ deleteEvent(String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ deleteEventsByOrganizer(String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ getAllEvents(OnSuccessListener<List<Event>>, OnFailureListener) : void
+  ~ getEventById(String, OnSuccessListener<Event>, OnFailureListener) : void
+  ~ getEventsWithPosters(OnSuccessListener<List<Event>>, OnFailureListener) : void
+  ~ saveEvent(Event, OnSuccessListener<Void>, OnFailureListener) : void
+}
+
+class "FirebaseRepository" as T15 <<repository>> #FAD7A0 {
+  - ADMIN_DEVICES_COLLECTION : String
+  - COMMENTS_COLLECTION : String
+  - EVENTS_COLLECTION : String
+  - IMAGES_COLLECTION : String
+  - NOTIFICATIONS_COLLECTION : String
+  - USERS_COLLECTION : String
+  - WAITING_LIST_COLLECTION : String
+  - db : FirebaseFirestore
+  --
+  + FirebaseRepository()
+  + FirebaseRepository(FirebaseFirestore)
+  + addComment(String, EventComment, OnSuccessListener<EventComment>, OnFailureListener) : void
+  - adminDevices() : CollectionReference
+  - comments(String) : CollectionReference
+  + deleteCommentWithReplies(String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  - deleteCommentsAndLikes(String, List<String>, OnSuccessListener<Void>, OnFailureListener) : void
+  + deleteEvent(String, OnSuccessListener<Void>, OnFailureListener) : void
+  + deleteEventsByOrganizer(String, OnSuccessListener<Void>, OnFailureListener) : void
+  + deleteImageAsset(String, OnSuccessListener<Void>, OnFailureListener) : void
+  + deleteNotification(String, OnSuccessListener<Void>, OnFailureListener) : void
+  + deleteSingleCommentWithLikes(String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  + deleteUser(String, OnSuccessListener<Void>, OnFailureListener) : void
+  + deleteWaitingListEntry(String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  - events() : CollectionReference
+  + getAllComments(OnSuccessListener<List<EventComment>>, OnFailureListener) : void
+  + getAllEvents(OnSuccessListener<List<Event>>, OnFailureListener) : void
+  + getAllNotifications(OnSuccessListener<List<NotificationRecord>>, OnFailureListener) : void
+  + getAllUsers(OnSuccessListener<List<UserProfile>>, OnFailureListener) : void
+  + getAllWaitingListEntries(String, OnSuccessListener<List<WaitingListEntry>>, OnFailureListener) : void
+  + getCommentById(String, String, OnSuccessListener<EventComment>, OnFailureListener) : void
+  + getEventById(String, OnSuccessListener<Event>, OnFailureListener) : void
+  + getEventsWithPosters(OnSuccessListener<List<Event>>, OnFailureListener) : void
+  + getImageAssetForEvent(String, OnSuccessListener<ImageAsset>, OnFailureListener) : void
+  + getLikeStatesForComments(String, String, List<String>, OnSuccessListener<Set<String>>, OnFailureListener) : void
+  + getNotificationsForUser(String, OnSuccessListener<List<NotificationRecord>>, OnFailureListener) : void
+  + getTopLevelCommentsOnce(String, OnSuccessListener<List<EventComment>>, OnFailureListener) : void
+  + getUser(String, OnSuccessListener<UserProfile>, OnFailureListener) : void
+  + getWaitingEntriesCount(String, WaitingListStatus, OnSuccessListener<Integer>, OnFailureListener) : void
+  + getWaitingListEntry(String, String, OnSuccessListener<WaitingListEntry>, OnFailureListener) : void
+  + getWaitlistEntriesForUser(String, OnSuccessListener<List<WaitingListEntry>>, OnFailureListener) : void
+  - hasText(String) : boolean
+  - hydrate(DocumentSnapshot, Class<T>, IdSetter<T>) : T
+  - images() : CollectionReference
+  + isAdminInstallation(String, OnSuccessListener<Boolean>, OnFailureListener) : void
+  - isNonEmpty(String) : boolean
+  - isValidEvent(Event) : boolean
+  - isValidUser(UserProfile) : boolean
+  - mapNotificationRecords(Iterable<QueryDocumentSnapshot>) : List<NotificationRecord>
+  + muteNotifications(String, OnSuccessListener<Void>, OnFailureListener) : void
+  - notifications() : CollectionReference
+  + removeEventPoster(String, OnSuccessListener<Void>, OnFailureListener) : void
+  + saveEvent(Event, OnSuccessListener<Void>, OnFailureListener) : void
+  + saveFcmToken(String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  + saveImageAsset(ImageAsset, OnSuccessListener<Void>, OnFailureListener) : void
+  + saveNotification(NotificationRecord, OnSuccessListener<Void>, OnFailureListener) : void
+  + saveNotificationsBatch(List<NotificationRecord>, OnSuccessListener<Void>, OnFailureListener) : void
+  + saveUser(UserProfile, OnSuccessListener<Void>, OnFailureListener) : void
+  + seedDemoEvent(OnSuccessListener<Void>, OnFailureListener) : void
+  + setNotificationsMuted(String, boolean, OnSuccessListener<Void>, OnFailureListener) : void
+  + setPinnedComment(String, List<EventComment>, EventComment, OnSuccessListener<EventComment>, OnFailureListener) : void
+  + setSignInBannerEnabled(String, boolean, OnSuccessListener<Void>, OnFailureListener) : void
+  - sortNotificationsDescending(List<NotificationRecord>) : void
+  - sortWaitingListEntriesDescending(List<WaitingListEntry>) : void
+  + subscribeComments(String, String, OnSuccessListener<List<EventComment>>, OnFailureListener) : ListenerRegistration
+  + subscribeNotificationsForUser(String, OnSuccessListener<List<NotificationRecord>>, OnFailureListener) : ListenerRegistration
+  + toggleCommentLike(String, String, String, boolean, OnSuccessListener<Boolean>, OnFailureListener) : void
+  + updateComment(String, EventComment, OnSuccessListener<Void>, OnFailureListener) : void
+  + updateUser(UserProfile, OnSuccessListener<Void>, OnFailureListener) : void
+  + updateWaitingListEntry(String, String, WaitingListEntry, OnSuccessListener<Void>, OnFailureListener) : void
+  + upsertWaitingListEntry(String, String, WaitingListEntry, OnSuccessListener<Void>, OnFailureListener) : void
+  - users() : CollectionReference
+  - waitingList(String) : CollectionReference
+}
+
+class "FirebaseRepository.CommentIdSetter" as T16 #FAD7A0 {
+  - CommentIdSetter()
+  + setIdIfMissing(EventComment, String) : void
+}
+
+class "FirebaseRepository.EventIdSetter" as T17 #FAD7A0 {
+  - EventIdSetter()
+  + setIdIfMissing(Event, String) : void
+}
+
+interface "FirebaseRepository.IdSetter" as T18 #FAD7A0 {
+  ~ setIdIfMissing(T, String) : void
+}
+
+class "FirebaseRepository.ImageIdSetter" as T19 #FAD7A0 {
+  - ImageIdSetter()
+  + setIdIfMissing(ImageAsset, String) : void
+}
+
+class "FirebaseRepository.LikeRecord" as T20 #FAD7A0 {
+  + likedAtMillis : long
+  + uid : String
+  --
+  + LikeRecord()
+  ~ LikeRecord(String, long)
+}
+
+interface "ImageRepository" as T21 <<repository>> #FAD7A0 {
+  ~ deleteImageAsset(String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ getEventsWithPosters(OnSuccessListener<List<Event>>, OnFailureListener) : void
+  ~ getImageAssetForEvent(String, OnSuccessListener<ImageAsset>, OnFailureListener) : void
+  ~ removeEventPoster(String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ saveImageAsset(ImageAsset, OnSuccessListener<Void>, OnFailureListener) : void
+}
+
+interface "NotificationRepository" as T22 <<repository>> #FAD7A0 {
+  ~ deleteNotification(String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ getAllNotifications(OnSuccessListener<List<NotificationRecord>>, OnFailureListener) : void
+  ~ getNotificationsForUser(String, OnSuccessListener<List<NotificationRecord>>, OnFailureListener) : void
+  ~ saveNotification(NotificationRecord, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ saveNotificationsBatch(List<NotificationRecord>, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ subscribeNotificationsForUser(String, OnSuccessListener<List<NotificationRecord>>, OnFailureListener) : ListenerRegistration
+}
+
+interface "UserRepository" as T23 <<repository>> #FAD7A0 {
+  ~ deleteUser(String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ getAllUsers(OnSuccessListener<List<UserProfile>>, OnFailureListener) : void
+  ~ getUser(String, OnSuccessListener<UserProfile>, OnFailureListener) : void
+  ~ isAdminInstallation(String, OnSuccessListener<Boolean>, OnFailureListener) : void
+  ~ muteNotifications(String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ saveFcmToken(String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ saveUser(UserProfile, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ setNotificationsMuted(String, boolean, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ setSignInBannerEnabled(String, boolean, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ updateUser(UserProfile, OnSuccessListener<Void>, OnFailureListener) : void
+}
+
+interface "WaitingListRepository" as T24 <<repository>> #FAD7A0 {
+  ~ deleteWaitingListEntry(String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ getAllWaitingListEntries(String, OnSuccessListener<List<WaitingListEntry>>, OnFailureListener) : void
+  ~ getWaitingEntriesCount(String, WaitingListStatus, OnSuccessListener<Integer>, OnFailureListener) : void
+  ~ getWaitingListEntry(String, String, OnSuccessListener<WaitingListEntry>, OnFailureListener) : void
+  ~ getWaitlistEntriesForUser(String, OnSuccessListener<List<WaitingListEntry>>, OnFailureListener) : void
+  ~ updateWaitingListEntry(String, String, WaitingListEntry, OnSuccessListener<Void>, OnFailureListener) : void
+  ~ upsertWaitingListEntry(String, String, WaitingListEntry, OnSuccessListener<Void>, OnFailureListener) : void
+}
+
+}
+
+package "com.example.helios.model" {
+class "AdminDevice" as T1 #FCF3CF {
+  - addedAtMillis : long
+  - enabled : boolean
+  - installationId : String
+  - note : String
+  --
+  + AdminDevice()
+  + AdminDevice(String, boolean, String, long)
+  + getAddedAtMillis() : long
+  + getInstallationId() : String
+  + getNote() : String
+  + isEnabled() : boolean
+  + setAddedAtMillis(long) : void
+  + setEnabled(boolean) : void
+  + setInstallationId(String) : void
+  + setNote(String) : void
+}
+
+class "Event" as T2 #FCF3CF {
+  - address : String
+  - capacity : int
+  - coOrganizerUids : List<String>
+  - description : String
+  - drawCount : int
+  - drawHappened : boolean
+  - endTimeMillis : long
+  - eventId : String
+  - geofenceCenter : GeoPoint
+  - geofenceRadiusMeters : Integer
+  - geolocationRequired : boolean
+  - interests : List<String>
+  - locationName : String
+  - lotteryGuidelines : String
+  - organizerUid : String
+  - pendingCoOrganizerUids : List<String>
+  - posterImageId : String
+  - privateEvent : boolean
+  - qrCodeValue : String
+  - registrationClosesMillis : long
+  - registrationOpensMillis : long
+  - sampleSize : int
+  - startTimeMillis : long
+  - title : String
+  - waitlistLimit : Integer
+  --
+  + Event()
+  + Event(String, String, String, String, String, long, long, long, long, int, int, Integer, boolean, String, String, String, String, List<String>, int, boolean)
+  + getAddress() : String
+  + getCapacity() : int
+  + getCoOrganizerUids() : List<String>
+  + getDescription() : String
+  + getDrawCount() : int
+  + getEndTimeMillis() : long
+  + getEventId() : String
+  + getGeofenceCenter() : GeoPoint
+  + getGeofenceRadiusMeters() : Integer
+  + getInterests() : List<String>
+  + getLocationName() : String
+  + getLotteryGuidelines() : String
+  + getOrganizerUid() : String
+  + getPendingCoOrganizerUids() : List<String>
+  + getPosterImageId() : String
+  + getQrCodeValue() : String
+  + getRegistrationClosesMillis() : long
+  + getRegistrationOpensMillis() : long
+  + getSampleSize() : int
+  + getStartTimeMillis() : long
+  + getTitle() : String
+  + getWaitlistLimit() : Integer
+  + hasGeofence() : boolean
+  + hasGeofenceCenter() : boolean
+  + isCoOrganizer(String) : boolean
+  + isDrawHappened() : boolean
+  + isGeolocationRequired() : boolean
+  + isPendingCoOrganizer(String) : boolean
+  + isPrivateEvent() : boolean
+  + setAddress(String) : void
+  + setCapacity(int) : void
+  + setCoOrganizerUids(List<String>) : void
+  + setDescription(String) : void
+  + setDrawCount(int) : void
+  + setDrawHappened(boolean) : void
+  + setEndTimeMillis(long) : void
+  + setEventId(String) : void
+  + setGeofenceCenter(GeoPoint) : void
+  + setGeofenceCenter(double, double) : void
+  + setGeofenceRadiusMeters(Integer) : void
+  + setGeolocationRequired(boolean) : void
+  + setInterests(List<String>) : void
+  + setLocationName(String) : void
+  + setLotteryGuidelines(String) : void
+  + setOrganizerUid(String) : void
+  + setPendingCoOrganizerUids(List<String>) : void
+  + setPosterImageId(String) : void
+  + setPrivateEvent(boolean) : void
+  + setQrCodeValue(String) : void
+  + setRegistrationClosesMillis(long) : void
+  + setRegistrationOpensMillis(long) : void
+  + setSampleSize(int) : void
+  + setStartTimeMillis(long) : void
+  + setTitle(String) : void
+  + setWaitlistLimit(Integer) : void
+}
+
+class "EventComment" as T3 #FCF3CF {
+  - authorNameSnapshot : String
+  - authorProfileImageUrlSnapshot : String
+  - authorUid : String
+  - body : String
+  - commentId : String
+  - createdAtMillis : long
+  - eventId : String
+  - isDeleted : boolean
+  - likeCount : int
+  - parentCommentId : String
+  - pinned : boolean
+  - updatedAtMillis : long
+  --
+  + EventComment()
+  + EventComment(String, String, String, String, String, String, String, long, long, int, boolean, boolean)
+  + getAuthorNameSnapshot() : String
+  + getAuthorProfileImageUrlSnapshot() : String
+  + getAuthorUid() : String
+  + getBody() : String
+  + getCommentId() : String
+  + getCreatedAtMillis() : long
+  + getEventId() : String
+  + getLikeCount() : int
+  + getParentCommentId() : String
+  + getUpdatedAtMillis() : long
+  + isDeleted() : boolean
+  + isPinned() : boolean
+  + isTopLevel() : boolean
+  + setAuthorNameSnapshot(String) : void
+  + setAuthorProfileImageUrlSnapshot(String) : void
+  + setAuthorUid(String) : void
+  + setBody(String) : void
+  + setCommentId(String) : void
+  + setCreatedAtMillis(long) : void
+  + setDeleted(boolean) : void
+  + setEventId(String) : void
+  + setLikeCount(int) : void
+  + setParentCommentId(String) : void
+  + setPinned(boolean) : void
+  + setUpdatedAtMillis(long) : void
+}
+
+class "GeoPoint" as T4 #FCF3CF {
+  - latitude : double
+  - longitude : double
+  --
+  + GeoPoint()
+  + GeoPoint(double, double)
+  + getLatitude() : double
+  + getLongitude() : double
+  + setLatitude(double) : void
+  + setLongitude(double) : void
+}
+
+class "ImageAsset" as T5 #FCF3CF {
+  - eventId : String
+  - imageId : String
+  - ownerUid : String
+  - storagePath : String
+  - uploadedAtMillis : long
+  --
+  + ImageAsset()
+  + ImageAsset(String, String, String, String, long)
+  + getEventId() : String
+  + getImageId() : String
+  + getOwnerUid() : String
+  + getStoragePath() : String
+  + getUploadedAtMillis() : long
+  + setEventId(String) : void
+  + setImageId(String) : void
+  + setOwnerUid(String) : void
+  + setStoragePath(String) : void
+  + setUploadedAtMillis(long) : void
+}
+
+enum "NotificationAudience" as T6 #FCF3CF {
+  + ACCEPTED : NotificationAudience
+  + AUDIENCE : NotificationAudience
+  + CANCELLED : NotificationAudience
+  + CO_ORGANIZER_INVITE : NotificationAudience
+  + DECLINED : NotificationAudience
+  + INDIVIDUAL : NotificationAudience
+  + INVITED : NotificationAudience
+  + NOT_SELECTED : NotificationAudience
+  + PRIVATE_EVENT_INVITE : NotificationAudience
+  + SELECTED : NotificationAudience
+  + WAITING : NotificationAudience
+  --
+  - NotificationAudience()
+}
+
+class "NotificationRecord" as T7 #FCF3CF {
+  - audience : NotificationAudience
+  - eventId : String
+  - message : String
+  - notificationId : String
+  - recipientUid : String
+  - senderUid : String
+  - sentAtMillis : long
+  - title : String
+  --
+  + NotificationRecord()
+  + NotificationRecord(String, String, String, String, NotificationAudience, String, String, long)
+  + getAudience() : NotificationAudience
+  + getEventId() : String
+  + getMessage() : String
+  + getNotificationId() : String
+  + getRecipientUid() : String
+  + getSenderUid() : String
+  + getSentAtMillis() : long
+  + getTitle() : String
+  + setAudience(NotificationAudience) : void
+  + setEventId(String) : void
+  + setMessage(String) : void
+  + setNotificationId(String) : void
+  + setRecipientUid(String) : void
+  + setSenderUid(String) : void
+  + setSentAtMillis(long) : void
+  + setTitle(String) : void
+}
+
+class "UserProfile" as T8 #FCF3CF {
+  - email : String
+  - fcmToken : String
+  - installationId : String
+  - name : String
+  - notificationsEnabled : boolean
+  - organizerAccessRevoked : boolean
+  - phone : String
+  - profileImageUrl : String
+  - role : String
+  - signInBannerEnabled : boolean
+  - uid : String
+  --
+  + UserProfile()
+  + UserProfile(String, String, String, String, String, boolean, String)
+  - emptyToNull(String) : String
+  + getDisplayNameOrFallback() : String
+  + getEmail() : String
+  + getFcmToken() : String
+  + getInstallationId() : String
+  + getName() : String
+  + getPhone() : String
+  + getProfileImageUrl() : String
+  + getRole() : String
+  + getUid() : String
+  + hasRequiredProfileInfo() : boolean
+  + isAdmin() : boolean
+  - isNonEmpty(String) : boolean
+  + isNotificationsEnabled() : boolean
+  + isOrganizerAccessRevoked() : boolean
+  + isSignInBannerEnabled() : boolean
+  + setEmail(String) : void
+  + setFcmToken(String) : void
+  + setInstallationId(String) : void
+  + setName(String) : void
+  + setNotificationsEnabled(boolean) : void
+  + setOrganizerAccessRevoked(boolean) : void
+  + setPhone(String) : void
+  + setProfileImageUrl(String) : void
+  + setRole(String) : void
+  + setSignInBannerEnabled(boolean) : void
+  + setUid(String) : void
+}
+
+class "WaitingListEntry" as T9 #FCF3CF {
+  - cancelledAtMillis : long
+  - entrantUid : String
+  - eventId : String
+  - invitedAtMillis : long
+  - joinLatitude : Double
+  - joinLongitude : Double
+  - joinedAtMillis : long
+  - respondedAtMillis : long
+  - status : WaitingListStatus
+  - statusReason : String
+  --
+  + WaitingListEntry()
+  + WaitingListEntry(String, String, WaitingListStatus, long)
+  + getCancelledAtMillis() : long
+  + getEntrantUid() : String
+  + getEventId() : String
+  + getInvitedAtMillis() : long
+  + getJoinLatitude() : Double
+  + getJoinLongitude() : Double
+  + getJoinedAtMillis() : long
+  + getRespondedAtMillis() : long
+  + getStatus() : WaitingListStatus
+  + getStatusReason() : String
+  + setCancelledAtMillis(long) : void
+  + setEntrantUid(String) : void
+  + setEventId(String) : void
+  + setInvitedAtMillis(long) : void
+  + setJoinLatitude(Double) : void
+  + setJoinLongitude(Double) : void
+  + setJoinedAtMillis(long) : void
+  + setRespondedAtMillis(long) : void
+  + setStatus(WaitingListStatus) : void
+  + setStatusReason(String) : void
+}
+
+enum "WaitingListStatus" as T10 #FCF3CF {
+  + ACCEPTED : WaitingListStatus
+  + CANCELLED : WaitingListStatus
+  + DECLINED : WaitingListStatus
+  + INVITED : WaitingListStatus
+  + NOT_SELECTED : WaitingListStatus
+  + WAITING : WaitingListStatus
+  --
+  - WaitingListStatus()
+}
+
+}
+
+package "com.example.helios.service" {
+class "AccessibilityPreferences" as T25 #D5F5E3 {
+  - KEY_COLOR_BLIND : String
+  - KEY_LARGE_TEXT : String
+  - KEY_LARGE_TOUCH_TARGETS : String
+  - LARGE_TEXT_FONT_SCALE : float
+  - PREFS_NAME : String
+  - prefs : SharedPreferences
+  --
+  + AccessibilityPreferences(Context)
+  + isColorBlindMode() : boolean
+  + isLargeTextMode() : boolean
+  + isLargeTouchTargetsMode() : boolean
+  - migrateLegacyComfortMode() : void
+  + setColorBlindMode(boolean) : void
+  + setLargeTextMode(boolean) : void
+  + setLargeTouchTargetsMode(boolean) : void
+  + wrapContext(Context) : Context
+}
+
+class "AdminGeolocationTestService" as T26 <<service>> #D5F5E3 {
+  - SANDBOX_EVENT_PREFIX : String
+  - SANDBOX_TITLE : String
+  - SANDBOX_USER_PREFIX : String
+  - authDeviceService : AuthDeviceService
+  - clock : Clock
+  - eventRepository : EventRepository
+  - userRepository : UserRepository
+  - waitingListRepository : WaitingListRepository
+  --
+  + AdminGeolocationTestService()
+  + AdminGeolocationTestService(FirebaseRepository)
+  + AdminGeolocationTestService(AuthDeviceService, UserRepository, EventRepository, WaitingListRepository, Clock)
+  + AdminGeolocationTestService(AuthDeviceService, UserRepository, EventRepository, WaitingListRepository)
+  - buildEntry(String, String, CoordinateSeed, long) : WaitingListEntry
+  - buildFakeUserUids(String) : List<String>
+  - buildFakeUsers(String) : List<UserProfile>
+  - buildSandboxEvent(String, long, GeoScenario) : Event
+  - buildSandboxEventId(String) : String
+  - buildSandboxState(Event, CurrentUserContext, GeoScenario) : SandboxState
+  - buildScenarioEntries(String, String, GeoScenario, long) : List<WaitingListEntry>
+  - calculateDistanceMeters(double, double, double, double) : double
+  + createOrRefreshSandbox(OnSuccessListener<SandboxState>, OnFailureListener) : void
+  + createRegionalSpreadSandbox(OnSuccessListener<SandboxState>, OnFailureListener) : void
+  - prepareSandbox(GeoScenario, OnSuccessListener<SandboxState>, OnFailureListener) : void
+  - sanitizeId(String) : String
+  - saveFakeUsers(String, OnSuccessListener<Void>, OnFailureListener) : void
+  - upsertEntries(String, List<WaitingListEntry>, OnSuccessListener<Void>, OnFailureListener) : void
+  - withCurrentUser(OnSuccessListener<CurrentUserContext>, OnFailureListener) : void
+}
+
+interface "AdminGeolocationTestService.Clock" as T27 #D5F5E3 {
+  ~ now() : long
+}
+
+class "AdminGeolocationTestService.CoordinateSeed" as T28 #D5F5E3 {
+  - latitude : double
+  - longitude : double
+  --
+  - CoordinateSeed(double, double)
+}
+
+class "AdminGeolocationTestService.CurrentUserContext" as T29 #D5F5E3 {
+  - profile : UserProfile
+  - uid : String
+  --
+  ~ CurrentUserContext(String, UserProfile)
+}
+
+enum "AdminGeolocationTestService.GeoScenario" as T30 #D5F5E3 {
+  + ALBERTA_SPREAD : GeoScenario
+  + EDMONTON_CLUSTER : GeoScenario
+  - coordinateSeeds : CoordinateSeed[]
+  - scenarioLabel : String
+  --
+  ~ GeoScenario(String, CoordinateSeed[])
+  + getCoordinateSeeds() : CoordinateSeed[]
+  + getFenceCenter() : CoordinateSeed
+  + getFenceRadiusMeters() : int
+  + getScenarioLabel() : String
+}
+
+class "AdminGeolocationTestService.SandboxState" as T31 #D5F5E3 {
+  - currentUid : String
+  - currentUserLabel : String
+  - event : Event
+  - fakeEntrantCount : int
+  - locationPointCount : int
+  - scenarioLabel : String
+  --
+  ~ SandboxState(Event, String, String, int, int, String)
+  + getCurrentUid() : String
+  + getCurrentUserLabel() : String
+  + getEvent() : Event
+  + getFakeEntrantCount() : int
+  + getLocationPointCount() : int
+  + getScenarioLabel() : String
+}
+
+class "AdminNotificationTestService" as T32 <<service>> #D5F5E3 {
+  - SANDBOX_EVENT_PREFIX : String
+  - SANDBOX_TITLE : String
+  - SANDBOX_USER_PREFIX : String
+  - authDeviceService : AuthDeviceService
+  - clock : Clock
+  - eventRepository : EventRepository
+  - organizerNotificationService : OrganizerNotificationService
+  - userRepository : UserRepository
+  - waitingListRepository : WaitingListRepository
+  --
+  + AdminNotificationTestService()
+  + AdminNotificationTestService(FirebaseRepository)
+  + AdminNotificationTestService(AuthDeviceService, UserRepository, EventRepository, WaitingListRepository, OrganizerNotificationService, Clock)
+  + AdminNotificationTestService(AuthDeviceService, UserRepository, EventRepository, WaitingListRepository, OrganizerNotificationService)
+  - buildEntry(String, String, WaitingListStatus, long) : WaitingListEntry
+  - buildFakeUserUids(String) : List<String>
+  - buildFakeUsers(String) : List<UserProfile>
+  - buildSandboxEvent(String, long) : Event
+  - buildSandboxEventId(String) : String
+  - buildSandboxState(Event, CurrentUserContext) : SandboxState
+  - buildScenarioEntries(String, String, WaitingListStatus, List<WaitingListStatus>, long) : List<WaitingListEntry>
+  + createOrRefreshSandbox(OnSuccessListener<SandboxState>, OnFailureListener) : void
+  - createOrRefreshSandboxForCurrentUser(CurrentUserContext, OnSuccessListener<SandboxState>, OnFailureListener) : void
+  - prepareSandbox(CurrentUserContext, WaitingListStatus, List<WaitingListStatus>, OnSuccessListener<SandboxState>, OnFailureListener) : void
+  - sanitizeId(String) : String
+  - saveFakeUsers(String, OnSuccessListener<Void>, OnFailureListener) : void
+  + sendCancelledBroadcastToSelf(OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  + sendCoOrganizerInviteToSelf(OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  + sendPrivateInviteToSelf(OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  + sendSelectedBroadcastToSelf(OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  + sendWaitingBroadcast(OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  - simulateDeterministicDraw(boolean, OnSuccessListener<Void>, OnFailureListener) : void
+  + simulateDrawWithAdminNotSelected(OnSuccessListener<Void>, OnFailureListener) : void
+  + simulateDrawWithAdminSelected(OnSuccessListener<Void>, OnFailureListener) : void
+  - upsertEntries(String, List<WaitingListEntry>, OnSuccessListener<Void>, OnFailureListener) : void
+  - withCurrentUser(OnSuccessListener<CurrentUserContext>, OnFailureListener) : void
+}
+
+interface "AdminNotificationTestService.Clock" as T33 #D5F5E3 {
+  ~ now() : long
+}
+
+class "AdminNotificationTestService.CurrentUserContext" as T34 #D5F5E3 {
+  - profile : UserProfile
+  - uid : String
+  --
+  ~ CurrentUserContext(String, UserProfile)
+}
+
+class "AdminNotificationTestService.SandboxState" as T35 #D5F5E3 {
+  - currentUid : String
+  - currentUserLabel : String
+  - event : Event
+  - fakeEntrantCount : int
+  - notificationsEnabled : boolean
+  - pushReady : boolean
+  --
+  ~ SandboxState(Event, String, String, int, boolean, boolean)
+  + getCurrentUid() : String
+  + getCurrentUserLabel() : String
+  + getEvent() : Event
+  + getFakeEntrantCount() : int
+  + isNotificationsEnabled() : boolean
+  + isPushReady() : boolean
+}
+
+class "CommentService" as T36 <<service>> #D5F5E3 {
+  - MAX_COMMENT_LENGTH : int
+  - eventService : EventService
+  - profileService : ProfileService
+  - repository : CommentRepository
+  --
+  + CommentService()
+  + CommentService(FirebaseRepository)
+  + CommentService(CommentRepository, ProfileService, EventService)
+  - buildComment(String, String, String, String, String, String, boolean) : EventComment
+  - cleanBody(String) : String
+  - createComment(String, String, String, String, String, String, boolean, OnSuccessListener<EventComment>, OnFailureListener) : void
+  + deleteComment(Context, String, EventComment, OnSuccessListener<Void>, OnFailureListener) : void
+  + getAllCommentsForAdmin(OnSuccessListener<List<EventComment>>, OnFailureListener) : void
+  - isNonEmpty(String) : boolean
+  + loadCurrentUserLikeStates(Context, String, List<String>, OnSuccessListener<Set<String>>, OnFailureListener) : void
+  - nonEmptyOr(String, String) : String
+  - normalize(String) : String
+  + postComment(Context, String, String, String, OnSuccessListener<EventComment>, OnFailureListener) : void
+  + postPinnedOrganizerComment(Context, String, String, OnSuccessListener<EventComment>, OnFailureListener) : void
+  + subscribeReplies(String, String, OnSuccessListener<List<EventComment>>, OnFailureListener) : ListenerRegistration
+  + subscribeTopLevelComments(String, OnSuccessListener<List<EventComment>>, OnFailureListener) : ListenerRegistration
+  + toggleLike(Context, String, String, boolean, OnSuccessListener<Boolean>, OnFailureListener) : void
+}
+
+class "EntrantEventService" as T37 <<service>> #D5F5E3 {
+  - eventRepository : EventRepository
+  - profileService : ProfileService
+  - waitingListRepository : WaitingListRepository
+  --
+  + EntrantEventService()
+  + EntrantEventService(FirebaseRepository)
+  + EntrantEventService(FirebaseRepository, ProfileService)
+  + EntrantEventService(WaitingListRepository, EventRepository, ProfileService)
+  ~ calculateDistanceMeters(double, double, double, double) : Double
+  - doJoin(String, Double, Double, FirebaseUser, OnSuccessListener<Void>, OnFailureListener) : void
+  - doLeave(String, FirebaseUser, OnSuccessListener<Void>, OnFailureListener) : void
+  + getCurrentUserWaitingListEntry(Context, String, OnSuccessListener<WaitingListEntry>, OnFailureListener) : void
+  + getCurrentUserWaitlistEntries(Context, OnSuccessListener<java.util.List<WaitingListEntry>>, OnFailureListener) : void
+  + getFilledSlotsCount(String, OnSuccessListener<Integer>, OnFailureListener) : void
+  + joinWaitingList(String, Double, Double, OnSuccessListener<Void>, OnFailureListener) : void
+  + leaveWaitingList(Context, String, OnSuccessListener<Void>, OnFailureListener) : void
+  - proceedWithJoin(String, String, long, Double, Double, OnSuccessListener<Void>, OnFailureListener) : void
+  + updateEntry(Context, String, WaitingListEntry, OnSuccessListener<Void>, OnFailureListener) : void
+}
+
+class "EventService" as T38 <<service>> #D5F5E3 {
+  - repository : EventRepository
+  --
+  + EventService()
+  + EventService(EventRepository)
+  + deleteEvent(String, OnSuccessListener<Void>, OnFailureListener) : void
+  + getAllEvents(OnSuccessListener<List<Event>>, OnFailureListener) : void
+  + getEventById(String, OnSuccessListener<Event>, OnFailureListener) : void
+  + saveEvent(Event, OnSuccessListener<Void>, OnFailureListener) : void
+}
+
+class "HeliosFirebaseMessagingService" as T39 <<service>> #D5F5E3 {
+  - CHANNEL_ID : String
+  - TAG : String
+  --
+  + HeliosFirebaseMessagingService()
+  - createNotificationChannel(Context) : void
+  + onMessageReceived(RemoteMessage) : void
+  + onNewToken(String) : void
+  + showLocalNotification(Context, String, String, String, String) : void
+}
+
+class "HeliosUiPreferences" as T40 #D5F5E3 {
+  - KEY_SHOW_HEADER_ICON : String
+  - PREFS_NAME : String
+  - preferences : SharedPreferences
+  --
+  + HeliosUiPreferences(Context)
+  + isHeaderIconEnabled() : boolean
+  + setHeaderIconEnabled(boolean) : void
+}
+
+class "ImageService" as T41 <<service>> #D5F5E3 {
+  - applicationContext : Context
+  - repository : ImageRepository
+  --
+  + ImageService(Context, ImageRepository)
+  + deleteImage(Event, OnSuccessListener<Void>, OnFailureListener) : void
+  + deleteImageAsset(String, OnSuccessListener<Void>, OnFailureListener) : void
+  - deleteImageRecordAndClearPoster(String, ImageAsset, OnSuccessListener<Void>, OnFailureListener) : void
+  + getAllImages(OnSuccessListener<List<Event>>, OnFailureListener) : void
+  + getImageAssetForEvent(String, OnSuccessListener<ImageAsset>, OnFailureListener) : void
+  + saveImageAsset(ImageAsset, OnSuccessListener<Void>, OnFailureListener) : void
+}
+
+class "LotteryService" as T42 <<service>> #D5F5E3 {
+  + NO_PEOPLE_IN_EVENT_MESSAGE : String
+  - eventRepository : EventRepository
+  - organizerNotificationService : OrganizerNotificationService
+  - waitingListRepository : WaitingListRepository
+  --
+  + LotteryService()
+  + LotteryService(FirebaseRepository)
+  + LotteryService(WaitingListRepository, EventRepository, OrganizerNotificationService)
+  - finalizeEventAndNotify(String, Event, List<WaitingListEntry>, List<WaitingListEntry>, OnSuccessListener<Void>, OnFailureListener) : void
+  + runDraw(String, Event, OnSuccessListener<Void>, OnFailureListener) : void
+  + runDraw(String, Event, int, OnSuccessListener<Void>, OnFailureListener) : void
+}
+
+class "NotificationSendResult" as T43 #D5F5E3 {
+  - recipientCount : int
+  --
+  + NotificationSendResult(int)
+  + getRecipientCount() : int
+}
+
+class "OrganizerNotificationService" as T44 <<service>> #D5F5E3 {
+  - notificationRepository : NotificationRepository
+  - userRepository : UserRepository
+  - waitingListRepository : WaitingListRepository
+  --
+  + OrganizerNotificationService()
+  + OrganizerNotificationService(FirebaseRepository)
+  + OrganizerNotificationService(WaitingListRepository, NotificationRepository, UserRepository)
+  + cancelEntrant(String, Event, WaitingListEntry, String, OnSuccessListener<Void>, OnFailureListener) : void
+  - describeEvent(Event) : String
+  + logEventAudit(String, Event, String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  - matchesAudience(WaitingListStatus, NotificationAudience) : boolean
+  + notifyCoOrganizerInvite(String, Event, String, OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  + notifyDrawResults(String, Event, List<WaitingListEntry>, List<WaitingListEntry>, OnSuccessListener<Void>, OnFailureListener) : void
+  + notifyEventCancelled(String, Event, List<WaitingListEntry>, OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  + notifyPrivateEventInvite(String, Event, String, OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  + notifyReplacementInvite(String, Event, String, OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  + sendToAudience(String, String, NotificationAudience, String, String, OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  - sendToRecipients(String, String, NotificationAudience, String, String, Set<String>, OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  - sendToSingleRecipient(String, String, String, NotificationAudience, String, String, OnSuccessListener<NotificationSendResult>, OnFailureListener) : void
+  - titleForEvent(String, String) : String
+}
+
+class "ProfileService" as T45 <<service>> #D5F5E3 {
+  - authDeviceService : AuthDeviceService
+  - eventRepository : EventRepository
+  - installationIdSource : InstallationIdSource
+  - userRepository : UserRepository
+  --
+  + ProfileService()
+  + ProfileService(FirebaseRepository)
+  + ProfileService(AuthDeviceService, UserRepository, EventRepository)
+  + ProfileService(AuthDeviceService, UserRepository, EventRepository, InstallationIdSource)
+  + bootstrapCurrentUser(Context, OnSuccessListener<BootstrapResult>, OnFailureListener) : void
+  + completeCurrentProfile(Context, String, String, String, OnSuccessListener<UserProfile>, OnFailureListener) : void
+  + completeCurrentProfileWithPhoto(Context, String, String, String, String, OnSuccessListener<UserProfile>, OnFailureListener) : void
+  - createDefaultProfile(String, String, String, OnSuccessListener<BootstrapResult>, OnFailureListener) : void
+  + deleteCurrentProfile(Context, OnSuccessListener<Void>, OnFailureListener) : void
+  + deleteProfile(String, OnSuccessListener<Void>, OnFailureListener) : void
+  - deleteUserAndEvents(String, OnSuccessListener<Void>, OnFailureListener) : void
+  + ensureSignedIn(OnSuccessListener<FirebaseUser>, OnFailureListener) : void
+  + getAllProfiles(OnSuccessListener<List<UserProfile>>, OnFailureListener) : void
+  + getUserProfile(String, OnSuccessListener<UserProfile>, OnFailureListener) : void
+  + loadCurrentProfile(Context, OnSuccessListener<UserProfile>, OnFailureListener) : void
+  - repairBootstrapProfile(UserProfile, String, String, String) : boolean
+  + requiresProfileCompletion(UserProfile) : boolean
+  + setNotificationsMuted(Context, boolean, OnSuccessListener<Void>, OnFailureListener) : void
+  + setOrganizerAccessRevoked(String, boolean, OnSuccessListener<Void>, OnFailureListener) : void
+  + setSignInBannerEnabled(Context, boolean, OnSuccessListener<Void>, OnFailureListener) : void
+  + updateCurrentProfilePhoto(Context, String, OnSuccessListener<UserProfile>, OnFailureListener) : void
+}
+
+class "ProfileService.BootstrapResult" as T46 #D5F5E3 {
+  - isNewUser : boolean
+  - profile : UserProfile
+  --
+  + BootstrapResult(UserProfile, boolean)
+  + getProfile() : UserProfile
+  + isNewUser() : boolean
+}
+
+interface "ProfileService.InstallationIdSource" as T47 #D5F5E3 {
+  ~ getInstallationId(Context) : String
+}
+
+class "WaitingListService" as T48 <<service>> #D5F5E3 {
+  - repository : WaitingListRepository
+  --
+  + WaitingListService()
+  + WaitingListService(WaitingListRepository)
+  + autoInviteReplacement(String, OnSuccessListener<Boolean>, OnFailureListener) : void
+  + getEntriesForEvent(String, OnSuccessListener<List<WaitingListEntry>>, OnFailureListener) : void
+  + inviteEntrantToWaitingList(String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  + removeEntry(String, String, OnSuccessListener<Void>, OnFailureListener) : void
+  + updateEntry(String, WaitingListEntry, OnSuccessListener<Void>, OnFailureListener) : void
+}
+
+}
+
+package "com.example.helios.ui" {
+class "AdminCommentAdapter" as T49 <<adapter>> #D6EAF8 {
+  - comments : List<EventComment>
+  - dateFormat : SimpleDateFormat
+  - eventTitlesById : Map<String, String>
+  - onDeleteComment : OnDeleteCommentListener
+  --
+  + AdminCommentAdapter(List<EventComment>, Map<String, String>, OnDeleteCommentListener)
+  - buildMeta(EventComment) : String
+  + getItemCount() : int
+  - nonEmptyOr(String, String) : String
+  + onBindViewHolder(ViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : ViewHolder
+  + replaceComments(List<EventComment>) : void
+  + replaceEventTitles(Map<String, String>) : void
+  - resolveEventTitle(EventComment) : String
+}
+
+class "AdminCommentAdapter.CommentDiff" as T50 #D6EAF8 {
+  - newItems : List<EventComment>
+  - oldItems : List<EventComment>
+  --
+  - CommentDiff(List<EventComment>, List<EventComment>)
+  + areContentsTheSame(int, int) : boolean
+  + areItemsTheSame(int, int) : boolean
+  - equalsNullable(String, String) : boolean
+  + getNewListSize() : int
+  + getOldListSize() : int
+}
+
+interface "AdminCommentAdapter.OnDeleteCommentListener" as T51 #D6EAF8 {
+  ~ onDeleteComment(EventComment) : void
+}
+
+class "AdminCommentAdapter.ViewHolder" as T52 <<viewholder>> #D6EAF8 {
+  ~ btnDelete : MaterialButton
+  ~ tvAuthor : TextView
+  ~ tvBody : TextView
+  ~ tvEvent : TextView
+  ~ tvMeta : TextView
+  --
+  ~ ViewHolder(View)
+}
+
+class "AdminEventAdapter" as T53 <<adapter>> #D6EAF8 {
+  - events : List<Event>
+  - onDelete : OnEventDeleteListener
+  - onEventClick : OnEventClickListener
+  - onViewOrganizer : OnViewOrganizerListener
+  --
+  + AdminEventAdapter(List<Event>, OnEventDeleteListener, OnViewOrganizerListener, OnEventClickListener)
+  + getItemCount() : int
+  + onBindViewHolder(ViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : ViewHolder
+  + replaceEvents(List<Event>) : void
+}
+
+class "AdminEventAdapter.EventDiff" as T54 #D6EAF8 {
+  - newItems : List<Event>
+  - oldItems : List<Event>
+  --
+  - EventDiff(List<Event>, List<Event>)
+  + areContentsTheSame(int, int) : boolean
+  + areItemsTheSame(int, int) : boolean
+  - equalsNullable(String, String) : boolean
+  + getNewListSize() : int
+  + getOldListSize() : int
+}
+
+interface "AdminEventAdapter.OnEventClickListener" as T55 #D6EAF8 {
+  ~ onEventClick(Event) : void
+}
+
+interface "AdminEventAdapter.OnEventDeleteListener" as T56 #D6EAF8 {
+  ~ onEventDelete(Event) : void
+}
+
+interface "AdminEventAdapter.OnViewOrganizerListener" as T57 #D6EAF8 {
+  ~ onViewOrganizer(Event) : void
+}
+
+class "AdminEventAdapter.ViewHolder" as T58 <<viewholder>> #D6EAF8 {
+  ~ btnDelete : Button
+  ~ btnViewOrganizer : Button
+  ~ tvDate : TextView
+  ~ tvDescription : TextView
+  ~ tvLocation : TextView
+  ~ tvMaxEntrants : TextView
+  ~ tvTags : TextView
+  ~ tvTitle : TextView
+  --
+  + ViewHolder(View)
+}
+
+class "AdminImageAdapter" as T59 <<adapter>> #D6EAF8 {
+  - events : List<Event>
+  - onDelete : OnImageDeleteListener
+  --
+  + AdminImageAdapter(List<Event>, OnImageDeleteListener)
+  + getItemCount() : int
+  + onBindViewHolder(ViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : ViewHolder
+  + replaceEvents(List<Event>) : void
+}
+
+class "AdminImageAdapter.EventDiff" as T60 #D6EAF8 {
+  - newItems : List<Event>
+  - oldItems : List<Event>
+  --
+  - EventDiff(List<Event>, List<Event>)
+  + areContentsTheSame(int, int) : boolean
+  + areItemsTheSame(int, int) : boolean
+  - equalsNullable(String, String) : boolean
+  + getNewListSize() : int
+  + getOldListSize() : int
+}
+
+interface "AdminImageAdapter.OnImageDeleteListener" as T61 #D6EAF8 {
+  ~ onImageDelete(Event) : void
+}
+
+class "AdminImageAdapter.ViewHolder" as T62 <<viewholder>> #D6EAF8 {
+  ~ btnDelete : Button
+  ~ ivPreview : ImageView
+  ~ tvLabel : TextView
+  --
+  ~ ViewHolder(View)
+}
+
+class "AdminNotificationAdapter" as T63 <<adapter>> #D6EAF8 {
+  - MESSAGE_PREVIEW_LIMIT : int
+  - dateFormat : SimpleDateFormat
+  - eventTitlesById : Map<String, String>
+  - notifications : List<NotificationRecord>
+  - onNotificationLongPress : OnNotificationLongPressListener
+  --
+  + AdminNotificationAdapter(List<NotificationRecord>, Map<String, String>, OnNotificationLongPressListener)
+  - formatAudience(NotificationAudience) : String
+  - formatTime(long) : String
+  + getItemCount() : int
+  - isNonEmpty(String) : boolean
+  - nonEmptyOr(String, String) : String
+  + onBindViewHolder(ViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : ViewHolder
+  + replaceEventTitles(Map<String, String>) : void
+  + replaceNotifications(List<NotificationRecord>) : void
+  - truncate(String) : String
+}
+
+class "AdminNotificationAdapter.NotificationDiff" as T64 #D6EAF8 {
+  - newItems : List<NotificationRecord>
+  - oldItems : List<NotificationRecord>
+  --
+  - NotificationDiff(List<NotificationRecord>, List<NotificationRecord>)
+  + areContentsTheSame(int, int) : boolean
+  + areItemsTheSame(int, int) : boolean
+  - equalsNullable(String, String) : boolean
+  + getNewListSize() : int
+  + getOldListSize() : int
+}
+
+interface "AdminNotificationAdapter.OnNotificationLongPressListener" as T65 #D6EAF8 {
+  ~ onNotificationLongPress(NotificationRecord) : void
+}
+
+class "AdminNotificationAdapter.ViewHolder" as T66 <<viewholder>> #D6EAF8 {
+  - tvAudience : TextView
+  - tvEventTitle : TextView
+  - tvMessage : TextView
+  - tvTime : TextView
+  - tvTitle : TextView
+  --
+  ~ ViewHolder(View)
+}
+
+class "EventAdapter" as T67 <<adapter>> #D6EAF8 {
+  - VIEW_TYPE_CO_ORGANIZER_INVITE : int
+  - VIEW_TYPE_EVENT : int
+  - VIEW_TYPE_PRIVATE_EVENT_INVITE : int
+  - entrantStatusesByEventId : Map<String, WaitingListStatus>
+  - entrantViewerUid : String
+  - onCoOrganizerInviteAction : OnCoOrganizerInviteActionListener
+  - onEventClick : OnEventClickListener
+  - onPrivateEventInviteAction : OnPrivateEventInviteActionListener
+  - organizerViewerUid : String
+  --
+  + EventAdapter(List<Event>)
+  + EventAdapter(List<Event>, OnEventClickListener)
+  + EventAdapter(List<Event>, OnEventClickListener, OnCoOrganizerInviteActionListener)
+  + EventAdapter(List<Event>, OnEventClickListener, OnCoOrganizerInviteActionListener, OnPrivateEventInviteActionListener)
+  - bindCoOrganizerInvite(CoOrganizerInviteViewHolder, Event) : void
+  - bindEventCard(EventCardViewHolder, Event) : void
+  - bindPrivateEventInvite(PrivateEventInviteViewHolder, Event) : void
+  - getEntrantStatusForEvent(Event) : WaitingListStatus
+  + getItemViewType(int) : int
+  + onBindViewHolder(EventViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : EventViewHolder
+  + replaceEvents(List<Event>) : void
+  + setEntrantViewerState(String, Map<String, WaitingListStatus>) : void
+  + setOrganizerViewerUid(String) : void
+}
+
+class "EventAdapter.CoOrganizerInviteViewHolder" as T68 <<viewholder>> #D6EAF8 {
+  ~ btnAccept : View
+  ~ btnDecline : View
+  ~ tvEventTitle : TextView
+  --
+  ~ CoOrganizerInviteViewHolder(View)
+}
+
+class "EventAdapter.EventCardViewHolder" as T69 <<viewholder>> #D6EAF8 {
+  ~ badgeContainer : View
+  ~ posterImageView : ImageView
+  ~ tvCoOrganizerBadge : TextView
+  ~ tvDate : TextView
+  ~ tvLocation : TextView
+  ~ tvMaxEntrants : TextView
+  ~ tvPrivateEventBadge : TextView
+  ~ tvRegistrationStatus : TextView
+  ~ tvTags : TextView
+  ~ tvTitle : TextView
+  --
+  + EventCardViewHolder(View)
+}
+
+class "EventAdapter.EventDiff" as T70 #D6EAF8 {
+  - EventDiff()
+  + areContentsTheSame(Event, Event) : boolean
+  + areItemsTheSame(Event, Event) : boolean
+  - equalsNullable(String, String) : boolean
+  - safeList(List<String>) : List<String>
+}
+
+class "EventAdapter.EventViewHolder" as T71 <<viewholder>> #D6EAF8 {
+  ~ EventViewHolder(View)
+}
+
+interface "EventAdapter.OnCoOrganizerInviteActionListener" as T72 #D6EAF8 {
+  ~ onAcceptInvite(Event) : void
+  ~ onDeclineInvite(Event) : void
+}
+
+interface "EventAdapter.OnEventClickListener" as T73 #D6EAF8 {
+  ~ onEventClick(Event) : void
+}
+
+interface "EventAdapter.OnPrivateEventInviteActionListener" as T74 #D6EAF8 {
+  ~ onAcceptInvite(Event) : void
+  ~ onDeclineInvite(Event) : void
+}
+
+class "EventAdapter.PrivateEventInviteViewHolder" as T75 <<viewholder>> #D6EAF8 {
+  ~ btnAccept : View
+  ~ btnDecline : View
+  ~ tvDate : TextView
+  ~ tvEventTitle : TextView
+  ~ tvMaxEntrants : TextView
+  --
+  ~ PrivateEventInviteViewHolder(View)
+}
+
+class "LauncherActivity" as T76 <<activity>> #D6EAF8 {
+  - MIN_LOADING_DELAY_MS : long
+  - profileService : ProfileService
+  - welcomeText : TextView
+  --
+  + LauncherActivity()
+  # onCreate(Bundle) : void
+  - openMain(UserProfile) : void
+  - openProfileSetupRequired() : void
+}
+
+class "MainActivity" as T77 <<activity>> #D6EAF8 {
+  - authDeviceService : com.example.helios.auth.AuthDeviceService
+  - bannerRole : TextView
+  - bannerText : TextView
+  - bannerView : View
+  - bottomNav : BottomNavigationView
+  - bottomNavOrganizer : BottomNavigationView
+  - cachedProfile : UserProfile
+  - cachedProfileComplete : Boolean
+  - currentBottomMenuRes : int
+  - hasLoadedNotificationSnapshot : boolean
+  - lastSelectedItemId : int
+  - navController : NavController
+  - navHostFragment : NavHostFragment
+  - notificationListenerRegistration : ListenerRegistration
+  - notificationRepository : NotificationRepository
+  - observedNotificationIds : Set<String>
+  - organizerEventId : String
+  - profileService : ProfileService
+  --
+  + MainActivity()
+  - applyInsets() : void
+  - consumeNotificationLaunchIntent(Intent) : void
+  - createBottomNavListener() : BottomNavigationView.OnItemSelectedListener
+  - createOrganizerBottomNavListener() : NavigationBarView.OnItemSelectedListener
+  - gateOrganizeAndNavigate() : void
+  - handleLiveNotifications(List<NotificationRecord>) : void
+  - mapOrganizerTab(int) : int
+  - navigateTopLevel(int) : boolean
+  # onCreate(Bundle) : void
+  # onNewIntent(Intent) : void
+  # onPause() : void
+  # onResume() : void
+  + openNotificationTarget(String) : void
+  - openProfileSetupPrompt() : void
+  - refreshUserBanner() : void
+  - refreshUserBannerWithRetry(boolean) : void
+  - requestNotificationPermissionIfNeeded() : void
+  - setCheckedTabSilently(int) : void
+  - setOrganizerCheckedTabSilently(int) : void
+  - showMainBottomNav(int) : void
+  - showOrganizerBottomNav(int) : void
+  - startNotificationListener() : void
+  - stopNotificationListener() : void
+}
+
+class "NotificationAdapter" as T78 <<adapter>> #D6EAF8 {
+  - dateFormat : SimpleDateFormat
+  - onNotificationClick : OnNotificationClickListener
+  --
+  + NotificationAdapter(List<NotificationRecord>)
+  + NotificationAdapter(List<NotificationRecord>, OnNotificationClickListener)
+  + onBindViewHolder(ViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : ViewHolder
+  + replaceNotifications(List<NotificationRecord>) : void
+}
+
+class "NotificationAdapter.NotificationDiff" as T79 #D6EAF8 {
+  - NotificationDiff()
+  + areContentsTheSame(NotificationRecord, NotificationRecord) : boolean
+  + areItemsTheSame(NotificationRecord, NotificationRecord) : boolean
+  - equalsNullable(String, String) : boolean
+}
+
+interface "NotificationAdapter.OnNotificationClickListener" as T80 #D6EAF8 {
+  ~ onNotificationClick(NotificationRecord) : void
+}
+
+class "NotificationAdapter.ViewHolder" as T81 <<viewholder>> #D6EAF8 {
+  ~ tvMessage : TextView
+  ~ tvTime : TextView
+  ~ tvTitle : TextView
+  --
+  ~ ViewHolder(View)
+}
+
+class "ProfileEventHistoryAdapter" as T82 <<adapter>> #D6EAF8 {
+  - onHistoryClickListener : OnHistoryClickListener
+  --
+  + ProfileEventHistoryAdapter(OnHistoryClickListener)
+  - getStatusIconRes(WaitingListStatus) : int
+  - getStatusTintAttr(WaitingListStatus) : int
+  + onBindViewHolder(ViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : ViewHolder
+  + replaceItems(List<HistoryItem>) : void
+}
+
+class "ProfileEventHistoryAdapter.HistoryItem" as T83 #D6EAF8 {
+  - clickable : boolean
+  - eventId : String
+  - stableId : String
+  - status : WaitingListStatus
+  - subtext : String
+  - title : String
+  --
+  + HistoryItem(String, String, String, String, WaitingListStatus, boolean)
+  + getEventId() : String
+  + getStableId() : String
+  + getStatus() : WaitingListStatus
+  + getSubtext() : String
+  + getTitle() : String
+  + isClickable() : boolean
+}
+
+class "ProfileEventHistoryAdapter.HistoryItemDiff" as T84 #D6EAF8 {
+  - HistoryItemDiff()
+  + areContentsTheSame(HistoryItem, HistoryItem) : boolean
+  + areItemsTheSame(HistoryItem, HistoryItem) : boolean
+}
+
+interface "ProfileEventHistoryAdapter.OnHistoryClickListener" as T85 #D6EAF8 {
+  ~ onHistoryClick(HistoryItem) : void
+}
+
+class "ProfileEventHistoryAdapter.ViewHolder" as T86 <<viewholder>> #D6EAF8 {
+  - ivChevron : ImageView
+  - ivEventStatus : ImageView
+  - tvEventName : TextView
+  - tvEventSubtext : TextView
+  --
+  ~ ViewHolder(View)
+}
+
+class "ProfileSetupActivity" as T87 <<activity>> #D6EAF8 {
+  + EXTRA_MODE : String
+  + EXTRA_RETURN_TO_MAIN : String
+  + MODE_EDIT_PROFILE : String
+  + MODE_SETUP_REQUIRED : String
+  - contentContainer : View
+  - currentProfileImageUrl : String
+  - emailInput : EditText
+  - mode : String
+  - nameInput : EditText
+  - pendingProfileImageUri : Uri
+  - phoneInput : EditText
+  - pickProfileImageLauncher : ActivityResultLauncher<PickVisualMediaRequest>
+  - primaryButton : MaterialButton
+  - profileImageView : ImageView
+  - profilePhotoButton : MaterialButton
+  - profilePhotoProgress : ProgressBar
+  - profileService : ProfileService
+  - returnToMain : boolean
+  - subtitleText : TextView
+  - titleText : TextView
+  --
+  + ProfileSetupActivity()
+  - applyInsets() : void
+  - attachValidationWatchers() : void
+  - bindRemoteProfileImage(String) : void
+  - configureUiForMode() : void
+  - finishOrGoMain() : void
+  - hasRequiredInputs() : boolean
+  # onCreate(Bundle) : void
+  - openProfileImagePicker() : void
+  - persistReadPermission(Uri) : void
+  - prefillCurrentProfile() : void
+  - saveProfile() : void
+  - setPhotoUploadInProgress(boolean) : void
+  - showProfilePlaceholder() : void
+  - showSelectedProfileImage(Uri) : void
+  - updatePrimaryButtonState() : void
+  - uploadPhotoAndSaveProfile(String, String, String, Uri) : void
+}
+
+class "ProfileSetupActivity.SimpleWatcher" as T88 #D6EAF8 {
+  - callback : Runnable
+  --
+  ~ SimpleWatcher(Runnable)
+  + afterTextChanged(Editable) : void
+  + beforeTextChanged(CharSequence, int, int, int) : void
+  + onTextChanged(CharSequence, int, int, int) : void
+}
+
+class "ThemedActivity" as T89 <<activity>> #D6EAF8 {
+  - appliedAppearanceSignature : String
+  - fontCallbacksRegistered : boolean
+  - fontLifecycleCallbacks : FragmentManager.FragmentLifecycleCallbacks
+  --
+  + ThemedActivity()
+  # applyHeliosTheme() : void
+  - applyPreferredFontRecursively(View, Typeface) : void
+  - applyPreferredFontToContent() : void
+  # applyPreferredFontToView(View) : void
+  # attachBaseContext(Context) : void
+  + onContentChanged() : void
+  # onDestroy() : void
+  # onPostCreate(Bundle) : void
+  # onResume() : void
+  + refreshHeaderBranding() : void
+  - registerFontCallbacksIfNeeded() : void
+}
+
+class "UserAdapter" as T90 <<adapter>> #D6EAF8 {
+  - onDelete : OnUserDeleteListener
+  - onUserClick : OnUserClickListener
+  - onViewEvents : OnViewEventsListener
+  - organizerUids : Set<String>
+  - users : List<UserProfile>
+  --
+  + UserAdapter(List<UserProfile>, Set<String>, OnUserDeleteListener, OnViewEventsListener, OnUserClickListener)
+  + getItemCount() : int
+  + onBindViewHolder(UserViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : UserViewHolder
+  + replaceUsers(List<UserProfile>, Set<String>) : void
+}
+
+interface "UserAdapter.OnUserClickListener" as T91 #D6EAF8 {
+  ~ onUserClick(UserProfile) : void
+}
+
+interface "UserAdapter.OnUserDeleteListener" as T92 #D6EAF8 {
+  ~ onUserDelete(UserProfile) : void
+}
+
+interface "UserAdapter.OnViewEventsListener" as T93 #D6EAF8 {
+  ~ onViewEvents(UserProfile) : void
+}
+
+class "UserAdapter.UserDiff" as T94 #D6EAF8 {
+  - newItems : List<UserProfile>
+  - newOrganizerUids : Set<String>
+  - oldItems : List<UserProfile>
+  - oldOrganizerUids : Set<String>
+  --
+  - UserDiff(List<UserProfile>, List<UserProfile>, Set<String>, Set<String>)
+  + areContentsTheSame(int, int) : boolean
+  + areItemsTheSame(int, int) : boolean
+  - equalsNullable(String, String) : boolean
+  + getNewListSize() : int
+  + getOldListSize() : int
+}
+
+class "UserAdapter.UserViewHolder" as T95 <<viewholder>> #D6EAF8 {
+  ~ btnDelete : Button
+  ~ btnViewEvents : Button
+  ~ tvEmail : TextView
+  ~ tvName : TextView
+  ~ tvRole : TextView
+  --
+  + UserViewHolder(View)
+}
+
+}
+
+package "com.example.helios.ui.common" {
+class "EventNavArgs" as T96 #D6EAF8 {
+  + ARG_EVENT_ID : String
+  + ARG_OPEN_EVENT_POSTING : String
+  --
+  - EventNavArgs()
+  + forEventId(String) : Bundle
+  + forEventIdAndOpenPosting(String) : Bundle
+  + getEventId(Bundle) : String
+  + hasEventId(Bundle) : boolean
+  + shouldOpenEventPosting(Bundle) : boolean
+}
+
+class "HeliosChipFactory" as T97 #D6EAF8 {
+  - CHIP_COMFORTABLE_HORIZONTAL_PADDING_DP : float
+  - CHIP_COMFORTABLE_MIN_HEIGHT_DP : float
+  - CHIP_HORIZONTAL_PADDING_DP : float
+  - CHIP_ICON_END_PADDING_DP : float
+  - CHIP_MIN_HEIGHT_DP : float
+  --
+  - HeliosChipFactory()
+  - applyBaseStyle(Context, Chip) : void
+  + createAssistChip(Context, CharSequence) : Chip
+  + createCheckableChip(Context, CharSequence, boolean) : Chip
+  - createCheckedStateList(Context, int, int) : ColorStateList
+  + createDismissibleChip(Context, CharSequence, View.OnClickListener) : Chip
+}
+
+class "HeliosHeaderBranding" as T98 #D6EAF8 {
+  - HeliosHeaderBranding()
+  + applyToActivity(AppCompatActivity) : void
+  + applyToView(View, boolean) : void
+  - setVisible(ImageView, boolean) : void
+}
+
+class "HeliosImageUploader" as T99 #D6EAF8 {
+  - TAG : String
+  --
+  - HeliosImageUploader()
+  - deleteFromResolvedReference(StorageReference, Runnable, OnFailureListener) : void
+  + deleteFromStorage(Context, String, Runnable, OnFailureListener) : void
+  - deleteQuietly(File) : void
+  - getStorageConfig(Context) : StorageConfig
+  + getUserFacingUploadErrorMessage(Exception) : String
+  - isObjectMissing(Exception) : boolean
+  - logNonStorageFailure(Exception, String, String) : void
+  - logStorageFailure(StorageException, String, String, UploadStage) : void
+  ~ mapStorageFailureCodeToMessage(int, UploadStage) : String
+  ~ normalizeConfiguredBucket(String) : String
+  - resolveExtension(ContentResolver, String, Uri) : String
+  - resolveExtensionFromDisplayName(ContentResolver, Uri) : String
+  - resolveStorageReference(Context, String) : StorageReference
+  - stageImageForUpload(Context, Uri, String) : File
+  + uploadImage(Context, Uri, String, OnSuccessListener<UploadResult>, OnFailureListener) : void
+  - wrapUploadFailure(Exception, String, String, UploadStage) : Exception
+}
+
+class "HeliosImageUploader.ImageUploadException" as T100 #D6EAF8 {
+  - bucketUrl : String
+  - stage : UploadStage
+  - storagePath : String
+  - userMessage : String
+  --
+  - ImageUploadException(String, UploadStage, String, String, Throwable)
+  + getBucketUrl() : String
+  + getStage() : UploadStage
+  + getStoragePath() : String
+  + getUserMessage() : String
+}
+
+class "HeliosImageUploader.StorageConfig" as T101 #D6EAF8 {
+  - bucketUrl : String
+  - storage : FirebaseStorage
+  --
+  - StorageConfig(FirebaseStorage, String)
+}
+
+class "HeliosImageUploader.UploadResult" as T102 #D6EAF8 {
+  - downloadUrl : String
+  - storagePath : String
+  --
+  + UploadResult(String, String)
+  + getDownloadUrl() : String
+  + getStoragePath() : String
+}
+
+enum "HeliosImageUploader.UploadStage" as T103 #D6EAF8 {
+  + GET_DOWNLOAD_URL : UploadStage
+  + PUT_FILE : UploadStage
+  --
+  - UploadStage()
+}
+
+class "HeliosLocation" as T104 #D6EAF8 {
+  + LOCATION_PERMISSIONS : String[]
+  --
+  - HeliosLocation()
+  + buildLocationServicesDisabledMessage(String) : String
+  + buildLocationUnavailableMessage(String) : String
+  + buildPermissionDeniedMessage(String) : String
+  + createCurrentLocationRequest(Context) : CurrentLocationRequest
+  + createLocationSettingsRequest(Context) : LocationSettingsRequest
+  + getLocationPriority(Context) : int
+  + hasAnyLocationPermission(Context) : boolean
+  + hasPreciseLocationPermission(Context) : boolean
+  + isLikelyEmulator() : boolean
+  - lower(String) : String
+}
+
+class "HeliosText" as T105 #D6EAF8 {
+  - HeliosText()
+  + containsIgnoreCase(String, String) : boolean
+  + isNonEmpty(String) : boolean
+  + nonEmptyOr(String, String) : String
+  + safeLower(String) : String
+  + trimToNull(String) : String
+}
+
+class "HeliosUi" as T106 #D6EAF8 {
+  - HeliosUi()
+  + setVisible(View, boolean) : void
+  + toast(Fragment, String) : void
+  + toastLong(Fragment, String) : void
+}
+
+class "NotificationNavArgs" as T107 #D6EAF8 {
+  + EXTRA_NOTIFICATION_EVENT_ID : String
+  + EXTRA_OPENED_FROM_NOTIFICATION : String
+  + REQUEST_OPEN_EVENT : String
+  --
+  - NotificationNavArgs()
+  + clear(Intent) : void
+  + getEventId(Intent) : String
+  + hasEventId(Intent) : boolean
+  + isNotificationIntent(Intent) : boolean
+  + markNotificationIntent(Intent, String) : void
+}
+
+}
+
+package "com.example.helios.ui.event" {
+class "EventCommentsAdapter" as T108 <<adapter>> #D6EAF8 {
+  - actionListener : CommentActionListener
+  - authorProfileImageUrls : Map<String, String>
+  - currentUserAdmin : boolean
+  - currentUserUid : String
+  - likedCommentIds : Set<String>
+  - organizerUid : String
+  - repliesByParent : Map<String, List<EventComment>>
+  - sharedReplyPool : RecyclerView.RecycledViewPool
+  - topLevelComments : List<EventComment>
+  --
+  + EventCommentsAdapter(CommentActionListener)
+  - bindAvatar(ImageView, EventComment) : void
+  - canDelete(EventComment) : boolean
+  - findTopLevelCommentIndex(String) : int
+  + getAllVisibleCommentIds() : List<String>
+  + getAllVisibleComments() : List<EventComment>
+  + getItemCount() : int
+  - isLiked(EventComment) : boolean
+  - isNonEmpty(String) : boolean
+  - isOrganizerAuthor(EventComment) : boolean
+  - nonEmptyOr(String, String) : String
+  + onBindViewHolder(CommentViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : CommentViewHolder
+  - relativeTime(long) : CharSequence
+  - resolveAuthorProfileImageUrl(EventComment) : String
+  + setAuthorProfileImageUrls(Map<String, String>) : void
+  + setCurrentUser(String, boolean) : void
+  + setLikedCommentIds(Set<String>) : void
+  + setOrganizerUid(String) : void
+  + setReplies(String, List<EventComment>) : void
+  + setTopLevelComments(List<EventComment>) : void
+}
+
+interface "EventCommentsAdapter.CommentActionListener" as T109 #D6EAF8 {
+  ~ onDelete(EventComment) : void
+  ~ onLikeToggle(EventComment, boolean) : void
+  ~ onReply(EventComment) : void
+}
+
+class "EventCommentsAdapter.CommentDiff" as T110 #D6EAF8 {
+  - newItems : List<EventComment>
+  - oldItems : List<EventComment>
+  --
+  - CommentDiff(List<EventComment>, List<EventComment>)
+  + areContentsTheSame(int, int) : boolean
+  + areItemsTheSame(int, int) : boolean
+  - equalsNullable(String, String) : boolean
+  + getNewListSize() : int
+  + getOldListSize() : int
+}
+
+class "EventCommentsAdapter.CommentViewHolder" as T111 <<viewholder>> #D6EAF8 {
+  - actionLike : LinearLayout
+  - actionReply : LinearLayout
+  - ivAvatar : ImageView
+  - ivLike : ImageView
+  - replyAdapter : ReplyAdapter
+  - rvReplies : RecyclerView
+  - tvAuthor : TextView
+  - tvBody : TextView
+  - tvDelete : TextView
+  - tvLikeCount : TextView
+  - tvPinned : TextView
+  - tvRole : TextView
+  - tvTime : TextView
+  --
+  ~ CommentViewHolder(View, RecyclerView.RecycledViewPool)
+  ~ bind(EventComment) : void
+  ~ bindReplies(List<EventComment>) : void
+}
+
+class "EventCommentsAdapter.ReplyAdapter" as T112 <<adapter>> #D6EAF8 {
+  - replies : List<EventComment>
+  --
+  ~ ReplyAdapter()
+  + getItemCount() : int
+  + onBindViewHolder(ReplyViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : ReplyViewHolder
+  ~ setItems(List<EventComment>) : void
+}
+
+class "EventCommentsAdapter.ReplyAdapter.ReplyViewHolder" as T113 <<viewholder>> #D6EAF8 {
+  - actionLike : LinearLayout
+  - ivAvatar : ImageView
+  - ivLike : ImageView
+  - tvAuthor : TextView
+  - tvBody : TextView
+  - tvDelete : TextView
+  - tvLikeCount : TextView
+  - tvRole : TextView
+  - tvTime : TextView
+  --
+  ~ ReplyViewHolder(View)
+  ~ bind(EventComment) : void
+}
+
+class "EventCommentsSection" as T114 #D6EAF8 {
+  - authorProfileImageUrls : Map<String, String>
+  - commentInput : EditText
+  - commentService : CommentService
+  - commentsAdapter : EventCommentsAdapter
+  - currentUserAdmin : boolean
+  - currentUserUid : String
+  - eventId : String
+  - fragment : Fragment
+  - likedCommentIds : Set<String>
+  - organizerUid : String
+  - pinCommentCheckbox : CheckBox
+  - postButton : MaterialButton
+  - profileService : ProfileService
+  - replyRegistrations : Map<String, ListenerRegistration>
+  - replyingToComment : EventComment
+  - replyingToView : TextView
+  - requestedAuthorProfileUids : Set<String>
+  - topLevelCommentsRegistration : ListenerRegistration
+  --
+  ~ EventCommentsSection(Fragment, String, CommentService, ProfileService, RecyclerView, EditText, MaterialButton, CheckBox, TextView)
+  ~ bindOrganizer(String) : void
+  ~ clear() : void
+  - clearListeners() : void
+  - clearReplyTarget() : void
+  - deleteComment(EventComment) : void
+  - ensureAuthorProfileImages(List<EventComment>) : void
+  ~ getCurrentUserUid() : String
+  ~ loadCurrentUser(CurrentUserListener) : void
+  - onCommentActionFailed(String) : void
+  - onLikePressed(EventComment, boolean) : void
+  - onPostCommentPressed() : void
+  - onReplyPressed(EventComment) : void
+  - refreshLikeStates() : void
+  - resetComposer() : void
+  - showDeleteCommentDialog(EventComment) : void
+  ~ subscribe() : void
+  - syncReplyListeners(List<EventComment>) : void
+}
+
+class "EventCommentsSection.CommentActions" as T115 #D6EAF8 {
+  - CommentActions()
+  + onDelete(EventComment) : void
+  + onLikeToggle(EventComment, boolean) : void
+  + onReply(EventComment) : void
+}
+
+interface "EventCommentsSection.CurrentUserListener" as T116 #D6EAF8 {
+  ~ onLoaded(String) : void
+}
+
+class "EventDetailsBottomSheet" as T117 #D6EAF8 {
+  + ARG_EVENT_ID : String
+  + ARG_HIDE_JOIN_BUTTON : String
+  + RESULT_EVENT_ID : String
+  + RESULT_INVITATION_RESPONSE : String
+  + RESULT_STATUS : String
+  - btnWaitingList : MaterialButton
+  - cardPoster : View
+  - cgEventTags : ChipGroup
+  - commentsSection : EventCommentsSection
+  - currentEntry : WaitingListEntry
+  - currentUserUid : String
+  - descriptionCard : View
+  - entrantEventService : EntrantEventService
+  - eventId : String
+  - eventService : EventService
+  - hideJoinButton : boolean
+  - isCurrentlyOnWaitingList : boolean
+  - isImageExpanded : boolean
+  - ivMaximizeIcon : ImageView
+  - ivPoster : ImageView
+  - loadedEvent : Event
+  - locationClient : FusedLocationProviderClient
+  - locationPermissionLauncher : ActivityResultLauncher<String[]>
+  - locationSettingsLauncher : ActivityResultLauncher<IntentSenderRequest>
+  - lotteryGuidelinesCard : View
+  - pendingLocationAction : Runnable
+  - tvCapacity : TextView
+  - tvDate : TextView
+  - tvDescription : TextView
+  - tvLocation : TextView
+  - tvLotteryGuidelines : TextView
+  - tvLotteryGuidelinesLabel : TextView
+  - tvName : TextView
+  - tvRegistrationEndDate : TextView
+  - tvRegistrationEndTime : TextView
+  - tvRegistrationStartDate : TextView
+  - tvTimeEnd : TextView
+  - tvTimeStart : TextView
+  - tvWaitlistCount : TextView
+  - waitingListService : WaitingListService
+  --
+  + EventDetailsBottomSheet()
+  - acceptCoOrganizerInvite() : void
+  - acceptInvitation() : void
+  - bindEvent(Event) : void
+  - bindGeofenceCard(Event) : void
+  - buildLocationRequiredMessage(String) : String
+  - clearPendingLocationAction() : void
+  - declineCoOrganizerInvite() : void
+  - declineInvitation() : void
+  - fetchLastKnownLocationThenJoin() : void
+  - fetchRequiredLocationThenJoin() : void
+  - handleLocationPermissionResult(Map<String, Boolean>) : void
+  - handleLocationSettingsResolutionResult(boolean) : void
+  - hideActionButtons() : void
+  - isCurrentUserOrganizerForEvent() : boolean
+  - isRegistrationClosed() : boolean
+  - joinWaitingListConfirmed() : void
+  - leaveWaitingList() : void
+  - loadEvent() : void
+  + newInstance(String) : EventDetailsBottomSheet
+  + newInstance(String, boolean) : EventDetailsBottomSheet
+  - nonEmptyOr(String, String) : String
+  - notifyEntryStatusChanged() : void
+  - notifyInvitationResponseChanged() : void
+  - notifyWaitingListStatusChanged(WaitingListStatus) : void
+  + onCreate(Bundle) : void
+  + onDestroyView() : void
+  - onJoinWaitingListFailed(Exception) : void
+  + onStart() : void
+  + onViewCreated(View, Bundle) : void
+  - onWaitingListButtonPressed() : void
+  - openEventAreaInMaps(Event) : void
+  - performJoinWaitingList(Double, Double) : void
+  - refreshCapacityCount() : void
+  - refreshWaitingListState() : void
+  - requestLocationAccessAndServices() : void
+  - requestRequiredLocationThenJoin() : void
+  - runPendingLocationAction() : void
+  - saveEntryResponse(String) : void
+  - setLoading(boolean) : void
+  - showActionButtons(String, String, Runnable, Runnable) : void
+  - showJoinWaitingListDialog() : void
+  - showLocationRequiredDialog(String) : void
+  - toast(String) : void
+  - toggleImageExpansion() : void
+  - trimToNull(String) : String
+  - updateWaitingListButton() : void
+}
+
+class "EventDiscoveryInsights" as T118 #D6EAF8 {
+  - DEFAULT_TAG_LIMIT : int
+  - HOT_TAG_COMPARATOR : Comparator<TagAggregate>
+  - NEW_TAG_COMPARATOR : Comparator<TagAggregate>
+  --
+  - EventDiscoveryInsights()
+  + fromEvents(List<Event>, long) : Result
+  - getFreshnessScore(Event) : long
+  - isActiveEvent(Event, long) : boolean
+  - toDisplayList(List<TagAggregate>, int) : List<String>
+}
+
+class "EventDiscoveryInsights.Result" as T119 #D6EAF8 {
+  - activeEventCount : int
+  - activePrivateCount : int
+  - activePublicCount : int
+  - hotTags : List<String>
+  - newTags : List<String>
+  --
+  - Result(List<String>, List<String>, int, int, int)
+  + getActiveEventCount() : int
+  + getActivePrivateCount() : int
+  + getActivePublicCount() : int
+  + getHotTags() : List<String>
+  + getNewTags() : List<String>
+}
+
+class "EventDiscoveryInsights.TagAggregate" as T120 #D6EAF8 {
+  - count : int
+  - displayName : String
+  - latestActivityMillis : long
+  --
+  - TagAggregate(String)
+}
+
+class "EventUiFormatter" as T121 #D6EAF8 {
+  - DATE_FORMAT : SimpleDateFormat
+  - FULL_DATE_FORMAT : SimpleDateFormat
+  - MERIDIEM_FORMAT : SimpleDateFormat
+  - REGISTRATION_TIME_FORMAT : SimpleDateFormat
+  - SHORT_TIME_FORMAT : SimpleDateFormat
+  - TIME_FORMAT : SimpleDateFormat
+  --
+  - EventUiFormatter()
+  + getCapacityChipLabel(Event) : String
+  + getDateLabel(Event) : String
+  + getDescription(Event) : String
+  + getDisplayTags(Event) : List<String>
+  + getEndTimeLabel(Event) : String
+  + getGeofenceSummary(Event) : String
+  + getLocationDetailLabel(Event) : String
+  + getLocationLabel(Event) : String
+  + getRegistrationEndDateLabel(Event) : String
+  + getRegistrationEndTimeLabel(Event) : String
+  + getRegistrationStartDateLabel(Event) : String
+  + getRegistrationStatusLabel(Event, long) : String
+  + getScheduleLabel(Event) : String
+  + getStartTimeLabel(Event) : String
+  + getTagSummary(Event, int) : String
+  + getTimeRangeLabel(Event) : String
+  + getTitle(Event) : String
+  - nonEmptyOr(String, String) : String
+  - nonEmptyOrNull(String) : String
+  - trimToNull(String) : String
+}
+
+}
+
+package "com.example.helios.ui.nav" {
+class "AdminFragment" as T122 <<fragment>> #D6EAF8 {
+  - ARG_ORGANIZER_UID : String
+  - allEvents : List<Event>
+  - allUsers : List<UserProfile>
+  - btnGeolocationLabMenu : MaterialButton
+  - btnGeolocationLabSeed : MaterialButton
+  - btnNotificationLabMenu : MaterialButton
+  - btnNotificationLabSeed : MaterialButton
+  - btnTabComments : TextView
+  - btnTabEvents : TextView
+  - btnTabGeo : TextView
+  - btnTabImages : TextView
+  - btnTabNotifications : TextView
+  - btnTabOrganizers : TextView
+  - btnTabUsers : TextView
+  - commentAdapter : AdminCommentAdapter
+  - commentService : CommentService
+  - displayedComments : List<EventComment>
+  - displayedEvents : List<Event>
+  - displayedImages : List<Event>
+  - displayedNotifications : List<NotificationRecord>
+  - displayedOrganizers : List<UserProfile>
+  - displayedUsers : List<UserProfile>
+  - eventAdapter : AdminEventAdapter
+  - eventService : EventService
+  - eventTitlesById : Map<String, String>
+  - filteredOrganizerUid : String
+  - geolocationLabExpanded : boolean
+  - geolocationLabState : AdminGeolocationTestService.SandboxState
+  - geolocationTestService : AdminGeolocationTestService
+  - imageAdapter : AdminImageAdapter
+  - imageService : ImageService
+  - isOrganizerMode : boolean
+  - ivScrollLeft : android.widget.ImageView
+  - ivScrollRight : android.widget.ImageView
+  - layoutGeoTab : LinearLayout
+  - layoutGeolocationLabContent : LinearLayout
+  - layoutGeolocationLabToggle : LinearLayout
+  - layoutNotificationLabContent : LinearLayout
+  - layoutNotificationLabToggle : LinearLayout
+  - layoutNotificationsTab : LinearLayout
+  - notificationAdapter : AdminNotificationAdapter
+  - notificationLabExpanded : boolean
+  - notificationLabState : AdminNotificationTestService.SandboxState
+  - notificationRepository : NotificationRepository
+  - notificationTestService : AdminNotificationTestService
+  - organizerAdapter : UserAdapter
+  - organizerName : String
+  - organizerUids : Set<String>
+  - profileService : ProfileService
+  - rvComments : RecyclerView
+  - rvEvents : RecyclerView
+  - rvImages : RecyclerView
+  - rvNotifications : RecyclerView
+  - rvOrganizers : RecyclerView
+  - rvUsers : RecyclerView
+  - tabContainer : HorizontalScrollView
+  - tvGeolocationLabStatus : TextView
+  - tvGeolocationLabToggleState : TextView
+  - tvNoComments : TextView
+  - tvNoEvents : TextView
+  - tvNoImages : TextView
+  - tvNoNotifications : TextView
+  - tvNoOrganizers : TextView
+  - tvNoUsers : TextView
+  - tvNotificationLabStatus : TextView
+  - tvNotificationLabToggleState : TextView
+  - userAdapter : UserAdapter
+  --
+  + AdminFragment()
+  - bindGeolocationLab() : void
+  - bindNotificationLab() : void
+  - bindTabs() : void
+  - confirmDeleteComment(EventComment) : void
+  - confirmDeleteNotification(NotificationRecord) : void
+  - confirmRevokeOrganizerAccess(UserProfile, int) : void
+  - deleteComment(EventComment) : void
+  - deleteEvent(Event) : void
+  - deleteImage(Event) : void
+  - deleteNotification(NotificationRecord) : void
+  - deleteUser(UserProfile) : void
+  - handleGeolocationLabFailure(String, Exception) : void
+  - handleGeolocationLabMenuItem(int) : void
+  - handleNotificationLabFailure(String, Exception) : void
+  - handleNotificationLabMenuItem(int) : void
+  - handleNotificationSendSuccess(String, NotificationSendResult) : void
+  - handleNotificationVoidSuccess(String) : void
+  - isNonEmpty(String) : boolean
+  - loadComments() : void
+  - loadEvents() : void
+  - loadImages() : void
+  - loadNotifications() : void
+  - loadUsers() : void
+  - nonEmptyOr(String, String) : String
+  - onEventClick(Event) : void
+  - onEventDelete(Event) : void
+  - onUserDelete(UserProfile) : void
+  + onViewCreated(View, Bundle) : void
+  - openGeolocationSandboxMap() : void
+  - openOrganizerMedia(UserProfile) : void
+  - rebuildEventMetadata() : void
+  - refreshGeolocationSandbox() : void
+  - refreshNotificationSandbox() : void
+  - refreshRegionalGeolocationSandbox() : void
+  - revokeOrganizerAccess(UserProfile, boolean) : void
+  - runDrawNotSelectedTest() : void
+  - runDrawSelectedTest() : void
+  - sendCancelledBroadcastTest() : void
+  - sendCoOrganizerInviteTest() : void
+  - sendPrivateInviteTest() : void
+  - sendSelectedBroadcastTest() : void
+  - sendWaitingBroadcastTest() : void
+  - setGeolocationLabBusy(boolean) : void
+  - setNotificationLabBusy(boolean) : void
+  - setupCommentAdapter() : void
+  - setupEventAdapter() : void
+  - setupImageAdapter() : void
+  - setupNotificationAdapter() : void
+  - setupUserAdapters() : void
+  - showGeolocationLabMenu(View) : void
+  - showNotificationLabMenu(View) : void
+  - showOrganizerInfo(Event) : void
+  - showTab(Tab) : void
+  - showUserEvents(UserProfile) : void
+  - toast(String) : void
+  - updateEmptyStates() : void
+  - updateGeolocationLabStatus(String) : void
+  - updateNoCommentsState() : void
+  - updateNoCommentsState(boolean) : void
+  - updateNoImagesState() : void
+  - updateNoImagesState(boolean) : void
+  - updateNoNotificationsState() : void
+  - updateNoNotificationsState(boolean) : void
+  - updateNotificationLabStatus(String) : void
+  - updateScrollHints() : void
+  - updateTabSelection(TextView, boolean) : void
+  - updateTitleWithOrganizer() : void
+}
+
+enum "AdminFragment.Tab" as T123 #D6EAF8 {
+  + COMMENTS : Tab
+  + EVENTS : Tab
+  + GEO : Tab
+  + IMAGES : Tab
+  + NOTIFICATIONS : Tab
+  + ORGANIZERS : Tab
+  + USERS : Tab
+  --
+  - Tab()
+}
+
+class "EntrantMapFragment" as T124 <<fragment>> #D6EAF8 {
+  - ARG_EVENT_ID : String
+  - FENCE_FILL_COLOR : int
+  - FENCE_STROKE_COLOR : int
+  - emptyView : TextView
+  - eventId : String
+  - eventService : EventService
+  - externalMapButton : MaterialButton
+  - googleMap : GoogleMap
+  - helperView : TextView
+  - loadedEvent : Event
+  - mapContainer : View
+  - mapsConfigured : boolean
+  - markerPoints : List<MarkerPoint>
+  - progressBar : ProgressBar
+  - waitingListService : WaitingListService
+  --
+  + EntrantMapFragment()
+  - buildBrowserMapUri() : Uri
+  - buildGeoMapUri() : Uri
+  - ensureMapFragment() : void
+  - getEventCenter() : LatLng
+  - getFenceZoomLevel() : float
+  - getMapCenter() : LatLng
+  - hasConfiguredMapsApiKey() : boolean
+  - includeFenceBounds(LatLngBounds.Builder, LatLng, Integer) : void
+  - loadEntrantLocations() : void
+  - loadEvent() : void
+  + onCreate(Bundle) : void
+  + onMapReady(GoogleMap) : void
+  + onViewCreated(View, Bundle) : void
+  - openMapExternally() : void
+  - renderMarkersIfReady() : void
+  - resolveEventCenterTitle() : String
+  - setLoading(boolean) : void
+  - showEmptyState(String) : void
+  - toast(String) : void
+  - updateMapHelperText() : void
+}
+
+class "EntrantMapFragment.MarkerPoint" as T125 #D6EAF8 {
+  - latLng : LatLng
+  - title : String
+  --
+  - MarkerPoint(LatLng, String)
+}
+
+class "EventBrowseFilter" as T126 #D6EAF8 {
+  - availabilityFilter : AvailabilityFilter
+  - capacityFilter : CapacityFilter
+  - endDateFilter : Long
+  - selectedInterests : List<String>
+  - startDateFilter : Long
+  - visibilityFilter : VisibilityFilter
+  --
+  + EventBrowseFilter()
+  + apply(List<Event>, String, Map<String, WaitingListStatus>, String) : Result
+  + clearDateRange() : void
+  + collectAvailableInterests(List<Event>, String, Map<String, WaitingListStatus>) : List<String>
+  + collectDisplayableEvents(List<Event>, String, Map<String, WaitingListStatus>) : List<Event>
+  - compareTitles(Event, Event) : int
+  + getAvailabilityFilter() : AvailabilityFilter
+  + getCapacityFilter() : CapacityFilter
+  + getEndDateFilter() : Long
+  + getSelectedInterests() : List<String>
+  + getStartDateFilter() : Long
+  + getVisibilityFilter() : VisibilityFilter
+  + isInterestSelected(String) : boolean
+  + isJoinedFilter() : boolean
+  - matchesAvailability(Event) : boolean
+  - matchesCapacity(Event) : boolean
+  - matchesDate(Event) : boolean
+  - matchesSearch(Event, String) : boolean
+  - matchesSelectedInterests(Event) : boolean
+  - matchesVisibilityFilter(Event) : boolean
+  + replaceSelectedInterests(List<String>) : void
+  + setAvailabilityFilter(AvailabilityFilter) : void
+  + setCapacityFilter(CapacityFilter) : void
+  + setEndDateFilter(Long) : void
+  + setStartDateFilter(Long) : void
+  + setVisibilityFilter(VisibilityFilter) : void
+  - shouldDisplayEvent(Event, String, Map<String, WaitingListStatus>) : boolean
+  - sortFilteredEvents(List<Event>, Map<String, WaitingListStatus>) : void
+  + toggleInterestSelection(String, boolean) : void
+}
+
+enum "EventBrowseFilter.AvailabilityFilter" as T127 #D6EAF8 {
+  + ALL : AvailabilityFilter
+  + OPEN_NOW : AvailabilityFilter
+  + UPCOMING : AvailabilityFilter
+  --
+  - AvailabilityFilter()
+}
+
+enum "EventBrowseFilter.CapacityFilter" as T128 #D6EAF8 {
+  + ALL : CapacityFilter
+  + LIMITED_CAPACITY : CapacityFilter
+  + WAITLIST_LIMITED : CapacityFilter
+  --
+  - CapacityFilter()
+}
+
+class "EventBrowseFilter.Result" as T129 #D6EAF8 {
+  - filteredEvents : List<Event>
+  - privateCount : int
+  - publicCount : int
+  --
+  - Result(List<Event>, int, int)
+  + getFilteredEvents() : List<Event>
+  + getPrivateCount() : int
+  + getPublicCount() : int
+}
+
+enum "EventBrowseFilter.VisibilityFilter" as T130 #D6EAF8 {
+  + ALL : VisibilityFilter
+  + JOINED_ONLY : VisibilityFilter
+  + PRIVATE_ONLY : VisibilityFilter
+  + PUBLIC_ONLY : VisibilityFilter
+  --
+  - VisibilityFilter()
+}
+
+class "EventUserPickerFragment" as T131 <<fragment>> #D6EAF8 {
+  - ARG_MODE : String
+  - adapter : UserAdapter
+  - allUsers : List<UserProfile>
+  - currentUid : String
+  - emptyView : TextView
+  - eventId : String
+  - eventService : EventService
+  - filteredUsers : List<UserProfile>
+  - loadedEvent : Event
+  - mode : Mode
+  - organizerNotificationService : OrganizerNotificationService
+  - profileService : ProfileService
+  - progressBar : android.widget.ProgressBar
+  - searchInput : EditText
+  - subtitleView : TextView
+  - titleView : TextView
+  - waitingListService : WaitingListService
+  --
+  + EventUserPickerFragment()
+  - applyFilter(String) : void
+  - bindModeText() : void
+  - cancelCoOrganizerInvite(UserProfile) : void
+  - getCoOrganizerActionState(UserProfile) : CoOrganizerActionState
+  - inviteCoOrganizer(UserProfile) : void
+  - inviteToPrivateEvent(UserProfile) : void
+  - loadEventAndAuthorize() : void
+  - loadUsers() : void
+  - nonEmptyOr(String, String) : String
+  + onCreate(Bundle) : void
+  - onUserActionPressed(UserProfile) : void
+  + onViewCreated(View, Bundle) : void
+  - removeCoOrganizer(UserProfile) : void
+  - safeLower(String) : String
+  - sendCoOrganizerInviteNotification(UserProfile) : void
+  - sendPrivateInviteNotification(UserProfile) : void
+  - toast(String) : void
+}
+
+enum "EventUserPickerFragment.CoOrganizerActionState" as T132 #D6EAF8 {
+  + CANCEL : CoOrganizerActionState
+  + INVITE : CoOrganizerActionState
+  + REMOVE : CoOrganizerActionState
+  --
+  - CoOrganizerActionState()
+}
+
+enum "EventUserPickerFragment.Mode" as T133 #D6EAF8 {
+  + ASSIGN_CO_ORGANIZER : Mode
+  + INVITE_PRIVATE : Mode
+  --
+  - Mode()
+}
+
+class "EventUserPickerFragment.UserAdapter" as T134 <<adapter>> #D6EAF8 {
+  - coOrganizerMode : boolean
+  - coOrganizerStateResolver : CoOrganizerStateResolver
+  - onAction : OnAction
+  - users : List<UserProfile>
+  --
+  ~ UserAdapter(List<UserProfile>, boolean, OnAction, CoOrganizerStateResolver)
+  - applyDestructiveButtonStyle(MaterialButton, String) : void
+  - applyInviteButtonStyle(MaterialButton) : void
+  - bindActionButton(MaterialButton, UserProfile) : void
+  + getItemCount() : int
+  + onBindViewHolder(VH, int) : void
+  + onCreateViewHolder(ViewGroup, int) : VH
+  ~ replaceUsers(List<UserProfile>) : void
+}
+
+interface "EventUserPickerFragment.UserAdapter.CoOrganizerStateResolver" as T135 #D6EAF8 {
+  ~ resolve(UserProfile) : CoOrganizerActionState
+}
+
+interface "EventUserPickerFragment.UserAdapter.OnAction" as T136 #D6EAF8 {
+  ~ onAction(UserProfile) : void
+}
+
+class "EventUserPickerFragment.UserAdapter.UserDiff" as T137 #D6EAF8 {
+  - newItems : List<UserProfile>
+  - oldItems : List<UserProfile>
+  --
+  - UserDiff(List<UserProfile>, List<UserProfile>)
+  + areContentsTheSame(int, int) : boolean
+  + areItemsTheSame(int, int) : boolean
+  - equalsNullable(String, String) : boolean
+  + getNewListSize() : int
+  + getOldListSize() : int
+}
+
+class "EventUserPickerFragment.UserAdapter.VH" as T138 #D6EAF8 {
+  ~ actionButton : MaterialButton
+  ~ avatarView : com.google.android.material.imageview.ShapeableImageView
+  ~ contactView : TextView
+  ~ nameView : TextView
+  --
+  ~ VH(View)
+}
+
+class "EventsFragment" as T139 <<fragment>> #D6EAF8 {
+  - EVENT_DETAILS_TAG : String
+  - allEvents : List<Event>
+  - availableTagSuggestionCount : int
+  - browseFilter : EventBrowseFilter
+  - btnAllTags : Button
+  - btnClearDateFilter : View
+  - btnFilter : View
+  - btnFilterEndDate : Button
+  - btnFilterStartDate : Button
+  - btnTagSuggestionsToggle : Button
+  - cgCapacityFilters : ChipGroup
+  - cgEventVisibility : ChipGroup
+  - cgFilterDisplay : ChipGroup
+  - cgInterestPreview : ChipGroup
+  - cgPopularPreview : ChipGroup
+  - cgRegistrationAvailability : ChipGroup
+  - currentUid : String
+  - currentUserEntryStatuses : Map<String, WaitingListStatus>
+  - dateFormat : SimpleDateFormat
+  - entrantEventService : EntrantEventService
+  - etSearch : EditText
+  - eventAdapter : EventAdapter
+  - eventService : EventService
+  - filteredEvents : List<Event>
+  - filtersMenuExpanded : boolean
+  - handler : Handler
+  - layoutFilterMenu : View
+  - layoutSuggestedTagsContent : View
+  - llDateFilters : View
+  - llInterestFilters : View
+  - loadedOnce : boolean
+  - pendingFilter : Runnable
+  - profileService : ProfileService
+  - rvEvents : RecyclerView
+  - tagSuggestionsExpanded : boolean
+  - tvResultsSummary : TextView
+  --
+  + EventsFragment()
+  - applyFilters() : void
+  - buildFilterButtonLabel() : String
+  - buildInterestPreviewTags(List<String>, EventDiscoveryInsights.Result) : List<String>
+  - containsIgnoreCase(List<String>, String) : boolean
+  - formatCount(int, String, String) : String
+  - getSearchQuery() : String
+  - handleInvitationResult(Bundle) : void
+  - handleNotificationOpen(Bundle) : void
+  - hasActiveBrowseInputs() : boolean
+  - loadCurrentUserEntries() : void
+  - loadCurrentUserEntriesFallback() : void
+  - loadEvents() : void
+  + onCreateView(LayoutInflater, ViewGroup, Bundle) : View
+  + onDestroyView() : void
+  + onResume() : void
+  + onViewCreated(View, Bundle) : void
+  - openEventDetails(Event) : void
+  - openEventDetailsById(String) : void
+  - populateInterestFilterChips(ChipGroup, List<String>, List<String>, String) : void
+  - populateInterestPreviewChips(ChipGroup, List<String>, String) : void
+  - respondToPrivateInvite(Event, WaitingListStatus, String) : void
+  - setupAvailabilityFilters() : void
+  - setupCapacityFilters() : void
+  - setupDateFilters() : void
+  - setupRecyclerView() : void
+  - setupSearch() : void
+  - setupVisibilityFilters() : void
+  - showDatePicker(Long, Long, Long, OnDateSelectedListener) : void
+  - showFilterDialog() : void
+  - styleCompactChip(Chip) : void
+  - stylePreviewChip(Chip) : void
+  - styleSelectedFilterChip(Chip) : void
+  - toggleFilterMenu() : void
+  - toggleInterest(List<String>, String, boolean) : void
+  - toggleTagSuggestions() : void
+  - updateFilterMenuVisibility() : void
+  - updateFilterVisuals() : void
+  - updateResultsSummary(EventBrowseFilter.Result) : void
+  - updateStoredEntryStatus(String, WaitingListStatus) : void
+  - updateTagActionLabels(List<String>, List<String>) : void
+  - updateTagSuggestionsVisibility(int) : void
+}
+
+interface "EventsFragment.OnDateSelectedListener" as T140 #D6EAF8 {
+  ~ onDateSelected(long) : void
+}
+
+class "ManageEventFragment" as T141 <<fragment>> #D6EAF8 {
+  - currentUserProfile : com.example.helios.model.UserProfile
+  - currentUserUid : String
+  - eventId : String
+  - eventService : EventService
+  - loadedEvent : Event
+  - openEventPostingOnLoad : boolean
+  - organizerNotificationService : OrganizerNotificationService
+  - profileService : ProfileService
+  - waitingListService : WaitingListService
+  --
+  + ManageEventFragment()
+  - buildDeletionAuditMessage(Event, List<WaitingListEntry>, int, String) : String
+  - buildStatusSummary(Event) : String
+  - buildSummary(Event) : String
+  - deleteCurrentEvent(MaterialButton) : void
+  - deleteEventRecord(Event, MaterialButton, String) : void
+  + onCreate(Bundle) : void
+  + onViewCreated(View, Bundle) : void
+  - openEventPosting() : void
+  - showDeleteEventConfirmDialog(MaterialButton) : void
+  - updateButtonVisibilities() : void
+  - updateDeleteEventVisibility(MaterialButton) : void
+  - writeDeletionAuditAndDelete(Event, List<WaitingListEntry>, int, String, MaterialButton) : void
+}
+
+class "NotificationsFragment" as T142 <<fragment>> #D6EAF8 {
+  - adapter : NotificationAdapter
+  - notificationRepository : NotificationRepository
+  - notifications : List<NotificationRecord>
+  - profileService : ProfileService
+  - rvNotifications : RecyclerView
+  - tvNoNotifications : TextView
+  --
+  + NotificationsFragment()
+  - loadNotifications() : void
+  + onResume() : void
+  + onViewCreated(View, Bundle) : void
+  - openNotificationTarget(NotificationRecord) : void
+}
+
+class "NotifyEntrantsFragment" as T143 <<fragment>> #D6EAF8 {
+  - eventId : String
+  - eventService : EventService
+  - loadedEvent : Event
+  - organizerNotificationService : OrganizerNotificationService
+  - profileService : ProfileService
+  --
+  + NotifyEntrantsFragment()
+  - loadEventAndAuthorize() : void
+  + onCreate(Bundle) : void
+  + onViewCreated(View, Bundle) : void
+  - sendNotifications(NotificationAudience, String, String, MaterialButton) : void
+}
+
+class "OrganizeFragment" as T144 <<fragment>> #D6EAF8 {
+  - allOrganizerEvents : List<Event>
+  - cardCurrentEvents : View
+  - cardPastEvents : View
+  - createEventButton : Button
+  - currentAdapter : EventAdapter
+  - currentEmptyText : TextView
+  - currentEvents : List<Event>
+  - currentEventsExpanded : boolean
+  - eventService : EventService
+  - ivCurrentEventsIcon : ImageView
+  - ivPastEventsIcon : ImageView
+  - organizerUid : String
+  - pastAdapter : EventAdapter
+  - pastEmptyText : TextView
+  - pastEvents : List<Event>
+  - pastEventsExpanded : boolean
+  - profileService : ProfileService
+  - searchEditText : EditText
+  - waitingListService : WaitingListService
+  --
+  + OrganizeFragment()
+  - acceptCoOrganizerInvite(Event) : void
+  - applyOrganizerFilter(String) : void
+  - compareTitles(Event, Event) : int
+  - declineCoOrganizerInvite(Event) : void
+  - isManagedByCurrentOrganizer(Event) : boolean
+  - isPendingInvite(Event) : boolean
+  - loadOrganizerEvents() : void
+  - matchesQuery(Event, String) : boolean
+  + onViewCreated(View, Bundle) : void
+  - openManagedEvent(Event) : void
+  - sortOrganizerEvents(List<Event>, boolean) : void
+  - toggleSection(boolean) : void
+  - updateEmptyStates() : void
+}
+
+class "OrganizerQrFragment" as T145 <<fragment>> #D6EAF8 {
+  - copyQrValueButton : MaterialButton
+  - currentQrBitmap : Bitmap
+  - currentQrValue : String
+  - description : String
+  - eventIdForView : String
+  - eventService : EventService
+  - geoRequired : boolean
+  - isPrivateEvent : boolean
+  - maxEntrants : int
+  - mode : Mode
+  - posterUri : String
+  - previewEventButton : MaterialButton
+  - profileService : ProfileService
+  - qrImage : ImageView
+  - qrUtilityActions : View
+  - registrationClosesMillis : long
+  - registrationOpensMillis : long
+  - saveQrImageButton : MaterialButton
+  - storagePermissionLauncher : ActivityResultLauncher<String>
+  - tagsRaw : String
+  - title : String
+  --
+  + OrganizerQrFragment()
+  - buildQrImageFileName() : String
+  - copyQrValueToClipboard() : void
+  - generateQrBitmap(String, int) : Bitmap
+  + onCreate(Bundle) : void
+  + onCreateView(LayoutInflater, ViewGroup, Bundle) : View
+  + onViewCreated(View, Bundle) : void
+  - saveBitmapToMediaStore(Bitmap, String) : Uri
+  - saveCurrentQrImage() : void
+  - saveEvent() : void
+  - saveQrImageRequested() : void
+  - showQrValue(String) : void
+  - updateQrUtilityButtons(boolean) : void
+}
+
+enum "OrganizerQrFragment.Mode" as T146 #D6EAF8 {
+  + CREATE : Mode
+  + VIEW_EXISTING : Mode
+  --
+  - Mode()
+}
+
+class "OrganizerViewEntrantsFragment" as T147 <<fragment>> #D6EAF8 {
+  - NO_PEOPLE_IN_EVENT_MESSAGE : String
+  - adapter : EntrantAdapter
+  - allEntries : List<WaitingListEntry>
+  - btnDraw : MaterialButton
+  - btnRemoveEntrant : MaterialButton
+  - btnToggleDrawControls : MaterialButton
+  - cgStatus : ChipGroup
+  - createDocumentLauncher : ActivityResultLauncher<String>
+  - displayList : List<EntrantDisplayModel>
+  - drawControlsExpanded : boolean
+  - entrantImageUrls : Map<String, String>
+  - entrantNames : Map<String, String>
+  - etDrawCount : EditText
+  - etSearch : EditText
+  - event : Event
+  - eventId : String
+  - eventService : EventService
+  - layoutDeclinedActions : View
+  - layoutDrawControls : View
+  - layoutDrawControlsHeader : View
+  - layoutDrawControlsInput : View
+  - layoutInvitedActions : View
+  - llFilters : View
+  - lotteryService : LotteryService
+  - organizerNotificationService : OrganizerNotificationService
+  - pendingCsvContent : String
+  - profileService : ProfileService
+  - removeEntrantMode : boolean
+  - tvDrawControlsHelper : TextView
+  - tvDrawIndicator : TextView
+  - tvHeaderSubtitle : TextView
+  - tvHeaderTitle : TextView
+  - tvInfoStats : TextView
+  - tvListHeader : TextView
+  - waitingListService : WaitingListService
+  --
+  + OrganizerViewEntrantsFragment()
+  - bindEntrantAvatar(ShapeableImageView, String) : void
+  - buildEntryMeta(WaitingListEntry) : String
+  - decreaseDrawCount(int, List<WaitingListEntry>) : void
+  - deleteSelectedDeclined() : void
+  - exportFinalList() : void
+  - finishReplacementInviteFlow(String, int, int, boolean) : void
+  - getDefaultStatusChipId() : int
+  - getDisplayName(WaitingListEntry) : String
+  - getProfileImageUrl(WaitingListEntry) : String
+  - getStatusLabel(WaitingListEntry) : String
+  - hasText(String) : boolean
+  - increaseDrawCount(int) : void
+  - initViews(View) : void
+  - isSelectedStatus(WaitingListEntry) : boolean
+  - isStatusViewEnabled() : boolean
+  - isWaitlistStatus(WaitingListEntry) : boolean
+  - loadData() : void
+  - matchesSearch(WaitingListEntry, String) : boolean
+  - normalize(String) : String
+  - notifyReplacementInvites(String, List<WaitingListEntry>, int, int, String) : void
+  + onCreate(Bundle) : void
+  + onViewCreated(View, Bundle) : void
+  - parseRequestedDrawCount() : int
+  - performDraw() : void
+  - prefetchEntrantNames(List<WaitingListEntry>) : void
+  - redrawReplacements() : void
+  - refreshEntries() : void
+  - removeEntrant(EntrantDisplayModel) : void
+  - runInitialDraw(int) : void
+  - setupListeners(View) : void
+  - setupRecyclerView(View) : void
+  - toast(String) : void
+  - toggleDrawControls() : void
+  - toggleRemoveEntrantMode() : void
+  - updateDisplayList() : void
+  - updateDrawCountDisplay() : void
+  - updateEntries(List<WaitingListEntry>, Runnable) : void
+  - updateHeaderForSelection(boolean, int) : void
+  - updateRemoveEntrantButtonState() : void
+  - updateUiState() : void
+  - writeCsvToUri(Uri, String) : void
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter" as T148 <<adapter>> #D6EAF8 {
+  - list : List<EntrantDisplayModel>
+  - selectedUids : Set<String>
+  --
+  ~ EntrantAdapter(List<EntrantDisplayModel>)
+  + getItemCount() : int
+  + getSelectedUids() : Set<String>
+  + onBindViewHolder(ViewHolder, int) : void
+  + onCreateViewHolder(ViewGroup, int) : ViewHolder
+  ~ replaceEntries(List<EntrantDisplayModel>) : void
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter.EntrantDiff" as T149 #D6EAF8 {
+  - newItems : List<EntrantDisplayModel>
+  - oldItems : List<EntrantDisplayModel>
+  --
+  - EntrantDiff(List<EntrantDisplayModel>, List<EntrantDisplayModel>)
+  + areContentsTheSame(int, int) : boolean
+  + areItemsTheSame(int, int) : boolean
+  - equalsNullable(String, String) : boolean
+  + getNewListSize() : int
+  + getOldListSize() : int
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter.ViewHolder" as T150 <<viewholder>> #D6EAF8 {
+  ~ checkbox : CheckBox
+  ~ ivAvatar : ShapeableImageView
+  ~ tvMeta : TextView
+  ~ tvName : TextView
+  ~ tvStatus : TextView
+  --
+  ~ ViewHolder(View)
+}
+
+class "OrganizerViewEntrantsFragment.EntrantDisplayModel" as T151 #D6EAF8 {
+  ~ entry : WaitingListEntry
+  ~ name : String
+  ~ profileImageUrl : String
+  --
+  ~ EntrantDisplayModel(WaitingListEntry, String, String)
+}
+
+class "ProfileFragment" as T152 <<fragment>> #D6EAF8 {
+  - EVENT_DETAILS_TAG : String
+  - NOTIFICATIONS_OFF_EMOJI : String
+  - NOTIFICATIONS_ON_EMOJI : String
+  - accessibilityPreferences : AccessibilityPreferences
+  - btnAdmin : MaterialButton
+  - btnChangePhoto : MaterialButton
+  - btnDelete : MaterialButton
+  - btnEdit : MaterialButton
+  - btnMute : MaterialButton
+  - cgFontOptions : ChipGroup
+  - cgThemeOptions : ChipGroup
+  - currentHistoryAdapter : ProfileEventHistoryAdapter
+  - entrantEventService : EntrantEventService
+  - eventHistoryLoadVersion : int
+  - eventService : EventService
+  - ivProfilePicture : ImageView
+  - locationClient : FusedLocationProviderClient
+  - locationPermissionLauncher : ActivityResultLauncher<String[]>
+  - locationSettingsLauncher : ActivityResultLauncher<IntentSenderRequest>
+  - notificationsCurrentlyEnabled : boolean
+  - pastHistoryAdapter : ProfileEventHistoryAdapter
+  - pickProfileImageLauncher : ActivityResultLauncher<PickVisualMediaRequest>
+  - profileImageUrl : String
+  - profilePhotoProgress : ProgressBar
+  - profileService : ProfileService
+  - rvCurrentHistory : RecyclerView
+  - rvPastHistory : RecyclerView
+  - skipNextResumeReload : boolean
+  - switchColorBlind : SwitchMaterial
+  - switchHeaderHeliosIcon : SwitchMaterial
+  - switchLargeText : SwitchMaterial
+  - switchLargeTouchTargets : SwitchMaterial
+  - switchSignInBanner : SwitchMaterial
+  - themeManager : HeliosThemeManager
+  - tvAccessibilitySummary : TextView
+  - tvCurrentHistoryEmpty : TextView
+  - tvEmail : TextView
+  - tvHeaderIconSummary : TextView
+  - tvName : TextView
+  - tvNotificationSummary : TextView
+  - tvPastHistoryEmpty : TextView
+  - tvPhone : TextView
+  - uiPreferences : HeliosUiPreferences
+  --
+  + ProfileFragment()
+  - applyFontSelection(HeliosFontOption) : void
+  - applyThemeSelection(HeliosThemeOption) : void
+  - bindAccessibilityPreferences() : void
+  - bindEmptyProfile() : void
+  - bindEventHistory(List<ProfileEventHistoryAdapter.HistoryItem>, List<ProfileEventHistoryAdapter.HistoryItem>) : void
+  - bindFontOptions() : void
+  - bindHeaderIconPreference() : void
+  - bindProfile(UserProfile) : void
+  - bindProfileImage(String) : void
+  - bindSignInBannerPreference(UserProfile) : void
+  - bindThemeOptions() : void
+  - buildHistoryItems(List<WaitingListEntry>, Map<String, Event>, boolean, long) : List<ProfileEventHistoryAdapter.HistoryItem>
+  - buildHistoryRow(WaitingListEntry, Event) : ProfileEventHistoryRow
+  - deleteProfile() : void
+  - fetchLastKnownLocationAndOpenMap() : void
+  - fetchLocationAndOpenMap() : void
+  - getHistoryTimestamp(WaitingListEntry, Event) : long
+  - getSortTime(WaitingListEntry, Event) : long
+  - getStatusLabel(WaitingListStatus) : String
+  - isEventCurrentOrUpcoming(Event, long) : boolean
+  - isHistoryRequestActive(int) : boolean
+  - launchProfileImagePicker() : void
+  - loadEventHistory() : void
+  - loadProfileSafe() : void
+  - normalize(String) : String
+  + onResume() : void
+  + onViewCreated(View, Bundle) : void
+  - onViewMyLocationPressed() : void
+  - openAdminPanel() : void
+  - openHistoryEventDetails(ProfileEventHistoryAdapter.HistoryItem) : void
+  - openLocationInMaps(double, double) : void
+  - openProfileEditorSafe() : void
+  - persistReadPermission(Uri) : void
+  - requestLocationServicesAndShow() : void
+  - setPhotoUploadInProgress(boolean) : void
+  - setupEventHistory() : void
+  - shouldShowInCurrentList(WaitingListEntry, Event, long) : boolean
+  - showAccessibilityRestartSnackbar() : void
+  - showDeleteConfirmationDialog() : void
+  - showProfileImagePlaceholder() : void
+  - toggleMute() : void
+  - updateAccessibilitySummary() : void
+  - updateHeaderIconSummary(boolean) : void
+  - updateMuteButton() : void
+  - uploadSelectedProfilePhoto(Uri) : void
+}
+
+class "ProfileFragment.ProfileEventHistoryRow" as T153 #D6EAF8 {
+  - clickable : boolean
+  - eventId : String
+  - sortTimeMillis : long
+  - stableId : String
+  - status : WaitingListStatus
+  - subtext : String
+  - title : String
+  --
+  - ProfileEventHistoryRow(String, String, String, String, WaitingListStatus, boolean, long)
+  - getSortTimeMillis() : long
+  - getStableId() : String
+  - toItem() : ProfileEventHistoryAdapter.HistoryItem
+}
+
+class "ScanQrFragment" as T154 <<fragment>> #D6EAF8 {
+  - cameraExecutor : ExecutorService
+  - cameraProvider : ProcessCameraProvider
+  - eventService : EventService
+  - pickImageLauncher : ActivityResultLauncher<Intent>
+  - requestPermissionLauncher : ActivityResultLauncher<String>
+  - viewFinder : PreviewView
+  --
+  + ScanQrFragment()
+  - bindCameraUseCases() : void
+  - handleQrCode(String) : void
+  - handleQrFromUri(Uri) : void
+  + onCreate(Bundle) : void
+  + onCreateView(LayoutInflater, ViewGroup, Bundle) : View
+  + onDestroy() : void
+  + onViewCreated(View, Bundle) : void
+  - startCamera() : void
+  - stopCamera() : void
+  - updateToggleState(View, boolean) : void
+}
+
+class "SetupEventFormData" as T155 #D6EAF8 {
+  - addressRaw : String
+  - description : String
+  - geofenceLatitudeRaw : String
+  - geofenceLongitudeRaw : String
+  - geofenceRadiusRaw : String
+  - locationNameRaw : String
+  - lotteryGuidelines : String
+  - maxEntrantsRaw : String
+  - tagsRaw : String
+  - title : String
+  - waitlistLimitRaw : String
+  --
+  - SetupEventFormData(String, String, String, String, String, String, String, String, String, String, String)
+  ~ applyTo(Event, int, long, long, long, long, boolean, boolean) : void
+  ~ from(EditText, EditText, EditText, EditText, EditText, EditText, EditText, EditText, EditText, EditText, EditText) : SetupEventFormData
+  ~ getAddress() : String
+  ~ getDescription() : String
+  ~ getInterests() : List<String>
+  ~ getLocationName() : String
+  ~ getLotteryGuidelines() : String
+  ~ getTitle() : String
+  ~ parseInterests() : List<String>
+  - parseOptionalDouble(String) : Double
+  - parseOptionalPositiveInt(String) : Integer
+  ~ resolveCapacity(int) : int
+  ~ resolveGeofenceLatitude() : Double
+  ~ resolveGeofenceLongitude() : Double
+  ~ resolveGeofenceRadiusMeters() : Integer
+  ~ resolveWaitlistLimit() : Integer
+  - safeText(EditText) : String
+  ~ validate(long, long, long, long, boolean) : String
+}
+
+class "SetupEventFragment" as T156 <<fragment>> #D6EAF8 {
+  - cancelButton : MaterialButton
+  - dateFormat : SimpleDateFormat
+  - eventEndMillis : long
+  - eventId : String
+  - eventService : EventService
+  - eventStartMillis : long
+  - geolocationRequired : boolean
+  - imageService : ImageService
+  - isPrivateEvent : boolean
+  - loadedEvent : Event
+  - locationClient : FusedLocationProviderClient
+  - locationPermissionLauncher : ActivityResultLauncher<String[]>
+  - locationSettingsLauncher : ActivityResultLauncher<IntentSenderRequest>
+  - mode : Mode
+  - pendingLocationAction : Runnable
+  - pendingPosterUri : Uri
+  - pickImageLauncher : ActivityResultLauncher<PickVisualMediaRequest>
+  - primaryButton : MaterialButton
+  - profileService : ProfileService
+  - registrationClosesMillis : long
+  - registrationOpensMillis : long
+  - timeFormat : SimpleDateFormat
+  - uploadImageView : ImageView
+  - uploadProgressBar : ProgressBar
+  --
+  + SetupEventFragment()
+  - applyCurrentLocationToFields(double, double, EditText, EditText, EditText) : void
+  - bindChipValue(TextView, long, SimpleDateFormat, String) : void
+  - bindExistingGeofence(Event, EditText, EditText, EditText) : void
+  - buildCreateModeEvent(SetupEventFormData, int, boolean, String) : Event
+  - cleanupPosterArtifacts(PosterUploadCleanupState, Exception, OnFailureListener, Runnable) : void
+  - clearPendingLocationAction() : void
+  - createEvent(SetupEventFormData, int) : void
+  - deleteCreatedEvent(String, Exception, Exception) : void
+  - deleteExistingImageAsset(ImageAsset, Runnable, OnFailureListener) : void
+  - deleteUploadedImageAssetIfNeeded(PosterUploadCleanupState, Exception, OnFailureListener, Runnable) : void
+  - fetchCurrentLocationForGeofence(EditText, EditText, EditText) : void
+  - fetchLastKnownLocationForGeofence(EditText, EditText, EditText) : void
+  - formatCoordinate(double) : String
+  - handleLocationPermissionResult(Map<String, Boolean>) : void
+  - handleLocationSettingsResolutionResult(boolean) : void
+  - initializeDefaultEventWindow() : void
+  - initializeDefaultRegistrationWindow() : void
+  - launchImagePicker() : void
+  + onCreate(Bundle) : void
+  + onCreateView(LayoutInflater, ViewGroup, Bundle) : View
+  + onViewCreated(View, Bundle) : void
+  - openDatePicker(long, DatePickedCallback) : void
+  - openGeofencePreview(EditText, EditText) : void
+  - openTimePicker(long, TimePickedCallback) : void
+  - persistReadPermission(Uri) : void
+  - replaceExistingPosterIfNeeded(Event, Runnable, OnFailureListener) : void
+  - requestCurrentLocationForGeofence(EditText, EditText, EditText) : void
+  - requestLocationAccessAndServices() : void
+  - rollbackCreatedEvent(Event, PosterUploadCleanupState, Exception) : void
+  - runPendingLocationAction() : void
+  - setUploadInProgress(boolean) : void
+  - showCreateFailureMessage(Exception, Exception, Exception) : void
+  - showPosterPlaceholder() : void
+  - showPosterPreview(Uri) : void
+  - showPosterPreview(String) : void
+  - updateCreatePrimaryButtonLabel(MaterialButton) : void
+  - updateDateChipStyle(TextView, boolean) : void
+  - updateDatePortion(long, long, int, int) : long
+  - updateEventWindowViews(TextView, TextView, TextView) : void
+  - updateGeoToggle(TextView, TextView, boolean) : void
+  - updateGeofenceSectionVisibility(View, boolean) : void
+  - updateManualCoordinatesVisibility(View, MaterialButton, boolean) : void
+  - updatePreviewButtonVisibility(MaterialButton, EditText, EditText) : void
+  - updatePrivateToggle(TextView, TextView, boolean) : void
+  - updateRegistrationWindowViews(TextView, TextView, TextView) : void
+  - updateTimePortion(long, int, int, long) : long
+  - uploadPosterAndSaveEvent(Event, Uri, OnSuccessListener<Void>, OnFailureListener) : void
+  - uploadPosterAndSaveEvent(Event, Uri, OnSuccessListener<Void>, OnFailureListener, PosterUploadCleanupState) : void
+}
+
+interface "SetupEventFragment.DatePickedCallback" as T157 #D6EAF8 {
+  ~ onPicked(long) : void
+}
+
+enum "SetupEventFragment.Mode" as T158 #D6EAF8 {
+  + CREATE : Mode
+  + EDIT : Mode
+  --
+  - Mode()
+}
+
+class "SetupEventFragment.PosterUploadCleanupState" as T159 #D6EAF8 {
+  - imageAssetId : String
+  - storagePath : String
+  --
+  - PosterUploadCleanupState()
+}
+
+interface "SetupEventFragment.TimePickedCallback" as T160 #D6EAF8 {
+  ~ onPicked(int, int) : void
+}
+
+}
+
+package "com.example.helios.ui.theme" {
+enum "HeliosFontOption" as T161 #D6EAF8 {
+  + MONO : HeliosFontOption
+  + SANS : HeliosFontOption
+  + SERIF : HeliosFontOption
+  - description : String
+  - displayName : String
+  - fontFamilyName : String
+  - storageValue : String
+  --
+  ~ HeliosFontOption(String, String, String, String)
+  + fromStorageValue(String) : HeliosFontOption
+  + getDescription() : String
+  + getDisplayName() : String
+  + getFontFamilyName() : String
+  + getStorageValue() : String
+}
+
+class "HeliosThemeManager" as T162 #D6EAF8 {
+  - KEY_FONT : String
+  - KEY_THEME : String
+  - PREFS_NAME : String
+  - preferences : SharedPreferences
+  --
+  + HeliosThemeManager(Context)
+  + applyTheme(AppCompatActivity, AccessibilityPreferences) : void
+  + createAppearanceSignature(AccessibilityPreferences) : String
+  + getFontOption() : HeliosFontOption
+  + getThemeOption() : HeliosThemeOption
+  + getTypeface() : Typeface
+  + setFontOption(HeliosFontOption) : void
+  + setThemeOption(HeliosThemeOption) : void
+}
+
+enum "HeliosThemeOption" as T163 #D6EAF8 {
+  + BLOSSOM : HeliosThemeOption
+  + DISCORDANT : HeliosThemeOption
+  + MEADOW : HeliosThemeOption
+  + MIDNIGHT : HeliosThemeOption
+  + OCEAN : HeliosThemeOption
+  + SUNRISE : HeliosThemeOption
+  - description : String
+  - displayName : String
+  - storageValue : String
+  - themeResId : int
+  --
+  ~ HeliosThemeOption(String, String, String, int)
+  + fromStorageValue(String) : HeliosThemeOption
+  + getDescription() : String
+  + getDisplayName() : String
+  + getStorageValue() : String
+  + getThemeResId() : int
+}
+
+}
+
+T1 -[hidden]-> T11
+T11 -[hidden]-> T13
+T13 -[hidden]-> T25
+T25 -[hidden]-> T49
+T49 -[hidden]-> T96
+T96 -[hidden]-> T108
+T108 -[hidden]-> T122
+T122 -[hidden]-> T161
+T161 -[hidden]-> T164
+
+T164 "1" --> "0..1" T11 : authDeviceService
+T164 "1" --> "0..1" T15 : repository
+T164 "1" --> "0..1" T25 : accessibilityPreferences
+T164 "1" --> "0..1" T26 : adminGeolocationTestService
+T164 "1" --> "0..1" T32 : adminNotificationTestService
+T164 "1" --> "0..1" T36 : commentService
+T164 "1" --> "0..1" T37 : entrantEventService
+T164 "1" --> "0..1" T38 : eventService
+T164 "1" --> "0..1" T40 : uiPreferences
+T164 "1" --> "0..1" T41 : imageService
+T164 "1" --> "0..1" T42 : lotteryService
+T164 "1" --> "0..1" T44 : organizerNotificationService
+T164 "1" --> "0..1" T45 : profileService
+T164 "1" --> "0..1" T48 : waitingListService
+T164 "1" --> "0..1" T162 : themeManager
+T2 "1" --> "0..1" T4 : geofenceCenter
+T7 "1" --> "0..1" T6 : audience
+T9 "1" --> "0..1" T10 : status
+T26 "1" --> "0..1" T11 : authDeviceService
+T26 "1" --> "0..1" T14 : eventRepository
+T26 "1" --> "0..1" T23 : userRepository
+T26 "1" --> "0..1" T24 : waitingListRepository
+T26 "1" --> "0..1" T27 : clock
+T29 "1" --> "1" T8 : profile
+T30 "1" --> "0..*" T28 : coordinateSeeds
+T31 "1" --> "1" T2 : event
+T32 "1" --> "0..1" T11 : authDeviceService
+T32 "1" --> "0..1" T14 : eventRepository
+T32 "1" --> "0..1" T23 : userRepository
+T32 "1" --> "0..1" T24 : waitingListRepository
+T32 "1" --> "0..1" T33 : clock
+T32 "1" --> "0..1" T44 : organizerNotificationService
+T34 "1" --> "1" T8 : profile
+T35 "1" --> "1" T2 : event
+T36 "1" --> "0..1" T13 : repository
+T36 "1" --> "0..1" T38 : eventService
+T36 "1" --> "0..1" T45 : profileService
+T37 "1" --> "0..1" T14 : eventRepository
+T37 "1" --> "0..1" T24 : waitingListRepository
+T37 "1" --> "0..1" T45 : profileService
+T38 "1" --> "0..1" T14 : repository
+T41 "1" --> "1" T21 : repository
+T42 "1" --> "0..1" T14 : eventRepository
+T42 "1" --> "0..1" T24 : waitingListRepository
+T42 "1" --> "0..1" T44 : organizerNotificationService
+T44 "1" --> "0..1" T22 : notificationRepository
+T44 "1" --> "0..1" T23 : userRepository
+T44 "1" --> "0..1" T24 : waitingListRepository
+T45 "1" --> "0..1" T11 : authDeviceService
+T45 "1" --> "0..1" T14 : eventRepository
+T45 "1" --> "0..1" T23 : userRepository
+T45 "1" --> "0..1" T47 : installationIdSource
+T46 "1" --> "1" T8 : profile
+T48 "1" --> "0..1" T24 : repository
+T49 "1" --> "0..*" T3 : comments
+T49 "1" --> "1" T51 : onDeleteComment
+T50 "1" --> "0..*" T3 : newItems, oldItems
+T53 "1" --> "0..*" T2 : events
+T53 "1" --> "1" T55 : onEventClick
+T53 "1" --> "1" T56 : onDelete
+T53 "1" --> "1" T57 : onViewOrganizer
+T54 "1" --> "0..*" T2 : newItems, oldItems
+T59 "1" --> "0..*" T2 : events
+T59 "1" --> "1" T61 : onDelete
+T60 "1" --> "0..*" T2 : newItems, oldItems
+T63 "1" --> "0..*" T7 : notifications
+T63 "1" --> "1" T65 : onNotificationLongPress
+T64 "1" --> "0..*" T7 : newItems, oldItems
+T67 "1" --> "0..*" T10 : entrantStatusesByEventId
+T67 "1" --> "0..1" T72 : onCoOrganizerInviteAction
+T67 "1" --> "0..1" T73 : onEventClick
+T67 "1" --> "0..1" T74 : onPrivateEventInviteAction
+T76 "1" --> "0..1" T45 : profileService
+T77 "1" --> "0..1" T11 : authDeviceService
+T77 "1" --> "0..1" T22 : notificationRepository
+T77 "1" --> "0..1" T8 : cachedProfile
+T77 "1" --> "0..1" T45 : profileService
+T78 "1" --> "0..1" T80 : onNotificationClick
+T82 "1" --> "1" T85 : onHistoryClickListener
+T83 "1" --> "1" T10 : status
+T87 "1" --> "0..1" T45 : profileService
+T90 "1" --> "0..*" T8 : users
+T90 "1" --> "1" T91 : onUserClick
+T90 "1" --> "1" T92 : onDelete
+T90 "1" --> "1" T93 : onViewEvents
+T94 "1" --> "0..*" T8 : newItems, oldItems
+T100 "1" --> "1" T103 : stage
+T108 "1" --> "0..*" T3 : repliesByParent, topLevelComments
+T108 "1" --> "1" T109 : actionListener
+T110 "1" --> "0..*" T3 : newItems, oldItems
+T112 "1" --> "0..*" T3 : replies
+T114 "1" --> "0..1" T3 : replyingToComment
+T114 "1" --> "1" T36 : commentService
+T114 "1" --> "1" T45 : profileService
+T117 "1" --> "0..1" T2 : loadedEvent
+T117 "1" --> "0..1" T9 : currentEntry
+T117 "1" --> "0..1" T37 : entrantEventService
+T117 "1" --> "0..1" T38 : eventService
+T117 "1" --> "0..1" T48 : waitingListService
+T117 "1" --> "0..1" T114 : commentsSection
+T118 "1" --> "1" T120 : 2 members
+T122 "1" --> "0..1" T22 : notificationRepository
+T122 "1" --> "0..*" T2 : 3 members
+T122 "1" --> "0..*" T3 : displayedComments
+T122 "1" --> "0..*" T7 : displayedNotifications
+T122 "1" --> "0..*" T8 : 3 members
+T122 "1" --> "0..1" T26 : geolocationTestService
+T122 "1" --> "0..1" T31 : geolocationLabState
+T122 "1" --> "0..1" T32 : notificationTestService
+T122 "1" --> "0..1" T35 : notificationLabState
+T122 "1" --> "0..1" T36 : commentService
+T122 "1" --> "0..1" T38 : eventService
+T122 "1" --> "0..1" T41 : imageService
+T122 "1" --> "0..1" T45 : profileService
+T122 "1" --> "0..1" T49 : commentAdapter
+T122 "1" --> "0..1" T53 : eventAdapter
+T122 "1" --> "0..1" T59 : imageAdapter
+T122 "1" --> "0..1" T63 : notificationAdapter
+T122 "1" --> "0..1" T90 : organizerAdapter, userAdapter
+T124 "1" --> "0..1" T2 : loadedEvent
+T124 "1" --> "0..1" T38 : eventService
+T124 "1" --> "0..1" T48 : waitingListService
+T124 "1" --> "0..*" T125 : markerPoints
+T126 "1" --> "1" T127 : availabilityFilter
+T126 "1" --> "1" T128 : capacityFilter
+T126 "1" --> "1" T130 : visibilityFilter
+T129 "1" --> "0..*" T2 : filteredEvents
+T131 "1" --> "0..1" T2 : loadedEvent
+T131 "1" --> "0..*" T8 : allUsers, filteredUsers
+T131 "1" --> "0..1" T38 : eventService
+T131 "1" --> "0..1" T44 : organizerNotificationService
+T131 "1" --> "0..1" T45 : profileService
+T131 "1" --> "0..1" T48 : waitingListService
+T131 "1" --> "0..1" T133 : mode
+T131 "1" --> "0..1" T134 : adapter
+T134 "1" --> "0..*" T8 : users
+T134 "1" --> "1" T135 : coOrganizerStateResolver
+T134 "1" --> "1" T136 : onAction
+T137 "1" --> "0..*" T8 : newItems, oldItems
+T139 "1" --> "0..*" T2 : allEvents, filteredEvents
+T139 "1" --> "0..*" T10 : currentUserEntryStatuses
+T139 "1" --> "0..1" T37 : entrantEventService
+T139 "1" --> "0..1" T38 : eventService
+T139 "1" --> "0..1" T45 : profileService
+T139 "1" --> "0..1" T67 : eventAdapter
+T141 "1" --> "0..1" T2 : loadedEvent
+T141 "1" --> "0..1" T8 : currentUserProfile
+T141 "1" --> "0..1" T38 : eventService
+T141 "1" --> "0..1" T44 : organizerNotificationService
+T141 "1" --> "0..1" T45 : profileService
+T141 "1" --> "0..1" T48 : waitingListService
+T142 "1" --> "0..1" T22 : notificationRepository
+T142 "1" --> "0..*" T7 : notifications
+T142 "1" --> "0..1" T45 : profileService
+T142 "1" --> "0..1" T78 : adapter
+T143 "1" --> "0..1" T2 : loadedEvent
+T143 "1" --> "0..1" T38 : eventService
+T143 "1" --> "0..1" T44 : organizerNotificationService
+T143 "1" --> "0..1" T45 : profileService
+T144 "1" --> "0..*" T2 : 3 members
+T144 "1" --> "0..1" T38 : eventService
+T144 "1" --> "0..1" T45 : profileService
+T144 "1" --> "0..1" T48 : waitingListService
+T144 "1" --> "0..1" T67 : currentAdapter, pastAdapter
+T145 "1" --> "0..1" T38 : eventService
+T145 "1" --> "0..1" T45 : profileService
+T145 "1" --> "0..1" T146 : mode
+T147 "1" --> "0..1" T2 : event
+T147 "1" --> "0..*" T9 : allEntries
+T147 "1" --> "0..1" T38 : eventService
+T147 "1" --> "0..1" T42 : lotteryService
+T147 "1" --> "0..1" T44 : organizerNotificationService
+T147 "1" --> "0..1" T45 : profileService
+T147 "1" --> "0..1" T48 : waitingListService
+T147 "1" --> "0..1" T148 : adapter
+T147 "1" --> "0..*" T151 : displayList
+T148 "1" --> "0..*" T151 : list
+T149 "1" --> "0..*" T151 : newItems, oldItems
+T151 "1" --> "0..1" T9 : entry
+T152 "1" --> "0..1" T25 : accessibilityPreferences
+T152 "1" --> "0..1" T37 : entrantEventService
+T152 "1" --> "0..1" T38 : eventService
+T152 "1" --> "0..1" T40 : uiPreferences
+T152 "1" --> "0..1" T45 : profileService
+T152 "1" --> "0..1" T82 : 2 members
+T152 "1" --> "0..1" T162 : themeManager
+T153 "1" --> "1" T10 : status
+T154 "1" --> "0..1" T38 : eventService
+T156 "1" --> "0..1" T2 : loadedEvent
+T156 "1" --> "0..1" T38 : eventService
+T156 "1" --> "0..1" T41 : imageService
+T156 "1" --> "0..1" T45 : profileService
+T156 "1" --> "0..1" T158 : mode
+T111 "1" *-- "1" T112 : replyAdapter
+T114 "1" *-- "1" T108 : commentsAdapter
+T139 "1" *-- "1" T126 : browseFilter
+T164 ..> T22 : uses
+T13 ..> T3 : uses
+T14 ..> T2 : uses
+T15 ..> T16 : uses
+T15 ..> T17 : uses
+T15 ..> T18 : uses
+T15 ..> T19 : uses
+T15 ..> T20 : uses
+T15 ..> T2 : uses
+T15 ..> T3 : uses
+T15 ..> T5 : uses
+T15 ..> T7 : uses
+T15 ..> T8 : uses
+T15 ..> T9 : uses
+T15 ..> T10 : uses
+T16 ..> T3 : uses
+T17 ..> T2 : uses
+T19 ..> T5 : uses
+T21 ..> T2 : uses
+T21 ..> T5 : uses
+T22 ..> T7 : uses
+T23 ..> T8 : uses
+T24 ..> T9 : uses
+T24 ..> T10 : uses
+T26 ..> T15 : uses
+T26 ..> T2 : uses
+T26 ..> T8 : uses
+T26 ..> T9 : uses
+T26 ..> T28 : uses
+T26 ..> T29 : uses
+T26 ..> T30 : uses
+T26 ..> T31 : uses
+T32 ..> T15 : uses
+T32 ..> T2 : uses
+T32 ..> T8 : uses
+T32 ..> T9 : uses
+T32 ..> T10 : uses
+T32 ..> T34 : uses
+T32 ..> T35 : uses
+T32 ..> T43 : uses
+T36 ..> T15 : uses
+T36 ..> T3 : uses
+T36 ..> T8 : uses
+T37 ..> T15 : uses
+T37 ..> T9 : uses
+T37 ..> T10 : uses
+T38 ..> T15 : uses
+T38 ..> T2 : uses
+T39 ..> T164 : uses
+T39 ..> T45 : uses
+T41 ..> T2 : uses
+T41 ..> T5 : uses
+T42 ..> T15 : uses
+T42 ..> T2 : uses
+T42 ..> T9 : uses
+T44 ..> T15 : uses
+T44 ..> T2 : uses
+T44 ..> T6 : uses
+T44 ..> T7 : uses
+T44 ..> T9 : uses
+T44 ..> T10 : uses
+T44 ..> T43 : uses
+T45 ..> T15 : uses
+T45 ..> T8 : uses
+T45 ..> T46 : uses
+T48 ..> T15 : uses
+T48 ..> T9 : uses
+T49 ..> T50 : uses
+T49 ..> T52 : uses
+T51 ..> T3 : uses
+T53 ..> T54 : uses
+T53 ..> T58 : uses
+T55 ..> T2 : uses
+T56 ..> T2 : uses
+T57 ..> T2 : uses
+T59 ..> T60 : uses
+T59 ..> T62 : uses
+T61 ..> T2 : uses
+T63 ..> T6 : uses
+T63 ..> T64 : uses
+T63 ..> T66 : uses
+T65 ..> T7 : uses
+T67 ..> T2 : uses
+T67 ..> T68 : uses
+T67 ..> T69 : uses
+T67 ..> T70 : uses
+T67 ..> T71 : uses
+T67 ..> T75 : uses
+T70 ..> T2 : uses
+T72 ..> T2 : uses
+T73 ..> T2 : uses
+T74 ..> T2 : uses
+T76 ..> T8 : uses
+T77 ..> T164 : uses
+T77 ..> T7 : uses
+T78 ..> T7 : uses
+T78 ..> T79 : uses
+T78 ..> T81 : uses
+T79 ..> T7 : uses
+T80 ..> T7 : uses
+T82 ..> T10 : uses
+T82 ..> T83 : uses
+T82 ..> T84 : uses
+T82 ..> T86 : uses
+T84 ..> T83 : uses
+T85 ..> T83 : uses
+T87 ..> T88 : uses
+T89 ..> T164 : uses
+T89 ..> T25 : uses
+T89 ..> T162 : uses
+T90 ..> T94 : uses
+T90 ..> T95 : uses
+T91 ..> T8 : uses
+T92 ..> T8 : uses
+T93 ..> T8 : uses
+T97 ..> T25 : uses
+T97 ..> T162 : uses
+T99 ..> T100 : uses
+T99 ..> T101 : uses
+T99 ..> T102 : uses
+T99 ..> T103 : uses
+T108 ..> T110 : uses
+T108 ..> T111 : uses
+T109 ..> T3 : uses
+T111 ..> T3 : uses
+T112 ..> T113 : uses
+T113 ..> T3 : uses
+T114 ..> T8 : uses
+T114 ..> T115 : uses
+T114 ..> T116 : uses
+T115 ..> T3 : uses
+T117 ..> T164 : uses
+T117 ..> T10 : uses
+T118 ..> T2 : uses
+T118 ..> T119 : uses
+T121 ..> T2 : uses
+T122 ..> T164 : uses
+T122 ..> T43 : uses
+T122 ..> T123 : uses
+T124 ..> T9 : uses
+T126 ..> T2 : uses
+T126 ..> T10 : uses
+T126 ..> T129 : uses
+T131 ..> T164 : uses
+T131 ..> T132 : uses
+T134 ..> T132 : uses
+T134 ..> T137 : uses
+T134 ..> T138 : uses
+T135 ..> T8 : uses
+T135 ..> T132 : uses
+T136 ..> T8 : uses
+T139 ..> T164 : uses
+T139 ..> T9 : uses
+T139 ..> T74 : uses
+T139 ..> T119 : uses
+T139 ..> T129 : uses
+T139 ..> T140 : uses
+T141 ..> T164 : uses
+T141 ..> T9 : uses
+T142 ..> T164 : uses
+T143 ..> T164 : uses
+T143 ..> T6 : uses
+T144 ..> T164 : uses
+T144 ..> T72 : uses
+T145 ..> T164 : uses
+T145 ..> T2 : uses
+T147 ..> T164 : uses
+T148 ..> T149 : uses
+T148 ..> T150 : uses
+T152 ..> T2 : uses
+T152 ..> T8 : uses
+T152 ..> T9 : uses
+T152 ..> T10 : uses
+T152 ..> T83 : uses
+T152 ..> T153 : uses
+T152 ..> T161 : uses
+T152 ..> T163 : uses
+T153 ..> T83 : uses
+T155 ..> T2 : uses
+T156 ..> T164 : uses
+T156 ..> T5 : uses
+T156 ..> T155 : uses
+T156 ..> T157 : uses
+T156 ..> T159 : uses
+T156 ..> T160 : uses
+T162 ..> T25 : uses
+T162 ..> T161 : uses
+T162 ..> T163 : uses
+T52 <|-- T49
+T58 <|-- T53
+T62 <|-- T59
+T66 <|-- T63
+T2 <|-- T67
+T71 <|-- T68
+T71 <|-- T69
+T2 <|-- T70
+T71 <|-- T75
+T89 <|-- T76
+T89 <|-- T77
+T7 <|-- T78
+T7 <|-- T79
+T83 <|-- T82
+T83 <|-- T84
+T89 <|-- T87
+T95 <|-- T90
+T111 <|-- T108
+T113 <|-- T112
+T138 <|-- T134
+T141 ..> T124 : action_manageEventFragment_to_entrantMapFragment
+T13 <|.. T15
+T14 <|.. T15
+T21 <|.. T15
+T22 <|.. T15
+T23 <|.. T15
+T24 <|.. T15
+T18 <|.. T16
+T18 <|.. T17
+T18 <|.. T19
+T109 <|.. T115
+@enduml

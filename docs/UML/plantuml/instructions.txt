@@ -1,0 +1,9 @@
+PlantUML Syntax:
+
+java -jar plantuml.jar -tsvg (YOUR PUML FILE HERE)
+
+to export to svg (high quality)
+
+e.g.
+
+java -jar plantuml.jar -tsvg puml/full_reference.puml

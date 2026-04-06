@@ -1,0 +1,60 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam ArrowFontSize 11
+skinparam packageTitleAlignment left
+title Package dependency overview
+
+rectangle "com.example.helios.model" as P1
+rectangle "com.example.helios.auth" as P2
+rectangle "com.example.helios.data" as P3
+rectangle "com.example.helios.service" as P4
+rectangle "com.example.helios.ui" as P5
+rectangle "com.example.helios.ui.common" as P6
+rectangle "com.example.helios.ui.event" as P7
+rectangle "com.example.helios.ui.nav" as P8
+rectangle "com.example.helios.ui.theme" as P9
+rectangle "com.example.helios" as P10
+
+P1 -[hidden]-> P2
+P2 -[hidden]-> P3
+P3 -[hidden]-> P4
+P4 -[hidden]-> P5
+P5 -[hidden]-> P6
+P6 -[hidden]-> P7
+P7 -[hidden]-> P8
+P8 -[hidden]-> P9
+P9 -[hidden]-> P10
+
+P3 ..> P1 : 69 uses
+P4 --> P1 : 5 structural, 111 uses
+P4 --> P2 : 3 structural, 6 uses
+P4 --> P3 : 19 structural, 35 uses
+P4 ..> P10 : 1 uses
+P5 --> P1 : 18 structural, 71 uses
+P5 --> P2 : 1 structural
+P5 --> P3 : 1 structural
+P5 --> P4 : 3 structural, 2 uses
+P5 ..> P9 : 1 uses
+P5 ..> P10 : 4 uses
+P6 ..> P4 : 1 uses
+P6 ..> P9 : 1 uses
+P7 --> P1 : 8 structural, 57 uses
+P7 --> P4 : 5 structural, 2 uses
+P7 ..> P10 : 1 uses
+P8 --> P1 : 31 structural, 149 uses
+P8 --> P3 : 2 structural
+P8 --> P4 : 44 structural, 1 uses
+P8 --> P5 : 12 structural, 18 uses
+P8 ..> P7 : 2 uses
+P8 --> P9 : 1 structural, 4 uses
+P8 ..> P10 : 10 uses
+P9 ..> P4 : 2 uses
+P10 --> P2 : 1 structural, 2 uses
+P10 --> P3 : 1 structural, 3 uses
+P10 --> P4 : 12 structural, 24 uses
+P10 --> P9 : 1 structural, 2 uses
+@enduml

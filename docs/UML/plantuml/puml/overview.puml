@@ -1,0 +1,781 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam ArrowFontSize 11
+skinparam packageTitleAlignment left
+hide fields
+hide methods
+
+title Architecture overview
+
+legend right
+  <back:#D6EAF8>UI</back>
+  <back:#D5F5E3>Service</back>
+  <back:#FAD7A0>Repository/Data</back>
+  <back:#E8DAEF>Auth/ViewModel</back>
+  <back:#FCF3CF>Model</back>
+  <back:#EAECEE>Utility/Other</back>
+endlegend
+
+package "com.example.helios" {
+class "HeliosApplication" as T164 <<application>> #F8F9F9 {
+}
+
+}
+
+package "com.example.helios.auth" {
+class "AuthDeviceService" as T11 <<service>> #D5F5E3 {
+}
+
+class "InstallationIdProvider" as T12 #E8DAEF {
+}
+
+}
+
+package "com.example.helios.data" {
+interface "CommentRepository" as T13 <<repository>> #FAD7A0 {
+}
+
+interface "EventRepository" as T14 <<repository>> #FAD7A0 {
+}
+
+class "FirebaseRepository" as T15 <<repository>> #FAD7A0 {
+}
+
+class "FirebaseRepository.CommentIdSetter" as T16 #FAD7A0 {
+}
+
+class "FirebaseRepository.EventIdSetter" as T17 #FAD7A0 {
+}
+
+interface "FirebaseRepository.IdSetter" as T18 #FAD7A0 {
+}
+
+class "FirebaseRepository.ImageIdSetter" as T19 #FAD7A0 {
+}
+
+class "FirebaseRepository.LikeRecord" as T20 #FAD7A0 {
+}
+
+interface "ImageRepository" as T21 <<repository>> #FAD7A0 {
+}
+
+interface "NotificationRepository" as T22 <<repository>> #FAD7A0 {
+}
+
+interface "UserRepository" as T23 <<repository>> #FAD7A0 {
+}
+
+interface "WaitingListRepository" as T24 <<repository>> #FAD7A0 {
+}
+
+}
+
+package "com.example.helios.model" {
+class "AdminDevice" as T1 #FCF3CF {
+}
+
+class "Event" as T2 #FCF3CF {
+}
+
+class "EventComment" as T3 #FCF3CF {
+}
+
+class "GeoPoint" as T4 #FCF3CF {
+}
+
+class "ImageAsset" as T5 #FCF3CF {
+}
+
+enum "NotificationAudience" as T6 #FCF3CF {
+}
+
+class "NotificationRecord" as T7 #FCF3CF {
+}
+
+class "UserProfile" as T8 #FCF3CF {
+}
+
+class "WaitingListEntry" as T9 #FCF3CF {
+}
+
+enum "WaitingListStatus" as T10 #FCF3CF {
+}
+
+}
+
+package "com.example.helios.service" {
+class "AccessibilityPreferences" as T25 #D5F5E3 {
+}
+
+class "AdminGeolocationTestService" as T26 <<service>> #D5F5E3 {
+}
+
+interface "AdminGeolocationTestService.Clock" as T27 #D5F5E3 {
+}
+
+class "AdminGeolocationTestService.CoordinateSeed" as T28 #D5F5E3 {
+}
+
+class "AdminGeolocationTestService.CurrentUserContext" as T29 #D5F5E3 {
+}
+
+enum "AdminGeolocationTestService.GeoScenario" as T30 #D5F5E3 {
+}
+
+class "AdminGeolocationTestService.SandboxState" as T31 #D5F5E3 {
+}
+
+class "AdminNotificationTestService" as T32 <<service>> #D5F5E3 {
+}
+
+interface "AdminNotificationTestService.Clock" as T33 #D5F5E3 {
+}
+
+class "AdminNotificationTestService.CurrentUserContext" as T34 #D5F5E3 {
+}
+
+class "AdminNotificationTestService.SandboxState" as T35 #D5F5E3 {
+}
+
+class "CommentService" as T36 <<service>> #D5F5E3 {
+}
+
+class "EntrantEventService" as T37 <<service>> #D5F5E3 {
+}
+
+class "EventService" as T38 <<service>> #D5F5E3 {
+}
+
+class "HeliosFirebaseMessagingService" as T39 <<service>> #D5F5E3 {
+}
+
+class "HeliosUiPreferences" as T40 #D5F5E3 {
+}
+
+class "ImageService" as T41 <<service>> #D5F5E3 {
+}
+
+class "LotteryService" as T42 <<service>> #D5F5E3 {
+}
+
+class "NotificationSendResult" as T43 #D5F5E3 {
+}
+
+class "OrganizerNotificationService" as T44 <<service>> #D5F5E3 {
+}
+
+class "ProfileService" as T45 <<service>> #D5F5E3 {
+}
+
+class "ProfileService.BootstrapResult" as T46 #D5F5E3 {
+}
+
+interface "ProfileService.InstallationIdSource" as T47 #D5F5E3 {
+}
+
+class "WaitingListService" as T48 <<service>> #D5F5E3 {
+}
+
+}
+
+package "com.example.helios.ui" {
+class "AdminCommentAdapter" as T49 <<adapter>> #D6EAF8 {
+}
+
+class "AdminCommentAdapter.CommentDiff" as T50 #D6EAF8 {
+}
+
+interface "AdminCommentAdapter.OnDeleteCommentListener" as T51 #D6EAF8 {
+}
+
+class "AdminCommentAdapter.ViewHolder" as T52 <<viewholder>> #D6EAF8 {
+}
+
+class "AdminEventAdapter" as T53 <<adapter>> #D6EAF8 {
+}
+
+class "AdminEventAdapter.EventDiff" as T54 #D6EAF8 {
+}
+
+interface "AdminEventAdapter.OnEventClickListener" as T55 #D6EAF8 {
+}
+
+interface "AdminEventAdapter.OnEventDeleteListener" as T56 #D6EAF8 {
+}
+
+interface "AdminEventAdapter.OnViewOrganizerListener" as T57 #D6EAF8 {
+}
+
+class "AdminEventAdapter.ViewHolder" as T58 <<viewholder>> #D6EAF8 {
+}
+
+class "AdminImageAdapter" as T59 <<adapter>> #D6EAF8 {
+}
+
+class "AdminImageAdapter.EventDiff" as T60 #D6EAF8 {
+}
+
+interface "AdminImageAdapter.OnImageDeleteListener" as T61 #D6EAF8 {
+}
+
+class "AdminImageAdapter.ViewHolder" as T62 <<viewholder>> #D6EAF8 {
+}
+
+class "AdminNotificationAdapter" as T63 <<adapter>> #D6EAF8 {
+}
+
+class "AdminNotificationAdapter.NotificationDiff" as T64 #D6EAF8 {
+}
+
+interface "AdminNotificationAdapter.OnNotificationLongPressListener" as T65 #D6EAF8 {
+}
+
+class "AdminNotificationAdapter.ViewHolder" as T66 <<viewholder>> #D6EAF8 {
+}
+
+class "EventAdapter" as T67 <<adapter>> #D6EAF8 {
+}
+
+class "EventAdapter.CoOrganizerInviteViewHolder" as T68 <<viewholder>> #D6EAF8 {
+}
+
+class "EventAdapter.EventCardViewHolder" as T69 <<viewholder>> #D6EAF8 {
+}
+
+class "EventAdapter.EventDiff" as T70 #D6EAF8 {
+}
+
+class "EventAdapter.EventViewHolder" as T71 <<viewholder>> #D6EAF8 {
+}
+
+interface "EventAdapter.OnCoOrganizerInviteActionListener" as T72 #D6EAF8 {
+}
+
+interface "EventAdapter.OnEventClickListener" as T73 #D6EAF8 {
+}
+
+interface "EventAdapter.OnPrivateEventInviteActionListener" as T74 #D6EAF8 {
+}
+
+class "EventAdapter.PrivateEventInviteViewHolder" as T75 <<viewholder>> #D6EAF8 {
+}
+
+class "LauncherActivity" as T76 <<activity>> #D6EAF8 {
+}
+
+class "MainActivity" as T77 <<activity>> #D6EAF8 {
+}
+
+class "NotificationAdapter" as T78 <<adapter>> #D6EAF8 {
+}
+
+class "NotificationAdapter.NotificationDiff" as T79 #D6EAF8 {
+}
+
+interface "NotificationAdapter.OnNotificationClickListener" as T80 #D6EAF8 {
+}
+
+class "NotificationAdapter.ViewHolder" as T81 <<viewholder>> #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter" as T82 <<adapter>> #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter.HistoryItem" as T83 #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter.HistoryItemDiff" as T84 #D6EAF8 {
+}
+
+interface "ProfileEventHistoryAdapter.OnHistoryClickListener" as T85 #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter.ViewHolder" as T86 <<viewholder>> #D6EAF8 {
+}
+
+class "ProfileSetupActivity" as T87 <<activity>> #D6EAF8 {
+}
+
+class "ProfileSetupActivity.SimpleWatcher" as T88 #D6EAF8 {
+}
+
+class "ThemedActivity" as T89 <<activity>> #D6EAF8 {
+}
+
+class "UserAdapter" as T90 <<adapter>> #D6EAF8 {
+}
+
+interface "UserAdapter.OnUserClickListener" as T91 #D6EAF8 {
+}
+
+interface "UserAdapter.OnUserDeleteListener" as T92 #D6EAF8 {
+}
+
+interface "UserAdapter.OnViewEventsListener" as T93 #D6EAF8 {
+}
+
+class "UserAdapter.UserDiff" as T94 #D6EAF8 {
+}
+
+class "UserAdapter.UserViewHolder" as T95 <<viewholder>> #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.common" {
+class "EventNavArgs" as T96 #D6EAF8 {
+}
+
+class "HeliosChipFactory" as T97 #D6EAF8 {
+}
+
+class "HeliosHeaderBranding" as T98 #D6EAF8 {
+}
+
+class "HeliosImageUploader" as T99 #D6EAF8 {
+}
+
+class "HeliosImageUploader.ImageUploadException" as T100 #D6EAF8 {
+}
+
+class "HeliosImageUploader.StorageConfig" as T101 #D6EAF8 {
+}
+
+class "HeliosImageUploader.UploadResult" as T102 #D6EAF8 {
+}
+
+enum "HeliosImageUploader.UploadStage" as T103 #D6EAF8 {
+}
+
+class "HeliosLocation" as T104 #D6EAF8 {
+}
+
+class "HeliosText" as T105 #D6EAF8 {
+}
+
+class "HeliosUi" as T106 #D6EAF8 {
+}
+
+class "NotificationNavArgs" as T107 #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.event" {
+class "EventCommentsAdapter" as T108 <<adapter>> #D6EAF8 {
+}
+
+interface "EventCommentsAdapter.CommentActionListener" as T109 #D6EAF8 {
+}
+
+class "EventCommentsAdapter.CommentDiff" as T110 #D6EAF8 {
+}
+
+class "EventCommentsAdapter.CommentViewHolder" as T111 <<viewholder>> #D6EAF8 {
+}
+
+class "EventCommentsAdapter.ReplyAdapter" as T112 <<adapter>> #D6EAF8 {
+}
+
+class "EventCommentsAdapter.ReplyAdapter.ReplyViewHolder" as T113 <<viewholder>> #D6EAF8 {
+}
+
+class "EventCommentsSection" as T114 #D6EAF8 {
+}
+
+class "EventCommentsSection.CommentActions" as T115 #D6EAF8 {
+}
+
+interface "EventCommentsSection.CurrentUserListener" as T116 #D6EAF8 {
+}
+
+class "EventDetailsBottomSheet" as T117 #D6EAF8 {
+}
+
+class "EventDiscoveryInsights" as T118 #D6EAF8 {
+}
+
+class "EventDiscoveryInsights.Result" as T119 #D6EAF8 {
+}
+
+class "EventDiscoveryInsights.TagAggregate" as T120 #D6EAF8 {
+}
+
+class "EventUiFormatter" as T121 #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.nav" {
+class "AdminFragment" as T122 <<fragment>> #D6EAF8 {
+}
+
+enum "AdminFragment.Tab" as T123 #D6EAF8 {
+}
+
+class "EntrantMapFragment" as T124 <<fragment>> #D6EAF8 {
+}
+
+class "EntrantMapFragment.MarkerPoint" as T125 #D6EAF8 {
+}
+
+class "EventBrowseFilter" as T126 #D6EAF8 {
+}
+
+enum "EventBrowseFilter.AvailabilityFilter" as T127 #D6EAF8 {
+}
+
+enum "EventBrowseFilter.CapacityFilter" as T128 #D6EAF8 {
+}
+
+class "EventBrowseFilter.Result" as T129 #D6EAF8 {
+}
+
+enum "EventBrowseFilter.VisibilityFilter" as T130 #D6EAF8 {
+}
+
+class "EventUserPickerFragment" as T131 <<fragment>> #D6EAF8 {
+}
+
+enum "EventUserPickerFragment.CoOrganizerActionState" as T132 #D6EAF8 {
+}
+
+enum "EventUserPickerFragment.Mode" as T133 #D6EAF8 {
+}
+
+class "EventUserPickerFragment.UserAdapter" as T134 <<adapter>> #D6EAF8 {
+}
+
+interface "EventUserPickerFragment.UserAdapter.CoOrganizerStateResolver" as T135 #D6EAF8 {
+}
+
+interface "EventUserPickerFragment.UserAdapter.OnAction" as T136 #D6EAF8 {
+}
+
+class "EventUserPickerFragment.UserAdapter.UserDiff" as T137 #D6EAF8 {
+}
+
+class "EventUserPickerFragment.UserAdapter.VH" as T138 #D6EAF8 {
+}
+
+class "EventsFragment" as T139 <<fragment>> #D6EAF8 {
+}
+
+interface "EventsFragment.OnDateSelectedListener" as T140 #D6EAF8 {
+}
+
+class "ManageEventFragment" as T141 <<fragment>> #D6EAF8 {
+}
+
+class "NotificationsFragment" as T142 <<fragment>> #D6EAF8 {
+}
+
+class "NotifyEntrantsFragment" as T143 <<fragment>> #D6EAF8 {
+}
+
+class "OrganizeFragment" as T144 <<fragment>> #D6EAF8 {
+}
+
+class "OrganizerQrFragment" as T145 <<fragment>> #D6EAF8 {
+}
+
+enum "OrganizerQrFragment.Mode" as T146 #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment" as T147 <<fragment>> #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter" as T148 <<adapter>> #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter.EntrantDiff" as T149 #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter.ViewHolder" as T150 <<viewholder>> #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantDisplayModel" as T151 #D6EAF8 {
+}
+
+class "ProfileFragment" as T152 <<fragment>> #D6EAF8 {
+}
+
+class "ProfileFragment.ProfileEventHistoryRow" as T153 #D6EAF8 {
+}
+
+class "ScanQrFragment" as T154 <<fragment>> #D6EAF8 {
+}
+
+class "SetupEventFormData" as T155 #D6EAF8 {
+}
+
+class "SetupEventFragment" as T156 <<fragment>> #D6EAF8 {
+}
+
+interface "SetupEventFragment.DatePickedCallback" as T157 #D6EAF8 {
+}
+
+enum "SetupEventFragment.Mode" as T158 #D6EAF8 {
+}
+
+class "SetupEventFragment.PosterUploadCleanupState" as T159 #D6EAF8 {
+}
+
+interface "SetupEventFragment.TimePickedCallback" as T160 #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.theme" {
+enum "HeliosFontOption" as T161 #D6EAF8 {
+}
+
+class "HeliosThemeManager" as T162 #D6EAF8 {
+}
+
+enum "HeliosThemeOption" as T163 #D6EAF8 {
+}
+
+}
+
+T1 -[hidden]-> T11
+T11 -[hidden]-> T13
+T13 -[hidden]-> T25
+T25 -[hidden]-> T49
+T49 -[hidden]-> T96
+T96 -[hidden]-> T108
+T108 -[hidden]-> T122
+T122 -[hidden]-> T161
+T161 -[hidden]-> T164
+
+T164 --> T11
+T164 --> T15
+T164 --> T25
+T164 --> T26
+T164 --> T32
+T164 --> T36
+T164 --> T37
+T164 --> T38
+T164 --> T40
+T164 --> T41
+T164 --> T42
+T164 --> T44
+T164 --> T45
+T164 --> T48
+T164 --> T162
+T2 --> T4
+T7 --> T6
+T9 --> T10
+T26 --> T11
+T26 --> T14
+T26 --> T23
+T26 --> T24
+T26 --> T27
+T29 --> T8
+T30 --> T28
+T31 --> T2
+T32 --> T11
+T32 --> T14
+T32 --> T23
+T32 --> T24
+T32 --> T33
+T32 --> T44
+T34 --> T8
+T35 --> T2
+T36 --> T13
+T36 --> T38
+T36 --> T45
+T37 --> T14
+T37 --> T24
+T37 --> T45
+T38 --> T14
+T41 --> T21
+T42 --> T14
+T42 --> T24
+T42 --> T44
+T44 --> T22
+T44 --> T23
+T44 --> T24
+T45 --> T11
+T45 --> T14
+T45 --> T23
+T45 --> T47
+T46 --> T8
+T48 --> T24
+T49 --> T3
+T49 --> T51
+T50 --> T3
+T53 --> T2
+T53 --> T55
+T53 --> T56
+T53 --> T57
+T54 --> T2
+T59 --> T2
+T59 --> T61
+T60 --> T2
+T63 --> T7
+T63 --> T65
+T64 --> T7
+T67 --> T10
+T67 --> T72
+T67 --> T73
+T67 --> T74
+T76 --> T45
+T77 --> T11
+T77 --> T22
+T77 --> T8
+T77 --> T45
+T78 --> T80
+T82 --> T85
+T83 --> T10
+T87 --> T45
+T90 --> T8
+T90 --> T91
+T90 --> T92
+T90 --> T93
+T94 --> T8
+T100 --> T103
+T108 --> T3
+T108 --> T109
+T110 --> T3
+T112 --> T3
+T114 --> T3
+T114 --> T36
+T114 --> T45
+T117 --> T2
+T117 --> T9
+T117 --> T37
+T117 --> T38
+T117 --> T48
+T117 --> T114
+T118 --> T120
+T122 --> T22
+T122 --> T2
+T122 --> T3
+T122 --> T7
+T122 --> T8
+T122 --> T26
+T122 --> T31
+T122 --> T32
+T122 --> T35
+T122 --> T36
+T122 --> T38
+T122 --> T41
+T122 --> T45
+T122 --> T49
+T122 --> T53
+T122 --> T59
+T122 --> T63
+T122 --> T90
+T124 --> T2
+T124 --> T38
+T124 --> T48
+T124 --> T125
+T126 --> T127
+T126 --> T128
+T126 --> T130
+T129 --> T2
+T131 --> T2
+T131 --> T8
+T131 --> T38
+T131 --> T44
+T131 --> T45
+T131 --> T48
+T131 --> T133
+T131 --> T134
+T134 --> T8
+T134 --> T135
+T134 --> T136
+T137 --> T8
+T139 --> T2
+T139 --> T10
+T139 --> T37
+T139 --> T38
+T139 --> T45
+T139 --> T67
+T141 --> T2
+T141 --> T8
+T141 --> T38
+T141 --> T44
+T141 --> T45
+T141 --> T48
+T142 --> T22
+T142 --> T7
+T142 --> T45
+T142 --> T78
+T143 --> T2
+T143 --> T38
+T143 --> T44
+T143 --> T45
+T144 --> T2
+T144 --> T38
+T144 --> T45
+T144 --> T48
+T144 --> T67
+T145 --> T38
+T145 --> T45
+T145 --> T146
+T147 --> T2
+T147 --> T9
+T147 --> T38
+T147 --> T42
+T147 --> T44
+T147 --> T45
+T147 --> T48
+T147 --> T148
+T147 --> T151
+T148 --> T151
+T149 --> T151
+T151 --> T9
+T152 --> T25
+T152 --> T37
+T152 --> T38
+T152 --> T40
+T152 --> T45
+T152 --> T82
+T152 --> T162
+T153 --> T10
+T154 --> T38
+T156 --> T2
+T156 --> T38
+T156 --> T41
+T156 --> T45
+T156 --> T158
+T111 *-- T112
+T114 *-- T108
+T139 *-- T126
+T52 <|-- T49
+T58 <|-- T53
+T62 <|-- T59
+T66 <|-- T63
+T2 <|-- T67
+T71 <|-- T68
+T71 <|-- T69
+T2 <|-- T70
+T71 <|-- T75
+T89 <|-- T76
+T89 <|-- T77
+T7 <|-- T78
+T7 <|-- T79
+T83 <|-- T82
+T83 <|-- T84
+T89 <|-- T87
+T95 <|-- T90
+T111 <|-- T108
+T113 <|-- T112
+T138 <|-- T134
+T13 <|.. T15
+T14 <|.. T15
+T21 <|.. T15
+T22 <|.. T15
+T23 <|.. T15
+T24 <|.. T15
+T18 <|.. T16
+T18 <|.. T17
+T18 <|.. T19
+T109 <|.. T115
+@enduml

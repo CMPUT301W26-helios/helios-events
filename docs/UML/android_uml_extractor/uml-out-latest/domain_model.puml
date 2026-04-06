@@ -1,0 +1,154 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam ArrowFontSize 11
+skinparam packageTitleAlignment left
+hide empty members
+hide methods
+
+title Domain model
+
+legend right
+  <back:#D6EAF8>UI</back>
+  <back:#D5F5E3>Service</back>
+  <back:#FAD7A0>Repository/Data</back>
+  <back:#E8DAEF>Auth/ViewModel</back>
+  <back:#FCF3CF>Model</back>
+  <back:#EAECEE>Utility/Other</back>
+endlegend
+
+package "com.example.helios.model" {
+class "AdminDevice" as T1 #FCF3CF {
+  - addedAtMillis : long
+  - enabled : boolean
+  - installationId : String
+  - note : String
+}
+
+class "Event" as T2 #FCF3CF {
+  - address : String
+  - capacity : int
+  - coOrganizerUids : List<String>
+  - description : String
+  - drawCount : int
+  - drawHappened : boolean
+  - endTimeMillis : long
+  - eventId : String
+  - geofenceCenter : GeoPoint
+  - geofenceRadiusMeters : Integer
+  - geolocationRequired : boolean
+  - interests : List<String>
+  - locationName : String
+  - lotteryGuidelines : String
+  - organizerUid : String
+  - pendingCoOrganizerUids : List<String>
+  - posterImageId : String
+  - privateEvent : boolean
+  - qrCodeValue : String
+  - registrationClosesMillis : long
+  - registrationOpensMillis : long
+  - sampleSize : int
+  - startTimeMillis : long
+  - title : String
+  - waitlistLimit : Integer
+}
+
+class "EventComment" as T3 #FCF3CF {
+  - authorNameSnapshot : String
+  - authorProfileImageUrlSnapshot : String
+  - authorUid : String
+  - body : String
+  - commentId : String
+  - createdAtMillis : long
+  - eventId : String
+  - isDeleted : boolean
+  - likeCount : int
+  - parentCommentId : String
+  - pinned : boolean
+  - updatedAtMillis : long
+}
+
+class "GeoPoint" as T4 #FCF3CF {
+  - latitude : double
+  - longitude : double
+}
+
+class "ImageAsset" as T5 #FCF3CF {
+  - eventId : String
+  - imageId : String
+  - ownerUid : String
+  - storagePath : String
+  - uploadedAtMillis : long
+}
+
+enum "NotificationAudience" as T6 #FCF3CF {
+  + ACCEPTED : NotificationAudience
+  + AUDIENCE : NotificationAudience
+  + CANCELLED : NotificationAudience
+  + CO_ORGANIZER_INVITE : NotificationAudience
+  + DECLINED : NotificationAudience
+  + INDIVIDUAL : NotificationAudience
+  + INVITED : NotificationAudience
+  + NOT_SELECTED : NotificationAudience
+  + PRIVATE_EVENT_INVITE : NotificationAudience
+  + SELECTED : NotificationAudience
+  + WAITING : NotificationAudience
+}
+
+class "NotificationRecord" as T7 #FCF3CF {
+  - audience : NotificationAudience
+  - eventId : String
+  - message : String
+  - notificationId : String
+  - recipientUid : String
+  - senderUid : String
+  - sentAtMillis : long
+  - title : String
+}
+
+class "UserProfile" as T8 #FCF3CF {
+  - email : String
+  - fcmToken : String
+  - installationId : String
+  - name : String
+  - notificationsEnabled : boolean
+  - organizerAccessRevoked : boolean
+  - phone : String
+  - profileImageUrl : String
+  - role : String
+  - signInBannerEnabled : boolean
+  - uid : String
+}
+
+class "WaitingListEntry" as T9 #FCF3CF {
+  - cancelledAtMillis : long
+  - entrantUid : String
+  - eventId : String
+  - invitedAtMillis : long
+  - joinLatitude : Double
+  - joinLongitude : Double
+  - joinedAtMillis : long
+  - respondedAtMillis : long
+  - status : WaitingListStatus
+  - statusReason : String
+}
+
+enum "WaitingListStatus" as T10 #FCF3CF {
+  + ACCEPTED : WaitingListStatus
+  + CANCELLED : WaitingListStatus
+  + DECLINED : WaitingListStatus
+  + INVITED : WaitingListStatus
+  + NOT_SELECTED : WaitingListStatus
+  + WAITING : WaitingListStatus
+}
+
+}
+
+
+T2 "1" --> "0..1" T4 : geofenceCenter
+T7 "1" --> "0..1" T6 : audience
+T9 "1" --> "0..1" T10 : status
+@enduml

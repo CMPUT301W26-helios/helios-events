@@ -1,0 +1,389 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam ArrowFontSize 11
+skinparam packageTitleAlignment left
+hide fields
+hide methods
+
+title Screen navigation
+
+legend right
+  <back:#D6EAF8>UI</back>
+  <back:#D5F5E3>Service</back>
+  <back:#FAD7A0>Repository/Data</back>
+  <back:#E8DAEF>Auth/ViewModel</back>
+  <back:#FCF3CF>Model</back>
+  <back:#EAECEE>Utility/Other</back>
+endlegend
+
+package "com.example.helios.ui" {
+class "AdminCommentAdapter" as T1 <<adapter>> #D6EAF8 {
+}
+
+class "AdminCommentAdapter.CommentDiff" as T2 #D6EAF8 {
+}
+
+interface "AdminCommentAdapter.OnDeleteCommentListener" as T3 #D6EAF8 {
+}
+
+class "AdminCommentAdapter.ViewHolder" as T4 <<viewholder>> #D6EAF8 {
+}
+
+class "AdminEventAdapter" as T5 <<adapter>> #D6EAF8 {
+}
+
+class "AdminEventAdapter.EventDiff" as T6 #D6EAF8 {
+}
+
+interface "AdminEventAdapter.OnEventClickListener" as T7 #D6EAF8 {
+}
+
+interface "AdminEventAdapter.OnEventDeleteListener" as T8 #D6EAF8 {
+}
+
+interface "AdminEventAdapter.OnViewOrganizerListener" as T9 #D6EAF8 {
+}
+
+class "AdminEventAdapter.ViewHolder" as T10 <<viewholder>> #D6EAF8 {
+}
+
+class "AdminImageAdapter" as T11 <<adapter>> #D6EAF8 {
+}
+
+class "AdminImageAdapter.EventDiff" as T12 #D6EAF8 {
+}
+
+interface "AdminImageAdapter.OnImageDeleteListener" as T13 #D6EAF8 {
+}
+
+class "AdminImageAdapter.ViewHolder" as T14 <<viewholder>> #D6EAF8 {
+}
+
+class "AdminNotificationAdapter" as T15 <<adapter>> #D6EAF8 {
+}
+
+class "AdminNotificationAdapter.NotificationDiff" as T16 #D6EAF8 {
+}
+
+interface "AdminNotificationAdapter.OnNotificationLongPressListener" as T17 #D6EAF8 {
+}
+
+class "AdminNotificationAdapter.ViewHolder" as T18 <<viewholder>> #D6EAF8 {
+}
+
+class "EventAdapter" as T19 <<adapter>> #D6EAF8 {
+}
+
+class "EventAdapter.CoOrganizerInviteViewHolder" as T20 <<viewholder>> #D6EAF8 {
+}
+
+class "EventAdapter.EventCardViewHolder" as T21 <<viewholder>> #D6EAF8 {
+}
+
+class "EventAdapter.EventDiff" as T22 #D6EAF8 {
+}
+
+class "EventAdapter.EventViewHolder" as T23 <<viewholder>> #D6EAF8 {
+}
+
+interface "EventAdapter.OnCoOrganizerInviteActionListener" as T24 #D6EAF8 {
+}
+
+interface "EventAdapter.OnEventClickListener" as T25 #D6EAF8 {
+}
+
+interface "EventAdapter.OnPrivateEventInviteActionListener" as T26 #D6EAF8 {
+}
+
+class "EventAdapter.PrivateEventInviteViewHolder" as T27 <<viewholder>> #D6EAF8 {
+}
+
+class "LauncherActivity" as T28 <<activity>> #D6EAF8 {
+}
+
+class "MainActivity" as T29 <<activity>> #D6EAF8 {
+}
+
+class "NotificationAdapter" as T30 <<adapter>> #D6EAF8 {
+}
+
+class "NotificationAdapter.NotificationDiff" as T31 #D6EAF8 {
+}
+
+interface "NotificationAdapter.OnNotificationClickListener" as T32 #D6EAF8 {
+}
+
+class "NotificationAdapter.ViewHolder" as T33 <<viewholder>> #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter" as T34 <<adapter>> #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter.HistoryItem" as T35 #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter.HistoryItemDiff" as T36 #D6EAF8 {
+}
+
+interface "ProfileEventHistoryAdapter.OnHistoryClickListener" as T37 #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter.ViewHolder" as T38 <<viewholder>> #D6EAF8 {
+}
+
+class "ProfileSetupActivity" as T39 <<activity>> #D6EAF8 {
+}
+
+class "ProfileSetupActivity.SimpleWatcher" as T40 #D6EAF8 {
+}
+
+class "ThemedActivity" as T41 <<activity>> #D6EAF8 {
+}
+
+class "UserAdapter" as T42 <<adapter>> #D6EAF8 {
+}
+
+interface "UserAdapter.OnUserClickListener" as T43 #D6EAF8 {
+}
+
+interface "UserAdapter.OnUserDeleteListener" as T44 #D6EAF8 {
+}
+
+interface "UserAdapter.OnViewEventsListener" as T45 #D6EAF8 {
+}
+
+class "UserAdapter.UserDiff" as T46 #D6EAF8 {
+}
+
+class "UserAdapter.UserViewHolder" as T47 <<viewholder>> #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.common" {
+class "EventNavArgs" as T48 #D6EAF8 {
+}
+
+class "HeliosChipFactory" as T49 #D6EAF8 {
+}
+
+class "HeliosHeaderBranding" as T50 #D6EAF8 {
+}
+
+class "HeliosImageUploader" as T51 #D6EAF8 {
+}
+
+class "HeliosImageUploader.ImageUploadException" as T52 #D6EAF8 {
+}
+
+class "HeliosImageUploader.StorageConfig" as T53 #D6EAF8 {
+}
+
+class "HeliosImageUploader.UploadResult" as T54 #D6EAF8 {
+}
+
+enum "HeliosImageUploader.UploadStage" as T55 #D6EAF8 {
+}
+
+class "HeliosLocation" as T56 #D6EAF8 {
+}
+
+class "HeliosText" as T57 #D6EAF8 {
+}
+
+class "HeliosUi" as T58 #D6EAF8 {
+}
+
+class "NotificationNavArgs" as T59 #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.event" {
+class "EventCommentsAdapter" as T60 <<adapter>> #D6EAF8 {
+}
+
+interface "EventCommentsAdapter.CommentActionListener" as T61 #D6EAF8 {
+}
+
+class "EventCommentsAdapter.CommentDiff" as T62 #D6EAF8 {
+}
+
+class "EventCommentsAdapter.CommentViewHolder" as T63 <<viewholder>> #D6EAF8 {
+}
+
+class "EventCommentsAdapter.ReplyAdapter" as T64 <<adapter>> #D6EAF8 {
+}
+
+class "EventCommentsAdapter.ReplyAdapter.ReplyViewHolder" as T65 <<viewholder>> #D6EAF8 {
+}
+
+class "EventCommentsSection" as T66 #D6EAF8 {
+}
+
+class "EventCommentsSection.CommentActions" as T67 #D6EAF8 {
+}
+
+interface "EventCommentsSection.CurrentUserListener" as T68 #D6EAF8 {
+}
+
+class "EventDetailsBottomSheet" as T69 #D6EAF8 {
+}
+
+class "EventDiscoveryInsights" as T70 #D6EAF8 {
+}
+
+class "EventDiscoveryInsights.Result" as T71 #D6EAF8 {
+}
+
+class "EventDiscoveryInsights.TagAggregate" as T72 #D6EAF8 {
+}
+
+class "EventUiFormatter" as T73 #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.nav" {
+class "AdminFragment" as T74 <<fragment>> #D6EAF8 {
+}
+
+enum "AdminFragment.Tab" as T75 #D6EAF8 {
+}
+
+class "EntrantMapFragment" as T76 <<fragment>> #D6EAF8 {
+}
+
+class "EntrantMapFragment.MarkerPoint" as T77 #D6EAF8 {
+}
+
+class "EventBrowseFilter" as T78 #D6EAF8 {
+}
+
+enum "EventBrowseFilter.AvailabilityFilter" as T79 #D6EAF8 {
+}
+
+enum "EventBrowseFilter.CapacityFilter" as T80 #D6EAF8 {
+}
+
+class "EventBrowseFilter.Result" as T81 #D6EAF8 {
+}
+
+enum "EventBrowseFilter.VisibilityFilter" as T82 #D6EAF8 {
+}
+
+class "EventUserPickerFragment" as T83 <<fragment>> #D6EAF8 {
+}
+
+enum "EventUserPickerFragment.CoOrganizerActionState" as T84 #D6EAF8 {
+}
+
+enum "EventUserPickerFragment.Mode" as T85 #D6EAF8 {
+}
+
+class "EventUserPickerFragment.UserAdapter" as T86 <<adapter>> #D6EAF8 {
+}
+
+interface "EventUserPickerFragment.UserAdapter.CoOrganizerStateResolver" as T87 #D6EAF8 {
+}
+
+interface "EventUserPickerFragment.UserAdapter.OnAction" as T88 #D6EAF8 {
+}
+
+class "EventUserPickerFragment.UserAdapter.UserDiff" as T89 #D6EAF8 {
+}
+
+class "EventUserPickerFragment.UserAdapter.VH" as T90 #D6EAF8 {
+}
+
+class "EventsFragment" as T91 <<fragment>> #D6EAF8 {
+}
+
+interface "EventsFragment.OnDateSelectedListener" as T92 #D6EAF8 {
+}
+
+class "ManageEventFragment" as T93 <<fragment>> #D6EAF8 {
+}
+
+class "NotificationsFragment" as T94 <<fragment>> #D6EAF8 {
+}
+
+class "NotifyEntrantsFragment" as T95 <<fragment>> #D6EAF8 {
+}
+
+class "OrganizeFragment" as T96 <<fragment>> #D6EAF8 {
+}
+
+class "OrganizerQrFragment" as T97 <<fragment>> #D6EAF8 {
+}
+
+enum "OrganizerQrFragment.Mode" as T98 #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment" as T99 <<fragment>> #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter" as T100 <<adapter>> #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter.EntrantDiff" as T101 #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter.ViewHolder" as T102 <<viewholder>> #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantDisplayModel" as T103 #D6EAF8 {
+}
+
+class "ProfileFragment" as T104 <<fragment>> #D6EAF8 {
+}
+
+class "ProfileFragment.ProfileEventHistoryRow" as T105 #D6EAF8 {
+}
+
+class "ScanQrFragment" as T106 <<fragment>> #D6EAF8 {
+}
+
+class "SetupEventFormData" as T107 #D6EAF8 {
+}
+
+class "SetupEventFragment" as T108 <<fragment>> #D6EAF8 {
+}
+
+interface "SetupEventFragment.DatePickedCallback" as T109 #D6EAF8 {
+}
+
+enum "SetupEventFragment.Mode" as T110 #D6EAF8 {
+}
+
+class "SetupEventFragment.PosterUploadCleanupState" as T111 #D6EAF8 {
+}
+
+interface "SetupEventFragment.TimePickedCallback" as T112 #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.theme" {
+enum "HeliosFontOption" as T113 #D6EAF8 {
+}
+
+class "HeliosThemeManager" as T114 #D6EAF8 {
+}
+
+enum "HeliosThemeOption" as T115 #D6EAF8 {
+}
+
+}
+
+T1 -[hidden]-> T48
+T48 -[hidden]-> T60
+T60 -[hidden]-> T74
+T74 -[hidden]-> T113
+
+T93 ..> T76 : navigates
+@enduml

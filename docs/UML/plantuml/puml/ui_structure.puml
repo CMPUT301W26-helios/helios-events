@@ -1,0 +1,667 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam ArrowFontSize 11
+skinparam packageTitleAlignment left
+hide fields
+hide methods
+
+title UI structure
+
+legend right
+  <back:#D6EAF8>UI</back>
+  <back:#D5F5E3>Service</back>
+  <back:#FAD7A0>Repository/Data</back>
+  <back:#E8DAEF>Auth/ViewModel</back>
+  <back:#FCF3CF>Model</back>
+  <back:#EAECEE>Utility/Other</back>
+endlegend
+
+package "com.example.helios" {
+class "HeliosApplication" as T138 <<application>> #F8F9F9 {
+}
+
+}
+
+package "com.example.helios.auth" {
+class "AuthDeviceService" as T7 <<service>> #D5F5E3 {
+}
+
+}
+
+package "com.example.helios.data" {
+interface "NotificationRepository" as T8 <<repository>> #FAD7A0 {
+}
+
+}
+
+package "com.example.helios.model" {
+class "Event" as T1 #FCF3CF {
+}
+
+class "EventComment" as T2 #FCF3CF {
+}
+
+class "NotificationRecord" as T3 #FCF3CF {
+}
+
+class "UserProfile" as T4 #FCF3CF {
+}
+
+class "WaitingListEntry" as T5 #FCF3CF {
+}
+
+enum "WaitingListStatus" as T6 #FCF3CF {
+}
+
+}
+
+package "com.example.helios.service" {
+class "AccessibilityPreferences" as T9 #D5F5E3 {
+}
+
+class "AdminGeolocationTestService" as T10 <<service>> #D5F5E3 {
+}
+
+class "AdminGeolocationTestService.SandboxState" as T11 #D5F5E3 {
+}
+
+class "AdminNotificationTestService" as T12 <<service>> #D5F5E3 {
+}
+
+class "AdminNotificationTestService.SandboxState" as T13 #D5F5E3 {
+}
+
+class "CommentService" as T14 <<service>> #D5F5E3 {
+}
+
+class "EntrantEventService" as T15 <<service>> #D5F5E3 {
+}
+
+class "EventService" as T16 <<service>> #D5F5E3 {
+}
+
+class "HeliosUiPreferences" as T17 #D5F5E3 {
+}
+
+class "ImageService" as T18 <<service>> #D5F5E3 {
+}
+
+class "LotteryService" as T19 <<service>> #D5F5E3 {
+}
+
+class "OrganizerNotificationService" as T20 <<service>> #D5F5E3 {
+}
+
+class "ProfileService" as T21 <<service>> #D5F5E3 {
+}
+
+class "WaitingListService" as T22 <<service>> #D5F5E3 {
+}
+
+}
+
+package "com.example.helios.ui" {
+class "AdminCommentAdapter" as T23 <<adapter>> #D6EAF8 {
+}
+
+class "AdminCommentAdapter.CommentDiff" as T24 #D6EAF8 {
+}
+
+interface "AdminCommentAdapter.OnDeleteCommentListener" as T25 #D6EAF8 {
+}
+
+class "AdminCommentAdapter.ViewHolder" as T26 <<viewholder>> #D6EAF8 {
+}
+
+class "AdminEventAdapter" as T27 <<adapter>> #D6EAF8 {
+}
+
+class "AdminEventAdapter.EventDiff" as T28 #D6EAF8 {
+}
+
+interface "AdminEventAdapter.OnEventClickListener" as T29 #D6EAF8 {
+}
+
+interface "AdminEventAdapter.OnEventDeleteListener" as T30 #D6EAF8 {
+}
+
+interface "AdminEventAdapter.OnViewOrganizerListener" as T31 #D6EAF8 {
+}
+
+class "AdminEventAdapter.ViewHolder" as T32 <<viewholder>> #D6EAF8 {
+}
+
+class "AdminImageAdapter" as T33 <<adapter>> #D6EAF8 {
+}
+
+class "AdminImageAdapter.EventDiff" as T34 #D6EAF8 {
+}
+
+interface "AdminImageAdapter.OnImageDeleteListener" as T35 #D6EAF8 {
+}
+
+class "AdminImageAdapter.ViewHolder" as T36 <<viewholder>> #D6EAF8 {
+}
+
+class "AdminNotificationAdapter" as T37 <<adapter>> #D6EAF8 {
+}
+
+class "AdminNotificationAdapter.NotificationDiff" as T38 #D6EAF8 {
+}
+
+interface "AdminNotificationAdapter.OnNotificationLongPressListener" as T39 #D6EAF8 {
+}
+
+class "AdminNotificationAdapter.ViewHolder" as T40 <<viewholder>> #D6EAF8 {
+}
+
+class "EventAdapter" as T41 <<adapter>> #D6EAF8 {
+}
+
+class "EventAdapter.CoOrganizerInviteViewHolder" as T42 <<viewholder>> #D6EAF8 {
+}
+
+class "EventAdapter.EventCardViewHolder" as T43 <<viewholder>> #D6EAF8 {
+}
+
+class "EventAdapter.EventDiff" as T44 #D6EAF8 {
+}
+
+class "EventAdapter.EventViewHolder" as T45 <<viewholder>> #D6EAF8 {
+}
+
+interface "EventAdapter.OnCoOrganizerInviteActionListener" as T46 #D6EAF8 {
+}
+
+interface "EventAdapter.OnEventClickListener" as T47 #D6EAF8 {
+}
+
+interface "EventAdapter.OnPrivateEventInviteActionListener" as T48 #D6EAF8 {
+}
+
+class "EventAdapter.PrivateEventInviteViewHolder" as T49 <<viewholder>> #D6EAF8 {
+}
+
+class "LauncherActivity" as T50 <<activity>> #D6EAF8 {
+}
+
+class "MainActivity" as T51 <<activity>> #D6EAF8 {
+}
+
+class "NotificationAdapter" as T52 <<adapter>> #D6EAF8 {
+}
+
+class "NotificationAdapter.NotificationDiff" as T53 #D6EAF8 {
+}
+
+interface "NotificationAdapter.OnNotificationClickListener" as T54 #D6EAF8 {
+}
+
+class "NotificationAdapter.ViewHolder" as T55 <<viewholder>> #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter" as T56 <<adapter>> #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter.HistoryItem" as T57 #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter.HistoryItemDiff" as T58 #D6EAF8 {
+}
+
+interface "ProfileEventHistoryAdapter.OnHistoryClickListener" as T59 #D6EAF8 {
+}
+
+class "ProfileEventHistoryAdapter.ViewHolder" as T60 <<viewholder>> #D6EAF8 {
+}
+
+class "ProfileSetupActivity" as T61 <<activity>> #D6EAF8 {
+}
+
+class "ProfileSetupActivity.SimpleWatcher" as T62 #D6EAF8 {
+}
+
+class "ThemedActivity" as T63 <<activity>> #D6EAF8 {
+}
+
+class "UserAdapter" as T64 <<adapter>> #D6EAF8 {
+}
+
+interface "UserAdapter.OnUserClickListener" as T65 #D6EAF8 {
+}
+
+interface "UserAdapter.OnUserDeleteListener" as T66 #D6EAF8 {
+}
+
+interface "UserAdapter.OnViewEventsListener" as T67 #D6EAF8 {
+}
+
+class "UserAdapter.UserDiff" as T68 #D6EAF8 {
+}
+
+class "UserAdapter.UserViewHolder" as T69 <<viewholder>> #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.common" {
+class "EventNavArgs" as T70 #D6EAF8 {
+}
+
+class "HeliosChipFactory" as T71 #D6EAF8 {
+}
+
+class "HeliosHeaderBranding" as T72 #D6EAF8 {
+}
+
+class "HeliosImageUploader" as T73 #D6EAF8 {
+}
+
+class "HeliosImageUploader.ImageUploadException" as T74 #D6EAF8 {
+}
+
+class "HeliosImageUploader.StorageConfig" as T75 #D6EAF8 {
+}
+
+class "HeliosImageUploader.UploadResult" as T76 #D6EAF8 {
+}
+
+enum "HeliosImageUploader.UploadStage" as T77 #D6EAF8 {
+}
+
+class "HeliosLocation" as T78 #D6EAF8 {
+}
+
+class "HeliosText" as T79 #D6EAF8 {
+}
+
+class "HeliosUi" as T80 #D6EAF8 {
+}
+
+class "NotificationNavArgs" as T81 #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.event" {
+class "EventCommentsAdapter" as T82 <<adapter>> #D6EAF8 {
+}
+
+interface "EventCommentsAdapter.CommentActionListener" as T83 #D6EAF8 {
+}
+
+class "EventCommentsAdapter.CommentDiff" as T84 #D6EAF8 {
+}
+
+class "EventCommentsAdapter.CommentViewHolder" as T85 <<viewholder>> #D6EAF8 {
+}
+
+class "EventCommentsAdapter.ReplyAdapter" as T86 <<adapter>> #D6EAF8 {
+}
+
+class "EventCommentsAdapter.ReplyAdapter.ReplyViewHolder" as T87 <<viewholder>> #D6EAF8 {
+}
+
+class "EventCommentsSection" as T88 #D6EAF8 {
+}
+
+class "EventCommentsSection.CommentActions" as T89 #D6EAF8 {
+}
+
+interface "EventCommentsSection.CurrentUserListener" as T90 #D6EAF8 {
+}
+
+class "EventDetailsBottomSheet" as T91 #D6EAF8 {
+}
+
+class "EventDiscoveryInsights" as T92 #D6EAF8 {
+}
+
+class "EventDiscoveryInsights.Result" as T93 #D6EAF8 {
+}
+
+class "EventDiscoveryInsights.TagAggregate" as T94 #D6EAF8 {
+}
+
+class "EventUiFormatter" as T95 #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.nav" {
+class "AdminFragment" as T96 <<fragment>> #D6EAF8 {
+}
+
+enum "AdminFragment.Tab" as T97 #D6EAF8 {
+}
+
+class "EntrantMapFragment" as T98 <<fragment>> #D6EAF8 {
+}
+
+class "EntrantMapFragment.MarkerPoint" as T99 #D6EAF8 {
+}
+
+class "EventBrowseFilter" as T100 #D6EAF8 {
+}
+
+enum "EventBrowseFilter.AvailabilityFilter" as T101 #D6EAF8 {
+}
+
+enum "EventBrowseFilter.CapacityFilter" as T102 #D6EAF8 {
+}
+
+class "EventBrowseFilter.Result" as T103 #D6EAF8 {
+}
+
+enum "EventBrowseFilter.VisibilityFilter" as T104 #D6EAF8 {
+}
+
+class "EventUserPickerFragment" as T105 <<fragment>> #D6EAF8 {
+}
+
+enum "EventUserPickerFragment.CoOrganizerActionState" as T106 #D6EAF8 {
+}
+
+enum "EventUserPickerFragment.Mode" as T107 #D6EAF8 {
+}
+
+class "EventUserPickerFragment.UserAdapter" as T108 <<adapter>> #D6EAF8 {
+}
+
+interface "EventUserPickerFragment.UserAdapter.CoOrganizerStateResolver" as T109 #D6EAF8 {
+}
+
+interface "EventUserPickerFragment.UserAdapter.OnAction" as T110 #D6EAF8 {
+}
+
+class "EventUserPickerFragment.UserAdapter.UserDiff" as T111 #D6EAF8 {
+}
+
+class "EventUserPickerFragment.UserAdapter.VH" as T112 #D6EAF8 {
+}
+
+class "EventsFragment" as T113 <<fragment>> #D6EAF8 {
+}
+
+interface "EventsFragment.OnDateSelectedListener" as T114 #D6EAF8 {
+}
+
+class "ManageEventFragment" as T115 <<fragment>> #D6EAF8 {
+}
+
+class "NotificationsFragment" as T116 <<fragment>> #D6EAF8 {
+}
+
+class "NotifyEntrantsFragment" as T117 <<fragment>> #D6EAF8 {
+}
+
+class "OrganizeFragment" as T118 <<fragment>> #D6EAF8 {
+}
+
+class "OrganizerQrFragment" as T119 <<fragment>> #D6EAF8 {
+}
+
+enum "OrganizerQrFragment.Mode" as T120 #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment" as T121 <<fragment>> #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter" as T122 <<adapter>> #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter.EntrantDiff" as T123 #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantAdapter.ViewHolder" as T124 <<viewholder>> #D6EAF8 {
+}
+
+class "OrganizerViewEntrantsFragment.EntrantDisplayModel" as T125 #D6EAF8 {
+}
+
+class "ProfileFragment" as T126 <<fragment>> #D6EAF8 {
+}
+
+class "ProfileFragment.ProfileEventHistoryRow" as T127 #D6EAF8 {
+}
+
+class "ScanQrFragment" as T128 <<fragment>> #D6EAF8 {
+}
+
+class "SetupEventFormData" as T129 #D6EAF8 {
+}
+
+class "SetupEventFragment" as T130 <<fragment>> #D6EAF8 {
+}
+
+interface "SetupEventFragment.DatePickedCallback" as T131 #D6EAF8 {
+}
+
+enum "SetupEventFragment.Mode" as T132 #D6EAF8 {
+}
+
+class "SetupEventFragment.PosterUploadCleanupState" as T133 #D6EAF8 {
+}
+
+interface "SetupEventFragment.TimePickedCallback" as T134 #D6EAF8 {
+}
+
+}
+
+package "com.example.helios.ui.theme" {
+enum "HeliosFontOption" as T135 #D6EAF8 {
+}
+
+class "HeliosThemeManager" as T136 #D6EAF8 {
+}
+
+enum "HeliosThemeOption" as T137 #D6EAF8 {
+}
+
+}
+
+T1 -[hidden]-> T7
+T7 -[hidden]-> T8
+T8 -[hidden]-> T9
+T9 -[hidden]-> T23
+T23 -[hidden]-> T70
+T70 -[hidden]-> T82
+T82 -[hidden]-> T96
+T96 -[hidden]-> T135
+T135 -[hidden]-> T138
+
+T138 --> T7 : authDeviceService
+T138 --> T9 : accessibilityPreferences
+T138 --> T10 : adminGeolocationTestService
+T138 --> T12 : adminNotificationTestService
+T138 --> T14 : commentService
+T138 --> T15 : entrantEventService
+T138 --> T16 : eventService
+T138 --> T17 : uiPreferences
+T138 --> T18 : imageService
+T138 --> T19 : lotteryService
+T138 --> T20 : organizerNotificationService
+T138 --> T21 : profileService
+T138 --> T22 : waitingListService
+T138 --> T136 : themeManager
+T5 --> T6 : status
+T10 --> T7 : authDeviceService
+T11 --> T1 : event
+T12 --> T7 : authDeviceService
+T12 --> T20 : organizerNotificationService
+T13 --> T1 : event
+T14 --> T16 : eventService
+T14 --> T21 : profileService
+T15 --> T21 : profileService
+T19 --> T20 : organizerNotificationService
+T20 --> T8 : notificationRepository
+T21 --> T7 : authDeviceService
+T23 --> T2 : comments
+T23 --> T25 : onDeleteComment
+T24 --> T2 : 2 members
+T27 --> T1 : events
+T27 --> T29 : onEventClick
+T27 --> T30 : onDelete
+T27 --> T31 : onViewOrganizer
+T28 --> T1 : 2 members
+T33 --> T1 : events
+T33 --> T35 : onDelete
+T34 --> T1 : 2 members
+T37 --> T3 : notifications
+T37 --> T39 : onNotificationLongPress
+T38 --> T3 : 2 members
+T41 --> T6 : entrantStatusesByEventId
+T41 --> T46 : onCoOrganizerInviteAction
+T41 --> T47 : onEventClick
+T41 --> T48 : onPrivateEventInviteAction
+T50 --> T21 : profileService
+T51 --> T7 : authDeviceService
+T51 --> T8 : notificationRepository
+T51 --> T4 : cachedProfile
+T51 --> T21 : profileService
+T52 --> T54 : onNotificationClick
+T56 --> T59 : onHistoryClickListener
+T57 --> T6 : status
+T61 --> T21 : profileService
+T64 --> T4 : users
+T64 --> T65 : onUserClick
+T64 --> T66 : onDelete
+T64 --> T67 : onViewEvents
+T68 --> T4 : 2 members
+T74 --> T77 : stage
+T82 --> T2 : 2 members
+T82 --> T83 : actionListener
+T84 --> T2 : 2 members
+T86 --> T2 : replies
+T88 --> T2 : replyingToComment
+T88 --> T14 : commentService
+T88 --> T21 : profileService
+T91 --> T1 : loadedEvent
+T91 --> T5 : currentEntry
+T91 --> T15 : entrantEventService
+T91 --> T16 : eventService
+T91 --> T22 : waitingListService
+T91 --> T88 : commentsSection
+T92 --> T94 : 2 members
+T96 --> T8 : notificationRepository
+T96 --> T1 : 3 members
+T96 --> T2 : displayedComments
+T96 --> T3 : displayedNotifications
+T96 --> T4 : 3 members
+T96 --> T10 : geolocationTestService
+T96 --> T11 : geolocationLabState
+T96 --> T12 : notificationTestService
+T96 --> T13 : notificationLabState
+T96 --> T14 : commentService
+T96 --> T16 : eventService
+T96 --> T18 : imageService
+T96 --> T21 : profileService
+T96 --> T23 : commentAdapter
+T96 --> T27 : eventAdapter
+T96 --> T33 : imageAdapter
+T96 --> T37 : notificationAdapter
+T96 --> T64 : 2 members
+T98 --> T1 : loadedEvent
+T98 --> T16 : eventService
+T98 --> T22 : waitingListService
+T98 --> T99 : markerPoints
+T100 --> T101 : availabilityFilter
+T100 --> T102 : capacityFilter
+T100 --> T104 : visibilityFilter
+T103 --> T1 : filteredEvents
+T105 --> T1 : loadedEvent
+T105 --> T4 : 2 members
+T105 --> T16 : eventService
+T105 --> T20 : organizerNotificationService
+T105 --> T21 : profileService
+T105 --> T22 : waitingListService
+T105 --> T107 : mode
+T105 --> T108 : adapter
+T108 --> T4 : users
+T108 --> T109 : coOrganizerStateResolver
+T108 --> T110 : onAction
+T111 --> T4 : 2 members
+T113 --> T1 : 2 members
+T113 --> T6 : currentUserEntryStatuses
+T113 --> T15 : entrantEventService
+T113 --> T16 : eventService
+T113 --> T21 : profileService
+T113 --> T41 : eventAdapter
+T115 --> T1 : loadedEvent
+T115 --> T4 : currentUserProfile
+T115 --> T16 : eventService
+T115 --> T20 : organizerNotificationService
+T115 --> T21 : profileService
+T115 --> T22 : waitingListService
+T116 --> T8 : notificationRepository
+T116 --> T3 : notifications
+T116 --> T21 : profileService
+T116 --> T52 : adapter
+T117 --> T1 : loadedEvent
+T117 --> T16 : eventService
+T117 --> T20 : organizerNotificationService
+T117 --> T21 : profileService
+T118 --> T1 : 3 members
+T118 --> T16 : eventService
+T118 --> T21 : profileService
+T118 --> T22 : waitingListService
+T118 --> T41 : 2 members
+T119 --> T16 : eventService
+T119 --> T21 : profileService
+T119 --> T120 : mode
+T121 --> T1 : event
+T121 --> T5 : allEntries
+T121 --> T16 : eventService
+T121 --> T19 : lotteryService
+T121 --> T20 : organizerNotificationService
+T121 --> T21 : profileService
+T121 --> T22 : waitingListService
+T121 --> T122 : adapter
+T121 --> T125 : displayList
+T122 --> T125 : list
+T123 --> T125 : 2 members
+T125 --> T5 : entry
+T126 --> T9 : accessibilityPreferences
+T126 --> T15 : entrantEventService
+T126 --> T16 : eventService
+T126 --> T17 : uiPreferences
+T126 --> T21 : profileService
+T126 --> T56 : 2 members
+T126 --> T136 : themeManager
+T127 --> T6 : status
+T128 --> T16 : eventService
+T130 --> T1 : loadedEvent
+T130 --> T16 : eventService
+T130 --> T18 : imageService
+T130 --> T21 : profileService
+T130 --> T132 : mode
+T85 *-- T86 : replyAdapter
+T88 *-- T82 : commentsAdapter
+T113 *-- T100 : browseFilter
+T26 <|-- T23
+T32 <|-- T27
+T36 <|-- T33
+T40 <|-- T37
+T1 <|-- T41
+T45 <|-- T42
+T45 <|-- T43
+T1 <|-- T44
+T45 <|-- T49
+T63 <|-- T50
+T63 <|-- T51
+T3 <|-- T52
+T3 <|-- T53
+T57 <|-- T56
+T57 <|-- T58
+T63 <|-- T61
+T69 <|-- T64
+T85 <|-- T82
+T87 <|-- T86
+T112 <|-- T108
+T115 ..> T98 : navigates
+T83 <|.. T89
+@enduml

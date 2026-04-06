@@ -1,0 +1,904 @@
+@startuml
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam ArrowFontSize 11
+skinparam packageTitleAlignment left
+hide empty members
+hide methods
+
+title Service and data structure
+
+legend right
+  <back:#D6EAF8>UI</back>
+  <back:#D5F5E3>Service</back>
+  <back:#FAD7A0>Repository/Data</back>
+  <back:#E8DAEF>Auth/ViewModel</back>
+  <back:#FCF3CF>Model</back>
+  <back:#EAECEE>Utility/Other</back>
+endlegend
+
+package "com.example.helios" {
+class "HeliosApplication" as T59 <<application>> #F8F9F9 {
+  - TAG : String
+  - accessibilityPreferences : AccessibilityPreferences
+  - adminGeolocationTestService : AdminGeolocationTestService
+  - adminNotificationTestService : AdminNotificationTestService
+  - authDeviceService : AuthDeviceService
+  - commentService : CommentService
+  - entrantEventService : EntrantEventService
+  - eventService : EventService
+  - imageService : ImageService
+  - lotteryService : LotteryService
+  - organizerNotificationService : OrganizerNotificationService
+  - profileService : ProfileService
+  - repository : FirebaseRepository
+  - themeManager : HeliosThemeManager
+  - uiPreferences : HeliosUiPreferences
+  - waitingListService : WaitingListService
+}
+
+}
+
+package "com.example.helios.auth" {
+class "AuthDeviceService" as T3 <<service>> #D5F5E3 {
+  - auth : FirebaseAuth
+}
+
+class "InstallationIdProvider" as T4 #E8DAEF {
+  - KEY_INSTALLATION_ID : String
+  - PREFS : String
+}
+
+}
+
+package "com.example.helios.data" {
+interface "CommentRepository" as T5 <<repository>> #FAD7A0 {
+}
+
+interface "EventRepository" as T6 <<repository>> #FAD7A0 {
+}
+
+class "FirebaseRepository" as T7 <<repository>> #FAD7A0 {
+  - ADMIN_DEVICES_COLLECTION : String
+  - COMMENTS_COLLECTION : String
+  - EVENTS_COLLECTION : String
+  - IMAGES_COLLECTION : String
+  - NOTIFICATIONS_COLLECTION : String
+  - USERS_COLLECTION : String
+  - WAITING_LIST_COLLECTION : String
+  - db : FirebaseFirestore
+}
+
+class "FirebaseRepository.CommentIdSetter" as T8 #FAD7A0 {
+}
+
+class "FirebaseRepository.EventIdSetter" as T9 #FAD7A0 {
+}
+
+interface "FirebaseRepository.IdSetter" as T10 #FAD7A0 {
+}
+
+class "FirebaseRepository.ImageIdSetter" as T11 #FAD7A0 {
+}
+
+class "FirebaseRepository.LikeRecord" as T12 #FAD7A0 {
+  + likedAtMillis : long
+  + uid : String
+}
+
+interface "ImageRepository" as T13 <<repository>> #FAD7A0 {
+}
+
+interface "NotificationRepository" as T14 <<repository>> #FAD7A0 {
+}
+
+interface "UserRepository" as T15 <<repository>> #FAD7A0 {
+}
+
+interface "WaitingListRepository" as T16 <<repository>> #FAD7A0 {
+}
+
+}
+
+package "com.example.helios.model" {
+class "Event" as T1 #FCF3CF {
+  - address : String
+  - capacity : int
+  - coOrganizerUids : List<String>
+  - description : String
+  - drawCount : int
+  - drawHappened : boolean
+  - endTimeMillis : long
+  - eventId : String
+  - geofenceCenter : GeoPoint
+  - geofenceRadiusMeters : Integer
+  - geolocationRequired : boolean
+  - interests : List<String>
+  - locationName : String
+  - lotteryGuidelines : String
+  - organizerUid : String
+  - pendingCoOrganizerUids : List<String>
+  - posterImageId : String
+  - privateEvent : boolean
+  - qrCodeValue : String
+  - registrationClosesMillis : long
+  - registrationOpensMillis : long
+  - sampleSize : int
+  - startTimeMillis : long
+  - title : String
+  - waitlistLimit : Integer
+}
+
+class "UserProfile" as T2 #FCF3CF {
+  - email : String
+  - fcmToken : String
+  - installationId : String
+  - name : String
+  - notificationsEnabled : boolean
+  - organizerAccessRevoked : boolean
+  - phone : String
+  - profileImageUrl : String
+  - role : String
+  - signInBannerEnabled : boolean
+  - uid : String
+}
+
+}
+
+package "com.example.helios.service" {
+class "AccessibilityPreferences" as T17 #D5F5E3 {
+  - KEY_COLOR_BLIND : String
+  - KEY_LARGE_TEXT : String
+  - KEY_LARGE_TOUCH_TARGETS : String
+  - LARGE_TEXT_FONT_SCALE : float
+  - PREFS_NAME : String
+  - prefs : SharedPreferences
+}
+
+class "AdminGeolocationTestService" as T18 <<service>> #D5F5E3 {
+  - SANDBOX_EVENT_PREFIX : String
+  - SANDBOX_TITLE : String
+  - SANDBOX_USER_PREFIX : String
+  - authDeviceService : AuthDeviceService
+  - clock : Clock
+  - eventRepository : EventRepository
+  - userRepository : UserRepository
+  - waitingListRepository : WaitingListRepository
+}
+
+interface "AdminGeolocationTestService.Clock" as T19 #D5F5E3 {
+}
+
+class "AdminGeolocationTestService.CoordinateSeed" as T20 #D5F5E3 {
+  - latitude : double
+  - longitude : double
+}
+
+class "AdminGeolocationTestService.CurrentUserContext" as T21 #D5F5E3 {
+  - profile : UserProfile
+  - uid : String
+}
+
+enum "AdminGeolocationTestService.GeoScenario" as T22 #D5F5E3 {
+  + ALBERTA_SPREAD : GeoScenario
+  + EDMONTON_CLUSTER : GeoScenario
+  - coordinateSeeds : CoordinateSeed[]
+  - scenarioLabel : String
+}
+
+class "AdminGeolocationTestService.SandboxState" as T23 #D5F5E3 {
+  - currentUid : String
+  - currentUserLabel : String
+  - event : Event
+  - fakeEntrantCount : int
+  - locationPointCount : int
+  - scenarioLabel : String
+}
+
+class "AdminNotificationTestService" as T24 <<service>> #D5F5E3 {
+  - SANDBOX_EVENT_PREFIX : String
+  - SANDBOX_TITLE : String
+  - SANDBOX_USER_PREFIX : String
+  - authDeviceService : AuthDeviceService
+  - clock : Clock
+  - eventRepository : EventRepository
+  - organizerNotificationService : OrganizerNotificationService
+  - userRepository : UserRepository
+  - waitingListRepository : WaitingListRepository
+}
+
+interface "AdminNotificationTestService.Clock" as T25 #D5F5E3 {
+}
+
+class "AdminNotificationTestService.CurrentUserContext" as T26 #D5F5E3 {
+  - profile : UserProfile
+  - uid : String
+}
+
+class "AdminNotificationTestService.SandboxState" as T27 #D5F5E3 {
+  - currentUid : String
+  - currentUserLabel : String
+  - event : Event
+  - fakeEntrantCount : int
+  - notificationsEnabled : boolean
+  - pushReady : boolean
+}
+
+class "CommentService" as T28 <<service>> #D5F5E3 {
+  - MAX_COMMENT_LENGTH : int
+  - eventService : EventService
+  - profileService : ProfileService
+  - repository : CommentRepository
+}
+
+class "EntrantEventService" as T29 <<service>> #D5F5E3 {
+  - eventRepository : EventRepository
+  - profileService : ProfileService
+  - waitingListRepository : WaitingListRepository
+}
+
+class "EventService" as T30 <<service>> #D5F5E3 {
+  - repository : EventRepository
+}
+
+class "HeliosFirebaseMessagingService" as T31 <<service>> #D5F5E3 {
+  - CHANNEL_ID : String
+  - TAG : String
+}
+
+class "HeliosUiPreferences" as T32 #D5F5E3 {
+  - KEY_SHOW_HEADER_ICON : String
+  - PREFS_NAME : String
+  - preferences : SharedPreferences
+}
+
+class "ImageService" as T33 <<service>> #D5F5E3 {
+  - applicationContext : Context
+  - repository : ImageRepository
+}
+
+class "LotteryService" as T34 <<service>> #D5F5E3 {
+  + NO_PEOPLE_IN_EVENT_MESSAGE : String
+  - eventRepository : EventRepository
+  - organizerNotificationService : OrganizerNotificationService
+  - waitingListRepository : WaitingListRepository
+}
+
+class "NotificationSendResult" as T35 #D5F5E3 {
+  - recipientCount : int
+}
+
+class "OrganizerNotificationService" as T36 <<service>> #D5F5E3 {
+  - notificationRepository : NotificationRepository
+  - userRepository : UserRepository
+  - waitingListRepository : WaitingListRepository
+}
+
+class "ProfileService" as T37 <<service>> #D5F5E3 {
+  - authDeviceService : AuthDeviceService
+  - eventRepository : EventRepository
+  - installationIdSource : InstallationIdSource
+  - userRepository : UserRepository
+}
+
+class "ProfileService.BootstrapResult" as T38 #D5F5E3 {
+  - isNewUser : boolean
+  - profile : UserProfile
+}
+
+interface "ProfileService.InstallationIdSource" as T39 #D5F5E3 {
+}
+
+class "WaitingListService" as T40 <<service>> #D5F5E3 {
+  - repository : WaitingListRepository
+}
+
+}
+
+package "com.example.helios.ui" {
+class "LauncherActivity" as T41 <<activity>> #D6EAF8 {
+  - MIN_LOADING_DELAY_MS : long
+  - profileService : ProfileService
+  - welcomeText : TextView
+}
+
+class "MainActivity" as T42 <<activity>> #D6EAF8 {
+  - authDeviceService : com.example.helios.auth.AuthDeviceService
+  - bannerRole : TextView
+  - bannerText : TextView
+  - bannerView : View
+  - bottomNav : BottomNavigationView
+  - bottomNavOrganizer : BottomNavigationView
+  - cachedProfile : UserProfile
+  - cachedProfileComplete : Boolean
+  - currentBottomMenuRes : int
+  - hasLoadedNotificationSnapshot : boolean
+  - lastSelectedItemId : int
+  - navController : NavController
+  - navHostFragment : NavHostFragment
+  - notificationListenerRegistration : ListenerRegistration
+  - notificationRepository : NotificationRepository
+  - observedNotificationIds : Set<String>
+  - organizerEventId : String
+  - profileService : ProfileService
+}
+
+class "ProfileSetupActivity" as T43 <<activity>> #D6EAF8 {
+  + EXTRA_MODE : String
+  + EXTRA_RETURN_TO_MAIN : String
+  + MODE_EDIT_PROFILE : String
+  + MODE_SETUP_REQUIRED : String
+  - contentContainer : View
+  - currentProfileImageUrl : String
+  - emailInput : EditText
+  - mode : String
+  - nameInput : EditText
+  - pendingProfileImageUri : Uri
+  - phoneInput : EditText
+  - pickProfileImageLauncher : ActivityResultLauncher<PickVisualMediaRequest>
+  - primaryButton : MaterialButton
+  - profileImageView : ImageView
+  - profilePhotoButton : MaterialButton
+  - profilePhotoProgress : ProgressBar
+  - profileService : ProfileService
+  - returnToMain : boolean
+  - subtitleText : TextView
+  - titleText : TextView
+}
+
+}
+
+package "com.example.helios.ui.event" {
+class "EventCommentsSection" as T44 #D6EAF8 {
+  - authorProfileImageUrls : Map<String, String>
+  - commentInput : EditText
+  - commentService : CommentService
+  - commentsAdapter : EventCommentsAdapter
+  - currentUserAdmin : boolean
+  - currentUserUid : String
+  - eventId : String
+  - fragment : Fragment
+  - likedCommentIds : Set<String>
+  - organizerUid : String
+  - pinCommentCheckbox : CheckBox
+  - postButton : MaterialButton
+  - profileService : ProfileService
+  - replyRegistrations : Map<String, ListenerRegistration>
+  - replyingToComment : EventComment
+  - replyingToView : TextView
+  - requestedAuthorProfileUids : Set<String>
+  - topLevelCommentsRegistration : ListenerRegistration
+}
+
+class "EventDetailsBottomSheet" as T45 #D6EAF8 {
+  + ARG_EVENT_ID : String
+  + ARG_HIDE_JOIN_BUTTON : String
+  + RESULT_EVENT_ID : String
+  + RESULT_INVITATION_RESPONSE : String
+  + RESULT_STATUS : String
+  - btnWaitingList : MaterialButton
+  - cardPoster : View
+  - cgEventTags : ChipGroup
+  - commentsSection : EventCommentsSection
+  - currentEntry : WaitingListEntry
+  - currentUserUid : String
+  - descriptionCard : View
+  - entrantEventService : EntrantEventService
+  - eventId : String
+  - eventService : EventService
+  - hideJoinButton : boolean
+  - isCurrentlyOnWaitingList : boolean
+  - isImageExpanded : boolean
+  - ivMaximizeIcon : ImageView
+  - ivPoster : ImageView
+  - loadedEvent : Event
+  - locationClient : FusedLocationProviderClient
+  - locationPermissionLauncher : ActivityResultLauncher<String[]>
+  - locationSettingsLauncher : ActivityResultLauncher<IntentSenderRequest>
+  - lotteryGuidelinesCard : View
+  - pendingLocationAction : Runnable
+  - tvCapacity : TextView
+  - tvDate : TextView
+  - tvDescription : TextView
+  - tvLocation : TextView
+  - tvLotteryGuidelines : TextView
+  - tvLotteryGuidelinesLabel : TextView
+  - tvName : TextView
+  - tvRegistrationEndDate : TextView
+  - tvRegistrationEndTime : TextView
+  - tvRegistrationStartDate : TextView
+  - tvTimeEnd : TextView
+  - tvTimeStart : TextView
+  - tvWaitlistCount : TextView
+  - waitingListService : WaitingListService
+}
+
+}
+
+package "com.example.helios.ui.nav" {
+class "AdminFragment" as T46 <<fragment>> #D6EAF8 {
+  - ARG_ORGANIZER_UID : String
+  - allEvents : List<Event>
+  - allUsers : List<UserProfile>
+  - btnGeolocationLabMenu : MaterialButton
+  - btnGeolocationLabSeed : MaterialButton
+  - btnNotificationLabMenu : MaterialButton
+  - btnNotificationLabSeed : MaterialButton
+  - btnTabComments : TextView
+  - btnTabEvents : TextView
+  - btnTabGeo : TextView
+  - btnTabImages : TextView
+  - btnTabNotifications : TextView
+  - btnTabOrganizers : TextView
+  - btnTabUsers : TextView
+  - commentAdapter : AdminCommentAdapter
+  - commentService : CommentService
+  - displayedComments : List<EventComment>
+  - displayedEvents : List<Event>
+  - displayedImages : List<Event>
+  - displayedNotifications : List<NotificationRecord>
+  - displayedOrganizers : List<UserProfile>
+  - displayedUsers : List<UserProfile>
+  - eventAdapter : AdminEventAdapter
+  - eventService : EventService
+  - eventTitlesById : Map<String, String>
+  - filteredOrganizerUid : String
+  - geolocationLabExpanded : boolean
+  - geolocationLabState : AdminGeolocationTestService.SandboxState
+  - geolocationTestService : AdminGeolocationTestService
+  - imageAdapter : AdminImageAdapter
+  - imageService : ImageService
+  - isOrganizerMode : boolean
+  - ivScrollLeft : android.widget.ImageView
+  - ivScrollRight : android.widget.ImageView
+  - layoutGeoTab : LinearLayout
+  - layoutGeolocationLabContent : LinearLayout
+  - layoutGeolocationLabToggle : LinearLayout
+  - layoutNotificationLabContent : LinearLayout
+  - layoutNotificationLabToggle : LinearLayout
+  - layoutNotificationsTab : LinearLayout
+  - notificationAdapter : AdminNotificationAdapter
+  - notificationLabExpanded : boolean
+  - notificationLabState : AdminNotificationTestService.SandboxState
+  - notificationRepository : NotificationRepository
+  - notificationTestService : AdminNotificationTestService
+  - organizerAdapter : UserAdapter
+  - organizerName : String
+  - organizerUids : Set<String>
+  - profileService : ProfileService
+  - rvComments : RecyclerView
+  - rvEvents : RecyclerView
+  - rvImages : RecyclerView
+  - rvNotifications : RecyclerView
+  - rvOrganizers : RecyclerView
+  - rvUsers : RecyclerView
+  - tabContainer : HorizontalScrollView
+  - tvGeolocationLabStatus : TextView
+  - tvGeolocationLabToggleState : TextView
+  - tvNoComments : TextView
+  - tvNoEvents : TextView
+  - tvNoImages : TextView
+  - tvNoNotifications : TextView
+  - tvNoOrganizers : TextView
+  - tvNoUsers : TextView
+  - tvNotificationLabStatus : TextView
+  - tvNotificationLabToggleState : TextView
+  - userAdapter : UserAdapter
+}
+
+class "EntrantMapFragment" as T47 <<fragment>> #D6EAF8 {
+  - ARG_EVENT_ID : String
+  - FENCE_FILL_COLOR : int
+  - FENCE_STROKE_COLOR : int
+  - emptyView : TextView
+  - eventId : String
+  - eventService : EventService
+  - externalMapButton : MaterialButton
+  - googleMap : GoogleMap
+  - helperView : TextView
+  - loadedEvent : Event
+  - mapContainer : View
+  - mapsConfigured : boolean
+  - markerPoints : List<MarkerPoint>
+  - progressBar : ProgressBar
+  - waitingListService : WaitingListService
+}
+
+class "EventUserPickerFragment" as T48 <<fragment>> #D6EAF8 {
+  - ARG_MODE : String
+  - adapter : UserAdapter
+  - allUsers : List<UserProfile>
+  - currentUid : String
+  - emptyView : TextView
+  - eventId : String
+  - eventService : EventService
+  - filteredUsers : List<UserProfile>
+  - loadedEvent : Event
+  - mode : Mode
+  - organizerNotificationService : OrganizerNotificationService
+  - profileService : ProfileService
+  - progressBar : android.widget.ProgressBar
+  - searchInput : EditText
+  - subtitleView : TextView
+  - titleView : TextView
+  - waitingListService : WaitingListService
+}
+
+class "EventsFragment" as T49 <<fragment>> #D6EAF8 {
+  - EVENT_DETAILS_TAG : String
+  - allEvents : List<Event>
+  - availableTagSuggestionCount : int
+  - browseFilter : EventBrowseFilter
+  - btnAllTags : Button
+  - btnClearDateFilter : View
+  - btnFilter : View
+  - btnFilterEndDate : Button
+  - btnFilterStartDate : Button
+  - btnTagSuggestionsToggle : Button
+  - cgCapacityFilters : ChipGroup
+  - cgEventVisibility : ChipGroup
+  - cgFilterDisplay : ChipGroup
+  - cgInterestPreview : ChipGroup
+  - cgPopularPreview : ChipGroup
+  - cgRegistrationAvailability : ChipGroup
+  - currentUid : String
+  - currentUserEntryStatuses : Map<String, WaitingListStatus>
+  - dateFormat : SimpleDateFormat
+  - entrantEventService : EntrantEventService
+  - etSearch : EditText
+  - eventAdapter : EventAdapter
+  - eventService : EventService
+  - filteredEvents : List<Event>
+  - filtersMenuExpanded : boolean
+  - handler : Handler
+  - layoutFilterMenu : View
+  - layoutSuggestedTagsContent : View
+  - llDateFilters : View
+  - llInterestFilters : View
+  - loadedOnce : boolean
+  - pendingFilter : Runnable
+  - profileService : ProfileService
+  - rvEvents : RecyclerView
+  - tagSuggestionsExpanded : boolean
+  - tvResultsSummary : TextView
+}
+
+class "ManageEventFragment" as T50 <<fragment>> #D6EAF8 {
+  - currentUserProfile : com.example.helios.model.UserProfile
+  - currentUserUid : String
+  - eventId : String
+  - eventService : EventService
+  - loadedEvent : Event
+  - openEventPostingOnLoad : boolean
+  - organizerNotificationService : OrganizerNotificationService
+  - profileService : ProfileService
+  - waitingListService : WaitingListService
+}
+
+class "NotificationsFragment" as T51 <<fragment>> #D6EAF8 {
+  - adapter : NotificationAdapter
+  - notificationRepository : NotificationRepository
+  - notifications : List<NotificationRecord>
+  - profileService : ProfileService
+  - rvNotifications : RecyclerView
+  - tvNoNotifications : TextView
+}
+
+class "NotifyEntrantsFragment" as T52 <<fragment>> #D6EAF8 {
+  - eventId : String
+  - eventService : EventService
+  - loadedEvent : Event
+  - organizerNotificationService : OrganizerNotificationService
+  - profileService : ProfileService
+}
+
+class "OrganizeFragment" as T53 <<fragment>> #D6EAF8 {
+  - allOrganizerEvents : List<Event>
+  - cardCurrentEvents : View
+  - cardPastEvents : View
+  - createEventButton : Button
+  - currentAdapter : EventAdapter
+  - currentEmptyText : TextView
+  - currentEvents : List<Event>
+  - currentEventsExpanded : boolean
+  - eventService : EventService
+  - ivCurrentEventsIcon : ImageView
+  - ivPastEventsIcon : ImageView
+  - organizerUid : String
+  - pastAdapter : EventAdapter
+  - pastEmptyText : TextView
+  - pastEvents : List<Event>
+  - pastEventsExpanded : boolean
+  - profileService : ProfileService
+  - searchEditText : EditText
+  - waitingListService : WaitingListService
+}
+
+class "OrganizerQrFragment" as T54 <<fragment>> #D6EAF8 {
+  - copyQrValueButton : MaterialButton
+  - currentQrBitmap : Bitmap
+  - currentQrValue : String
+  - description : String
+  - eventIdForView : String
+  - eventService : EventService
+  - geoRequired : boolean
+  - isPrivateEvent : boolean
+  - maxEntrants : int
+  - mode : Mode
+  - posterUri : String
+  - previewEventButton : MaterialButton
+  - profileService : ProfileService
+  - qrImage : ImageView
+  - qrUtilityActions : View
+  - registrationClosesMillis : long
+  - registrationOpensMillis : long
+  - saveQrImageButton : MaterialButton
+  - storagePermissionLauncher : ActivityResultLauncher<String>
+  - tagsRaw : String
+  - title : String
+}
+
+class "OrganizerViewEntrantsFragment" as T55 <<fragment>> #D6EAF8 {
+  - NO_PEOPLE_IN_EVENT_MESSAGE : String
+  - adapter : EntrantAdapter
+  - allEntries : List<WaitingListEntry>
+  - btnDraw : MaterialButton
+  - btnRemoveEntrant : MaterialButton
+  - btnToggleDrawControls : MaterialButton
+  - cgStatus : ChipGroup
+  - createDocumentLauncher : ActivityResultLauncher<String>
+  - displayList : List<EntrantDisplayModel>
+  - drawControlsExpanded : boolean
+  - entrantImageUrls : Map<String, String>
+  - entrantNames : Map<String, String>
+  - etDrawCount : EditText
+  - etSearch : EditText
+  - event : Event
+  - eventId : String
+  - eventService : EventService
+  - layoutDeclinedActions : View
+  - layoutDrawControls : View
+  - layoutDrawControlsHeader : View
+  - layoutDrawControlsInput : View
+  - layoutInvitedActions : View
+  - llFilters : View
+  - lotteryService : LotteryService
+  - organizerNotificationService : OrganizerNotificationService
+  - pendingCsvContent : String
+  - profileService : ProfileService
+  - removeEntrantMode : boolean
+  - tvDrawControlsHelper : TextView
+  - tvDrawIndicator : TextView
+  - tvHeaderSubtitle : TextView
+  - tvHeaderTitle : TextView
+  - tvInfoStats : TextView
+  - tvListHeader : TextView
+  - waitingListService : WaitingListService
+}
+
+class "ProfileFragment" as T56 <<fragment>> #D6EAF8 {
+  - EVENT_DETAILS_TAG : String
+  - NOTIFICATIONS_OFF_EMOJI : String
+  - NOTIFICATIONS_ON_EMOJI : String
+  - accessibilityPreferences : AccessibilityPreferences
+  - btnAdmin : MaterialButton
+  - btnChangePhoto : MaterialButton
+  - btnDelete : MaterialButton
+  - btnEdit : MaterialButton
+  - btnMute : MaterialButton
+  - cgFontOptions : ChipGroup
+  - cgThemeOptions : ChipGroup
+  - currentHistoryAdapter : ProfileEventHistoryAdapter
+  - entrantEventService : EntrantEventService
+  - eventHistoryLoadVersion : int
+  - eventService : EventService
+  - ivProfilePicture : ImageView
+  - locationClient : FusedLocationProviderClient
+  - locationPermissionLauncher : ActivityResultLauncher<String[]>
+  - locationSettingsLauncher : ActivityResultLauncher<IntentSenderRequest>
+  - notificationsCurrentlyEnabled : boolean
+  - pastHistoryAdapter : ProfileEventHistoryAdapter
+  - pickProfileImageLauncher : ActivityResultLauncher<PickVisualMediaRequest>
+  - profileImageUrl : String
+  - profilePhotoProgress : ProgressBar
+  - profileService : ProfileService
+  - rvCurrentHistory : RecyclerView
+  - rvPastHistory : RecyclerView
+  - skipNextResumeReload : boolean
+  - switchColorBlind : SwitchMaterial
+  - switchHeaderHeliosIcon : SwitchMaterial
+  - switchLargeText : SwitchMaterial
+  - switchLargeTouchTargets : SwitchMaterial
+  - switchSignInBanner : SwitchMaterial
+  - themeManager : HeliosThemeManager
+  - tvAccessibilitySummary : TextView
+  - tvCurrentHistoryEmpty : TextView
+  - tvEmail : TextView
+  - tvHeaderIconSummary : TextView
+  - tvName : TextView
+  - tvNotificationSummary : TextView
+  - tvPastHistoryEmpty : TextView
+  - tvPhone : TextView
+  - uiPreferences : HeliosUiPreferences
+}
+
+class "ScanQrFragment" as T57 <<fragment>> #D6EAF8 {
+  - cameraExecutor : ExecutorService
+  - cameraProvider : ProcessCameraProvider
+  - eventService : EventService
+  - pickImageLauncher : ActivityResultLauncher<Intent>
+  - requestPermissionLauncher : ActivityResultLauncher<String>
+  - viewFinder : PreviewView
+}
+
+class "SetupEventFragment" as T58 <<fragment>> #D6EAF8 {
+  - cancelButton : MaterialButton
+  - dateFormat : SimpleDateFormat
+  - eventEndMillis : long
+  - eventId : String
+  - eventService : EventService
+  - eventStartMillis : long
+  - geolocationRequired : boolean
+  - imageService : ImageService
+  - isPrivateEvent : boolean
+  - loadedEvent : Event
+  - locationClient : FusedLocationProviderClient
+  - locationPermissionLauncher : ActivityResultLauncher<String[]>
+  - locationSettingsLauncher : ActivityResultLauncher<IntentSenderRequest>
+  - mode : Mode
+  - pendingLocationAction : Runnable
+  - pendingPosterUri : Uri
+  - pickImageLauncher : ActivityResultLauncher<PickVisualMediaRequest>
+  - primaryButton : MaterialButton
+  - profileService : ProfileService
+  - registrationClosesMillis : long
+  - registrationOpensMillis : long
+  - timeFormat : SimpleDateFormat
+  - uploadImageView : ImageView
+  - uploadProgressBar : ProgressBar
+}
+
+}
+
+T1 -[hidden]-> T3
+T3 -[hidden]-> T5
+T5 -[hidden]-> T17
+T17 -[hidden]-> T41
+T41 -[hidden]-> T44
+T44 -[hidden]-> T46
+T46 -[hidden]-> T59
+
+T59 --> T3 : authDeviceService
+T59 --> T7 : repository
+T59 --> T17 : accessibilityPreferences
+T59 --> T18 : adminGeolocationTestService
+T59 --> T24 : adminNotificationTestService
+T59 --> T28 : commentService
+T59 --> T29 : entrantEventService
+T59 --> T30 : eventService
+T59 --> T32 : uiPreferences
+T59 --> T33 : imageService
+T59 --> T34 : lotteryService
+T59 --> T36 : organizerNotificationService
+T59 --> T37 : profileService
+T59 --> T40 : waitingListService
+T18 --> T3 : authDeviceService
+T18 --> T6 : eventRepository
+T18 --> T15 : userRepository
+T18 --> T16 : waitingListRepository
+T18 --> T19 : clock
+T21 --> T2 : profile
+T22 --> T20 : coordinateSeeds
+T23 --> T1 : event
+T24 --> T3 : authDeviceService
+T24 --> T6 : eventRepository
+T24 --> T15 : userRepository
+T24 --> T16 : waitingListRepository
+T24 --> T25 : clock
+T24 --> T36 : organizerNotificationService
+T26 --> T2 : profile
+T27 --> T1 : event
+T28 --> T5 : repository
+T28 --> T30 : eventService
+T28 --> T37 : profileService
+T29 --> T6 : eventRepository
+T29 --> T16 : waitingListRepository
+T29 --> T37 : profileService
+T30 --> T6 : repository
+T33 --> T13 : repository
+T34 --> T6 : eventRepository
+T34 --> T16 : waitingListRepository
+T34 --> T36 : organizerNotificationService
+T36 --> T14 : notificationRepository
+T36 --> T15 : userRepository
+T36 --> T16 : waitingListRepository
+T37 --> T3 : authDeviceService
+T37 --> T6 : eventRepository
+T37 --> T15 : userRepository
+T37 --> T39 : installationIdSource
+T38 --> T2 : profile
+T40 --> T16 : repository
+T41 --> T37 : profileService
+T42 --> T3 : authDeviceService
+T42 --> T14 : notificationRepository
+T42 --> T2 : cachedProfile
+T42 --> T37 : profileService
+T43 --> T37 : profileService
+T44 --> T28 : commentService
+T44 --> T37 : profileService
+T45 --> T1 : loadedEvent
+T45 --> T29 : entrantEventService
+T45 --> T30 : eventService
+T45 --> T40 : waitingListService
+T45 --> T44 : commentsSection
+T46 --> T14 : notificationRepository
+T46 --> T1 : 3 members
+T46 --> T2 : 3 members
+T46 --> T18 : geolocationTestService
+T46 --> T23 : geolocationLabState
+T46 --> T24 : notificationTestService
+T46 --> T27 : notificationLabState
+T46 --> T28 : commentService
+T46 --> T30 : eventService
+T46 --> T33 : imageService
+T46 --> T37 : profileService
+T47 --> T1 : loadedEvent
+T47 --> T30 : eventService
+T47 --> T40 : waitingListService
+T48 --> T1 : loadedEvent
+T48 --> T2 : 2 members
+T48 --> T30 : eventService
+T48 --> T36 : organizerNotificationService
+T48 --> T37 : profileService
+T48 --> T40 : waitingListService
+T49 --> T1 : 2 members
+T49 --> T29 : entrantEventService
+T49 --> T30 : eventService
+T49 --> T37 : profileService
+T50 --> T1 : loadedEvent
+T50 --> T2 : currentUserProfile
+T50 --> T30 : eventService
+T50 --> T36 : organizerNotificationService
+T50 --> T37 : profileService
+T50 --> T40 : waitingListService
+T51 --> T14 : notificationRepository
+T51 --> T37 : profileService
+T52 --> T1 : loadedEvent
+T52 --> T30 : eventService
+T52 --> T36 : organizerNotificationService
+T52 --> T37 : profileService
+T53 --> T1 : 3 members
+T53 --> T30 : eventService
+T53 --> T37 : profileService
+T53 --> T40 : waitingListService
+T54 --> T30 : eventService
+T54 --> T37 : profileService
+T55 --> T1 : event
+T55 --> T30 : eventService
+T55 --> T34 : lotteryService
+T55 --> T36 : organizerNotificationService
+T55 --> T37 : profileService
+T55 --> T40 : waitingListService
+T56 --> T17 : accessibilityPreferences
+T56 --> T29 : entrantEventService
+T56 --> T30 : eventService
+T56 --> T32 : uiPreferences
+T56 --> T37 : profileService
+T57 --> T30 : eventService
+T58 --> T1 : loadedEvent
+T58 --> T30 : eventService
+T58 --> T33 : imageService
+T58 --> T37 : profileService
+T5 <|.. T7
+T6 <|.. T7
+T13 <|.. T7
+T14 <|.. T7
+T15 <|.. T7
+T16 <|.. T7
+T10 <|.. T8
+T10 <|.. T9
+T10 <|.. T11
+@enduml
