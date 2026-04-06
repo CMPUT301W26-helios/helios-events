@@ -24,4 +24,16 @@
     <color name="cb_primary">#0077BB</color>
     <color name="cb_secondary">#EE7733</color>
     <color name="cb_error">#AA3377</color>
+
+    <!-- Discordant Palette -->
+    <color name="discord_blurple">#5865F2</color>
+    <color name="discord_green">#57F287</color>
+    <color name="discord_yellow">#FEE75C</color>
+    <color name="discord_red">#ED4245</color>
+    <color name="discord_fuchsia">#EB459E</color>
+    <color name="discord_black">#1E1F22</color>
+    <color name="discord_dark_grey">#2B2D31</color>
+    <color name="discord_mid_grey">#313338</color>
+    <color name="discord_light_grey">#B5BAC1</color>
+    <color name="discord_white">#FFFFFF</color>
 </resources>

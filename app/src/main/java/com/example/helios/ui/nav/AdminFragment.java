@@ -349,12 +349,12 @@ public class AdminFragment extends Fragment {
         updateNoCommentsState(tab == Tab.COMMENTS);
         updateNoNotificationsState(tab == Tab.NOTIFICATIONS);
 
-        btnTabEvents.setAlpha(tab == Tab.EVENTS ? 0.5f : 1f);
-        btnTabUsers.setAlpha(tab == Tab.USERS ? 0.5f : 1f);
-        btnTabImages.setAlpha(tab == Tab.IMAGES ? 0.5f : 1f);
-        btnTabComments.setAlpha(tab == Tab.COMMENTS ? 0.5f : 1f);
-        btnTabGeo.setAlpha(tab == Tab.GEO ? 0.5f : 1f);
-        btnTabNotifications.setAlpha(tab == Tab.NOTIFICATIONS ? 0.5f : 1f);
+        btnTabEvents.setSelected(tab == Tab.EVENTS);
+        btnTabUsers.setSelected(tab == Tab.USERS);
+        btnTabImages.setSelected(tab == Tab.IMAGES);
+        btnTabComments.setSelected(tab == Tab.COMMENTS);
+        btnTabGeo.setSelected(tab == Tab.GEO);
+        btnTabNotifications.setSelected(tab == Tab.NOTIFICATIONS);
 
         switch (tab) {
             case EVENTS:

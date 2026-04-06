@@ -9,7 +9,8 @@ public enum HeliosThemeOption {
     MIDNIGHT("midnight", "Midnight", "Dark green tones.", R.style.Theme_Helios_Midnight),
     SUNRISE("sunrise", "Sunrise", "Warm amber tones.", R.style.Theme_Helios_Sunrise),
     OCEAN("ocean", "Ocean", "Cool blue tones.", R.style.Theme_Helios_Ocean),
-    BLOSSOM("blossom", "Blossom", "Soft rose tones.", R.style.Theme_Helios_Blossom);
+    BLOSSOM("blossom", "Blossom", "Soft rose tones.", R.style.Theme_Helios_Blossom),
+    DISCORDANT("discordant", "Discordant", "Discord inspired dark tones.", R.style.Theme_Helios_Discordant);
 
     @NonNull
     private final String storageValue;

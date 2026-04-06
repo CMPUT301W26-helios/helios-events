@@ -29,83 +29,89 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_filter_chip"
+                android:background="@drawable/bg_admin_tab_selector"
                 android:paddingStart="16dp"
                 android:paddingTop="8dp"
                 android:paddingEnd="16dp"
                 android:paddingBottom="8dp"
                 android:text="Events"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="14sp" />
+                android:textColor="@color/clr_admin_tab_text"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btn_tab_users"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_filter_chip"
+                android:background="@drawable/bg_admin_tab_selector"
                 android:paddingStart="16dp"
                 android:paddingTop="8dp"
                 android:paddingEnd="16dp"
                 android:paddingBottom="8dp"
                 android:text="Users"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="14sp" />
+                android:textColor="@color/clr_admin_tab_text"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btn_tab_images"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_filter_chip"
+                android:background="@drawable/bg_admin_tab_selector"
                 android:paddingStart="16dp"
                 android:paddingTop="8dp"
                 android:paddingEnd="16dp"
                 android:paddingBottom="8dp"
                 android:text="Images"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="14sp" />
+                android:textColor="@color/clr_admin_tab_text"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btn_tab_comments"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_filter_chip"
+                android:background="@drawable/bg_admin_tab_selector"
                 android:paddingStart="16dp"
                 android:paddingTop="8dp"
                 android:paddingEnd="16dp"
                 android:paddingBottom="8dp"
                 android:text="Comments"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="14sp" />
+                android:textColor="@color/clr_admin_tab_text"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btn_tab_geo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:background="@drawable/bg_filter_chip"
+                android:background="@drawable/bg_admin_tab_selector"
                 android:paddingStart="16dp"
                 android:paddingTop="8dp"
                 android:paddingEnd="16dp"
                 android:paddingBottom="8dp"
                 android:text="Geo"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="14sp" />
+                android:textColor="@color/clr_admin_tab_text"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/btn_tab_notifications"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_filter_chip"
+                android:background="@drawable/bg_admin_tab_selector"
                 android:paddingStart="16dp"
                 android:paddingTop="8dp"
                 android:paddingEnd="16dp"
                 android:paddingBottom="8dp"
                 android:text="Notifications"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="14sp" />
+                android:textColor="@color/clr_admin_tab_text"
+                android:textSize="14sp"
+                android:textStyle="bold" />
         </LinearLayout>
     </HorizontalScrollView>
 

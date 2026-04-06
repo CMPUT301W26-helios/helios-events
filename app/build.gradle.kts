@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.cardview)
     implementation(libs.transport.api)
     implementation(libs.contentpager)
 
